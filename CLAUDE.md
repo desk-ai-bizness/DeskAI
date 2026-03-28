@@ -1,100 +1,94 @@
 # CLAUDE.md
 
-Project instructions for Claude Code when working on this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-**Medical AI Scribe** — an AI-powered consultation assistant that acts as a smart medical scribe for Brazilian physicians. It listens to doctor-patient consultations, transcribes audio with speaker diarization, generates structured summaries, and stores them for doctor review and approval.
+**DeskAI — Medical AI Scribe** for Brazilian physicians. Captures doctor-patient consultation audio, transcribes with speaker diarization, generates structured summaries, and stores them for physician review and approval.
 
-**Status:** Pre-MVP (Planning / Phase 0)
+**Status:** Pre-MVP — planning complete, ready to begin implementation (Task 001).
 
-**Core principle:** Report, never interpret. The AI summarizes what was said, never what it means. Every summary requires physician approval.
+**Core principle:** Report, never interpret. The AI summarizes what was said, never what it means. Every summary requires physician approval before permanent storage.
 
-## Tech Stack
+## Architecture
+
+AWS serverless, Hexagonal Architecture. Four layers:
+
+1. **Web Frontend** — React app (authenticated) + public marketing site. Presentation only; must be "as dumb as possible" with backend-driven UI configuration.
+2. **BFF Layer** — Frontend-specific APIs on AWS Lambda. Shapes backend data into UI-friendly payloads, injects UI config/labels.
+3. **Core Backend** — Python on AWS Lambda. Owns domain logic: consultation lifecycle, transcription integration, AI pipeline, review/finalization, audit.
+4. **Infrastructure** — Cognito (auth), API Gateway (HTTP + WebSocket), DynamoDB + S3 (data), Step Functions (orchestration), EventBridge/SQS/SNS (events).
+
+Key AWS services: Cognito, CloudFront, API Gateway (HTTP + WebSocket), Lambda, Step Functions, DynamoDB, S3, EventBridge, SQS, SNS, Secrets Manager, KMS, CloudWatch.
+
+## Tech Stack (MVP)
 
 | Layer | Technology |
 |-------|------------|
-| Mobile | React Native (Expo) |
-| Web | Next.js (React) |
-| Backend | Python 3.12+ (FastAPI) |
-| Database | PostgreSQL + JSONB |
-| Storage | AWS S3 (audio files) |
-| ASR | Deepgram (Nova-2 Medical) |
+| Frontend | React (authenticated app) + public website |
+| Backend | Python, AWS Lambda |
+| IaC | AWS CDK |
+| Auth | Amazon Cognito (email+password only, no social login) |
+| Database | DynamoDB + S3 |
+| ASR | Deepgram (Nova-2 Medical, pt-BR) |
 | LLM | Claude API (Anthropic) |
-| Auth | Auth0 or Clerk |
-| Queue | Celery + Redis |
-| Hosting (MVP) | Railway / Supabase |
+| Orchestration | AWS Step Functions |
+| Events | EventBridge, SQS, SNS |
+| Environments | `dev`, `prod` |
 
-## Language Rule
+**Note:** The root-level `TECHNICAL_PLAN.md` and `blueprint-medical-ai.md` reference an older stack (FastAPI, PostgreSQL, Railway/Supabase, Celery+Redis). The `v2/` directory is the current source of truth.
 
-- **Code, comments, variable names, commit messages, PR descriptions:** always in English.
-- **AI prompts and output templates for the scribe pipeline:** Brazilian Portuguese (pt-BR), since the product serves Brazilian physicians.
-- **User-facing strings:** Portuguese (pt-BR).
+## Language Rules
 
-## Development Guidelines
+- **Code, comments, variable names, commits, PRs, docs:** English.
+- **AI prompts and output templates (scribe pipeline):** Brazilian Portuguese (pt-BR).
+- **User-facing strings and product content:** Brazilian Portuguese (pt-BR).
 
-### Python / FastAPI
+## Source of Truth (v2/)
 
-- Python 3.12+ with type hints everywhere. Use `Pydantic v2` for all models.
-- Async by default — use `async def` for all endpoint handlers and service functions.
-- Follow the repository structure:
-  ```
-  app/
-  ├── api/          # Route handlers (thin — delegate to services)
-  ├── services/     # Business logic
-  ├── models/       # Pydantic models (request/response schemas)
-  ├── db/           # SQLAlchemy models and database access
-  ├── pipeline/     # AI pipeline (ASR + LLM + post-processing)
-  ├── workers/      # Celery background tasks
-  ├── core/         # Config, security, dependencies
-  └── tests/        # Mirror the app/ structure
-  ```
-- Use `httpx` (async) for external API calls, never `requests`.
-- Error handling: raise `HTTPException` in routes, use custom exception classes in services.
-- No bare `except:` — always catch specific exceptions.
+All implementation decisions live in `v2/`. Read these before any implementation work:
 
-### Testing
+1. `v2/docs/ai-context-rules.md` — Engineering principles and AI behavior rules
+2. `v2/docs/mvp-business-rules.md` — Product boundaries, plan types, consultation rules
+3. `v2/docs/mvp-technical-specs.md` — Architecture, AWS services, ADRs
+4. `v2/tasks/@task-manager.md` — Progress tracker and priority queue
+5. `v2/implementation-prompt.md` — Task execution protocol
 
-- **pytest** with `pytest-asyncio` for async tests.
-- Test files mirror source structure: `app/services/consultation.py` → `app/tests/services/test_consultation.py`.
-- Use `httpx.AsyncClient` with FastAPI's `TestClient` for API tests.
-- Mock external services (Deepgram, Claude API) in tests — never call real APIs.
-- Every new endpoint or service function needs tests.
+When implementing a task, follow the execution protocol in `v2/implementation-prompt.md`: read context files in order, implement the assigned task file fully, update `@task-manager.md` when done.
 
-### React Native (Expo) / Next.js
+## Task Workflow
 
-- TypeScript everywhere — no `any` types.
-- Functional components only, with hooks.
-- Use Expo's managed workflow.
-- Shared types between web and mobile where possible.
+Tasks are in `v2/tasks/` numbered 001–015. The task manager (`v2/tasks/@task-manager.md`) tracks status using: `planned`, `in_progress`, `blocked`, `done`, `canceled`.
 
-### Database
+Current next step: Task 001 (refine MVP requirements and delivery decisions).
 
-- PostgreSQL with JSONB for flexible summary storage.
-- Use SQLAlchemy 2.0+ with async engine.
-- Alembic for migrations — every schema change needs a migration.
-- Never use raw SQL strings in application code — use SQLAlchemy ORM/Core.
+## Backend Design Rules
 
-### Security (Non-Negotiable)
+- Hexagonal Architecture: business rules independent from frameworks and AWS services.
+- Ports and adapters boundaries between domain and infrastructure.
+- Async/event-driven where it improves resilience or decoupling.
+- Idempotent operations for async and distributed flows.
+- Business logic in backend services, never in frontend.
+- ADRs documented in `v2/docs/mvp-technical-specs.md`.
 
-- **Never log or print patient data** (PII, CPF, medical records).
-- **Never commit API keys, tokens, or secrets.** Use environment variables.
-- **Encrypt sensitive fields at rest** (CPF, phone numbers).
-- **All endpoints require authentication** except health checks.
-- **Audit trail** for every data access (LGPD requirement).
-- **HTTPS only** — no HTTP endpoints in production.
+## Security (Non-Negotiable)
 
-### AI Pipeline Rules
+- All consultation and user data is sensitive — never log PII, CPF, or medical records.
+- Encrypt sensitive fields at rest (KMS). Mask sensitive data in logs/traces.
+- Least-privilege IAM. Do not introduce broader permissions than necessary.
+- LGPD compliance required — audit trail for every data access.
 
-- The system prompt must enforce "report only, never interpret" — no diagnoses, no ICD codes, no clinical decisions.
-- Every summary field must link to transcript timestamps (`transcript_ref`).
-- JSON output must be validated against the schema before storage.
+## AI Pipeline Rules
+
+- System prompt enforces "report only, never interpret" — no diagnoses, no ICD codes, no clinical decisions.
+- Every summary field must link to transcript timestamps.
+- JSON output validated against schema before storage.
 - Flag unclear/uncertain sections with confidence scores.
-- Doctor approval is **required** before any summary is permanently stored.
+- If output cannot be produced reliably, mark as incomplete — never fabricate content.
 
 ## Commit Messages
 
-Use conventional commits:
+Conventional commits:
 ```
 feat: add consultation upload endpoint
 fix: handle empty transcript from Deepgram
@@ -102,14 +96,3 @@ chore: update dependencies
 docs: add API documentation
 test: add consultation service tests
 ```
-
-## Build Phases
-
-- **Phase 0:** AI pipeline proof-of-concept (Python script: audio → transcript → summary)
-- **Phase 1:** Backend API (FastAPI + PostgreSQL + async workers)
-- **Phase 2:** Web app (Next.js dashboard)
-- **Phase 3:** Mobile app (React Native / Expo)
-- **Phase 4:** Pilot with real physicians
-- **Phase 5:** LGPD compliance and scale
-
-See `blueprint-medical-ai.md` for full architecture details, data model, cost analysis, and roadmap.

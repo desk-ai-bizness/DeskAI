@@ -549,9 +549,11 @@ Required normalized fields:
 - timestamps_when_available
 - confidence_metadata_when_available
 
-## 13. OpenAI Processing Layer
+## 13. AI Processing Layer
 
 Use strict-schema processing only.
+
+The LLM provider for the MVP is Claude API (Anthropic). See `docs/requirements/05-decision-log.md` DEC-007.
 
 ### Required Modules
 
@@ -908,6 +910,27 @@ Do not include in the MVP:
 
 - decision: use AWS CDK
 - reason: keep AWS infrastructure defined as code and aligned with the project stack
+
+### ADR-006: Transcription Provider
+
+- decision: use Deepgram (Nova-2 Medical) as the first transcription provider
+- reason: medical-specific model, native WebSocket streaming API, pt-BR support, competitive MVP pricing
+- reversibility: high — provider is behind an adapter interface
+- reference: `docs/requirements/05-decision-log.md` DEC-001
+
+### ADR-007: LLM Provider
+
+- decision: use Claude API (Anthropic) for the AI processing pipeline
+- reason: strong structured output capabilities, schema-strict generation support, aligns with project guidance
+- reversibility: high — LLM is behind an adapter interface
+- reference: `docs/requirements/05-decision-log.md` DEC-007
+
+### ADR-008: Plan Entitlement Model
+
+- decision: all three plans share core features; differentiation is by usage limits only (consultation count, session duration, audio retention)
+- reason: MVP prioritizes reliability over feature segmentation; billing is post-MVP
+- reversibility: high — limits are feature-flag-driven configuration
+- reference: `docs/requirements/03-plan-entitlements.md`
 
 ## 26. AI Agent Notes
 

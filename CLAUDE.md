@@ -66,6 +66,7 @@ Current next step: Task 001 (refine MVP requirements and delivery decisions).
 
 - Hexagonal Architecture: business rules independent from frameworks and AWS services.
 - Ports and adapters boundaries between domain and infrastructure.
+- Use `asyncio` for handling async external API calls (not `httpx`).
 - Async/event-driven where it improves resilience or decoupling.
 - Idempotent operations for async and distributed flows.
 - Business logic in backend services, never in frontend.

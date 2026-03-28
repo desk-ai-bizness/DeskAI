@@ -1,4 +1,4 @@
-# Medical AI Scribe
+# DeskAI — Medical AI Scribe
 
 An AI-powered consultation assistant that acts as a **smart medical scribe** for physicians.
 
@@ -9,15 +9,15 @@ The service listens to doctor-patient consultations, transcribes the audio with 
 ```
 Doctor talks to patient
         |
-Audio captured (phone or browser)
+Audio captured (browser)
         |
-Transcription with speaker diarization
+Real-time transcription with speaker diarization
         |
 AI generates structured summary
         |
 Doctor reviews, edits, approves
         |
-Stored in database for patient history
+Stored securely (DynamoDB + S3)
 ```
 
 ## What It Is NOT
@@ -43,36 +43,61 @@ Brazilian physicians and clinics — built for Portuguese-first medical vocabula
 | Documentation time per consultation | ~7 minutes (AI reduces to ~2 min) |
 | Physicians using telemedicine | 68% |
 
+## Architecture
+
+AWS serverless with Hexagonal Architecture across four layers:
+
+1. **Web Frontend** — React app (authenticated) + public marketing site
+2. **BFF Layer** — Frontend-specific APIs on AWS Lambda
+3. **Core Backend** — Python on AWS Lambda (domain logic, consultation lifecycle, AI pipeline)
+4. **Infrastructure** — Cognito, API Gateway, DynamoDB, S3, Step Functions, EventBridge
+
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Mobile | React Native (Expo) |
-| Web | Next.js |
-| Backend | Python (FastAPI) |
-| Database | PostgreSQL + JSONB |
-| Storage | AWS S3 |
-| ASR | Deepgram (Nova-2 Medical) |
+| Frontend | React (authenticated app) + public website |
+| Backend | Python, AWS Lambda |
+| IaC | AWS CDK |
+| Auth | Amazon Cognito |
+| Database | DynamoDB + S3 |
+| ASR | Deepgram (Nova-2 Medical, pt-BR) |
 | LLM | Claude API (Anthropic) |
-| Auth | Auth0 or Clerk |
-| Queue | Celery + Redis |
-| Hosting (MVP) | Railway / Supabase |
-| Hosting (Prod) | AWS sa-east-1 (São Paulo) |
+| Orchestration | AWS Step Functions |
+| Events | EventBridge, SQS, SNS |
+| Environments | `dev`, `prod` |
 
 ## Project Status
 
-- [x] Product concept and market validation
-- [x] Technical blueprint complete
-- [ ] Phase 0: AI pipeline proof of concept
-- [ ] Phase 1: Backend API
-- [ ] Phase 2: Web app
-- [ ] Phase 3: Mobile app
-- [ ] Phase 4: Pilot with real doctors
-- [ ] Phase 5: LGPD compliance & scale
+**Status:** Pre-MVP — planning complete, ready to begin implementation.
+
+### Implementation Roadmap (15 Tasks)
+
+- [ ] 001 — Refine MVP requirements and delivery decisions
+- [ ] 002 — Design system architecture and project structure
+- [ ] 003 — Bootstrap repository and engineering foundation
+- [ ] 004 — Provision AWS foundation with CDK
+- [ ] 005 — Implement authentication and plan access control
+- [ ] 006 — Model consultation domain, persistence, and audit
+- [ ] 007 — Build BFF contracts, UI config, and feature flags
+- [ ] 008 — Implement real-time consultation session transport
+- [ ] 009 — Integrate transcription provider and normalization
+- [ ] 010 — Build AI processing pipeline and artifacts
+- [ ] 011 — Implement review, finalization, and export workflows
+- [ ] 012 — Build authenticated React app
+- [ ] 013 — Build public website and entry flows
+- [ ] 014 — Add observability, security, privacy, and cost controls
+- [ ] 015 — Run end-to-end hardening and release readiness
 
 ## Documentation
 
-- **[blueprint-medical-ai.md](./blueprint-medical-ai.md)** — Full technical blueprint covering architecture, data model, AI pipeline, infrastructure, costs, revenue model, competitive landscape, risks, and roadmap.
+All current documentation lives in [`v2/`](./v2/):
+
+- **[`v2/docs/ai-context-rules.md`](./v2/docs/ai-context-rules.md)** — Engineering principles and AI behavior rules
+- **[`v2/docs/mvp-business-rules.md`](./v2/docs/mvp-business-rules.md)** — Product boundaries, plan types, consultation rules
+- **[`v2/docs/mvp-technical-specs.md`](./v2/docs/mvp-technical-specs.md)** — Architecture, AWS services, and ADRs
+- **[`v2/tasks/@task-manager.md`](./v2/tasks/@task-manager.md)** — Task progress tracker and priority queue
+- **[`v2/implementation-prompt.md`](./v2/implementation-prompt.md)** — Task execution protocol
 
 ## Economics
 

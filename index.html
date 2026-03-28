@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medic AI — Menos tempo digitando, mais tempo cuidando</title>
+  <meta name="description" content="Medic AI transcreve suas consultas, gera resumos estruturados e envia notas fiscais automaticamente. Foque no paciente, não no teclado.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       CSS VARIABLES
+       ============================================ */
+    :root {
+      --color-primary: #0F766E;
+      --color-primary-dark: #0D5D57;
+      --color-primary-light: #14B8A6;
+      --color-accent: #F59E0B;
+      --color-accent-hover: #D97706;
+      --color-bg: #FAFBFC;
+      --color-bg-alt: #F0FDFA;
+      --color-bg-dark: #0F172A;
+      --color-card: #FFFFFF;
+      --color-text: #1E293B;
+      --color-text-secondary: #64748B;
+      --color-text-light: #94A3B8;
+      --color-text-on-dark: #F1F5F9;
+      --color-border: #E2E8F0;
+      --color-success: #10B981;
+      --color-highlight: #ECFDF5;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+      --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: 'Playfair Display', Georgia, serif;
+      --max-width: 1200px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ============================================
+       RESET & BASE
+       ============================================ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--color-text);
+      background: var(--color-bg);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    ul { list-style: none; }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ============================================
+       TYPOGRAPHY
+       ============================================ */
+    h1, h2, h3, h4 {
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    h1 { font-size: clamp(2.2rem, 5vw, 3.5rem); }
+    h2 { font-size: clamp(1.8rem, 3.5vw, 2.5rem); }
+    h3 { font-size: clamp(1.2rem, 2vw, 1.5rem); }
+
+    .section-label {
+      display: inline-block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+      background: var(--color-highlight);
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      margin-bottom: 16px;
+      color: var(--color-text);
+    }
+
+    .section-subtitle {
+      font-size: 1.125rem;
+      color: var(--color-text-secondary);
+      max-width: 640px;
+      margin: 0 auto 48px;
+    }
+
+    .text-center { text-align: center; }
+    .text-gradient {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ============================================
+       BUTTONS
+       ============================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border-radius: 100px;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all var(--transition);
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(15, 118, 110, 0.35);
+    }
+    .btn-primary:hover {
+      background: var(--color-primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(15, 118, 110, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--color-primary);
+      border: 2px solid var(--color-primary);
+    }
+    .btn-secondary:hover {
+      background: var(--color-highlight);
+      transform: translateY(-2px);
+    }
+
+    .btn-accent {
+      background: var(--color-accent);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    }
+    .btn-accent:hover {
+      background: var(--color-accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-white {
+      background: #fff;
+      color: var(--color-primary);
+      box-shadow: var(--shadow-md);
+    }
+    .btn-white:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn-lg {
+      padding: 18px 40px;
+      font-size: 1.1rem;
+    }
+
+    /* ============================================
+       NAVIGATION
+       ============================================ */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(250, 251, 252, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+      transition: all var(--transition);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--color-primary);
+    }
+
+    .nav-logo svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      transition: color var(--transition);
+    }
+    .nav-links a:hover {
+      color: var(--color-primary);
+    }
+
+    .nav-cta {
+      padding: 10px 24px !important;
+      font-size: 0.9rem !important;
+    }
+
+    .nav-mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .nav-mobile-toggle svg {
+      width: 24px;
+      height: 24px;
+      color: var(--color-text);
+    }
+
+    /* ============================================
+       HERO
+       ============================================ */
+    .hero {
+      padding: 140px 0 100px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(20, 184, 166, 0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -10%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-content {
+      max-width: 560px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--color-highlight);
+      color: var(--color-primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 100px;
+      margin-bottom: 24px;
+    }
+
+    .hero-badge-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--color-success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .hero h1 {
+      margin-bottom: 20px;
+      font-family: var(--font-sans);
+      letter-spacing: -0.02em;
+    }
+
+    .hero-slogan {
+      font-size: 1.25rem;
+      color: var(--color-text-secondary);
+      margin-bottom: 12px;
+      font-style: italic;
+      font-weight: 500;
+    }
+
+    .hero-description {
+      font-size: 1.1rem;
+      color: var(--color-text-secondary);
+      margin-bottom: 36px;
+      line-height: 1.8;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero-visual {
+      position: relative;
+    }
+
+    .hero-mockup {
+      background: var(--color-card);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      padding: 32px;
+      border: 1px solid var(--color-border);
+      position: relative;
+    }
+
+    .mockup-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .mockup-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .mockup-meta {
+      flex: 1;
+    }
+
+    .mockup-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .mockup-date {
+      font-size: 0.8rem;
+      color: var(--color-text-light);
+    }
+
+    .mockup-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--color-highlight);
+      color: var(--color-success);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 100px;
+    }
+
+    .mockup-body h4 {
+      font-size: 0.85rem;
+      color: var(--color-text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      margin-top: 16px;
+    }
+
+    .mockup-body h4:first-child {
+      margin-top: 0;
+    }
+
+    .mockup-body p {
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+    }
+
+    .mockup-body .tag {
+      display: inline-block;
+      background: #FEF3C7;
+      color: #92400E;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 100px;
+      margin-right: 6px;
+      margin-top: 4px;
+    }
+
+    .mockup-body .tag-blue {
+      background: #DBEAFE;
+      color: #1E40AF;
+    }
+
+    .hero-float-card {
+      position: absolute;
+      background: var(--color-card);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--color-border);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .hero-float-card.card-top {
+      top: -20px;
+      right: -30px;
+      animation-delay: 0s;
+    }
+
+    .hero-float-card.card-bottom {
+      bottom: -16px;
+      left: -20px;
+      animation-delay: 3s;
+    }
+
+    .float-card-icon {
+      font-size: 1.5rem;
+      margin-bottom: 4px;
+    }
+
+    .float-card-label {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+    }
+
+    .float-card-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* ============================================
+       STATS BAR
+       ============================================ */
+    .stats-bar {
+      padding: 60px 0;
+      background: var(--color-card);
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      text-align: center;
+    }
+
+    .stat-item {
+      padding: 16px;
+    }
+
+    .stat-number {
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 800;
+      color: var(--color-primary);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+      line-height: 1.4;
+    }
+
+    /* ============================================
+       PROBLEM SECTION
+       ============================================ */
+    .problem {
+      padding: 100px 0;
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .problem-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .problem-card {
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      transition: all var(--transition);
+    }
+
+    .problem-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .problem-card-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .problem-card h4 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--color-text);
+      margin-bottom: 4px;
+    }
+
+    .problem-card p {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    .problem-content h2 {
+      margin-bottom: 20px;
+    }
+
+    .problem-content p {
+      font-size: 1.05rem;
+      color: var(--color-text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.8;
+    }
+
+    .problem-content .highlight-text {
+      background: linear-gradient(transparent 60%, rgba(245, 158, 11, 0.2) 60%);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    /* ============================================
+       HOW IT WORKS
+       ============================================ */
+    .how-it-works {
+      padding: 100px 0;
+      background: var(--color-bg-alt);
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      margin-top: 16px;
+    }
+
+    .step-card {
+      text-align: center;
+      padding: 32px 24px;
+      position: relative;
+    }
+
+    .step-number {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin: 0 auto 20px;
+      box-shadow: 0 4px 14px rgba(15, 118, 110, 0.3);
+    }
+
+    .step-card h3 {
+      margin-bottom: 10px;
+      color: var(--color-text);
+    }
+
+    .step-card p {
+      font-size: 0.95rem;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+    }
+
+    .step-arrow {
+      position: absolute;
+      right: -24px;
+      top: 52px;
+      color: var(--color-primary-light);
+      opacity: 0.4;
+      font-size: 1.5rem;
+    }
+
+    .step-card:last-child .step-arrow {
+      display: none;
+    }
+
+    /* ============================================
+       FEATURES
+       ============================================ */
+    .features {
+      padding: 100px 0;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      transition: all var(--transition);
+    }
+
+    .feature-card:hover {
+      border-color: var(--color-primary-light);
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      background: var(--color-highlight);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+      margin-bottom: 10px;
+      font-size: 1.15rem;
+    }
+
+    .feature-card p {
+      font-size: 0.95rem;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ============================================
+       SPECIALTIES
+       ============================================ */
+    .specialties {
+      padding: 100px 0;
+      background: var(--color-bg-alt);
+    }
+
+    .specialties-scroll {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .specialty-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: 100px;
+      padding: 12px 24px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--color-text);
+      transition: all var(--transition);
+    }
+
+    .specialty-chip:hover {
+      border-color: var(--color-primary);
+      background: var(--color-highlight);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .specialty-icon {
+      font-size: 1.3rem;
+    }
+
+    /* ============================================
+       PRICING
+       ============================================ */
+    .pricing {
+      padding: 100px 0;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .pricing-card {
+      background: var(--color-card);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: 40px 32px;
+      text-align: center;
+      transition: all var(--transition);
+      position: relative;
+    }
+
+    .pricing-card:hover {
+      box-shadow: var(--shadow-xl);
+      transform: translateY(-4px);
+    }
+
+    .pricing-card.featured {
+      border-color: var(--color-primary);
+      background: linear-gradient(180deg, var(--color-highlight) 0%, var(--color-card) 30%);
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-primary);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 6px 20px;
+      border-radius: 100px;
+    }
+
+    .pricing-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .pricing-target {
+      font-size: 0.85rem;
+      color: var(--color-text-light);
+      margin-bottom: 24px;
+    }
+
+    .pricing-price {
+      margin-bottom: 8px;
+    }
+
+    .pricing-currency {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      vertical-align: super;
+    }
+
+    .pricing-amount {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--color-text);
+    }
+
+    .pricing-period {
+      font-size: 0.9rem;
+      color: var(--color-text-light);
+      margin-bottom: 32px;
+    }
+
+    .pricing-features {
+      text-align: left;
+      margin-bottom: 32px;
+    }
+
+    .pricing-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+    }
+
+    .pricing-features li svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: var(--color-success);
+      margin-top: 2px;
+    }
+
+    .pricing-card .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .pricing-note {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.9rem;
+      color: var(--color-text-light);
+    }
+
+    /* ============================================
+       TESTIMONIAL / SOCIAL PROOF
+       ============================================ */
+    .social-proof {
+      padding: 80px 0;
+      background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+      color: #fff;
+    }
+
+    .proof-inner {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .proof-inner .section-label {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+
+    .proof-quote {
+      font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+      font-style: italic;
+      line-height: 1.7;
+      margin-bottom: 24px;
+      opacity: 0.95;
+    }
+
+    .proof-author {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .proof-role {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    /* ============================================
+       FAQ
+       ============================================ */
+    .faq {
+      padding: 100px 0;
+      background: var(--color-bg-alt);
+    }
+
+    .faq-grid {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: all var(--transition);
+    }
+
+    .faq-item:hover {
+      box-shadow: var(--shadow-sm);
+    }
+
+    .faq-question {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 20px 24px;
+      background: none;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-text);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .faq-question svg {
+      width: 20px;
+      height: 20px;
+      color: var(--color-text-light);
+      transition: transform var(--transition);
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+
+    .faq-item.open .faq-question svg {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .faq-answer-inner {
+      padding: 0 24px 20px;
+      font-size: 0.95rem;
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 300px;
+    }
+
+    /* ============================================
+       CTA SECTION
+       ============================================ */
+    .cta {
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .cta-box {
+      background: linear-gradient(135deg, var(--color-bg-dark), #1E293B);
+      border-radius: var(--radius-xl);
+      padding: 64px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(20, 184, 166, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .cta-box::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .cta-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-content h2 {
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .cta-content p {
+      color: var(--color-text-light);
+      font-size: 1.1rem;
+      margin-bottom: 36px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ============================================
+       FOOTER
+       ============================================ */
+    .footer {
+      padding: 48px 0 32px;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--color-primary);
+    }
+
+    .footer-brand svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      transition: color var(--transition);
+    }
+    .footer-links a:hover {
+      color: var(--color-primary);
+    }
+
+    .footer-copy {
+      font-size: 0.8rem;
+      color: var(--color-text-light);
+    }
+
+    /* ============================================
+       SCROLL ANIMATIONS
+       ============================================ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 1024px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+      .hero-visual {
+        max-width: 500px;
+        margin: 0 auto;
+      }
+      .problem-grid {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        max-width: 420px;
+        margin: 0 auto;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-mobile-toggle { display: block; }
+
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 72px;
+        left: 0;
+        right: 0;
+        background: var(--color-card);
+        padding: 24px;
+        border-bottom: 1px solid var(--color-border);
+        box-shadow: var(--shadow-lg);
+        gap: 16px;
+      }
+
+      .hero { padding: 120px 0 60px; }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+      }
+
+      .steps-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      .step-arrow { display: none; }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .problem-cards {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .hero-buttons .btn {
+        justify-content: center;
+      }
+
+      .hero-float-card {
+        display: none;
+      }
+
+      .cta-box {
+        padding: 48px 24px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+      .problem-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================
+       NAVIGATION
+       ============================================ -->
+  <nav class="nav" id="nav">
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="36" height="36" rx="10" fill="currentColor"/>
+          <path d="M10 18C10 14 12 11 16 11C18 11 19.5 12 20.5 13.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="22" cy="16" r="3" fill="white" opacity="0.9"/>
+          <path d="M11 22H25" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+          <path d="M13 26H23" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+        </svg>
+        Medic AI
+      </a>
+
+      <div class="nav-links" id="navLinks">
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#funcionalidades">Funcionalidades</a>
+        <a href="#precos">Precos</a>
+        <a href="#faq">FAQ</a>
+        <a href="#comecar" class="btn btn-primary nav-cta">Comece gratis</a>
+      </div>
+
+      <button class="nav-mobile-toggle" id="navToggle" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============================================
+       HERO
+       ============================================ -->
+  <section class="hero" id="hero">
+    <div class="container hero-inner">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          Plataforma de IA para profissionais de saude
+        </div>
+
+        <h1>Seus pacientes merecem <span class="text-gradient">toda a sua atencao</span></h1>
+
+        <p class="hero-slogan">Menos tempo digitando, mais tempo cuidando.</p>
+
+        <p class="hero-description">
+          A Medic AI transcreve suas consultas, gera resumos clinicos estruturados e envia notas fiscais automaticamente. Voce foca no paciente, a gente cuida do resto.
+        </p>
+
+        <div class="hero-buttons">
+          <a href="#comecar" class="btn btn-primary btn-lg">
+            Comece gratis
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="#como-funciona" class="btn btn-secondary btn-lg">Veja como funciona</a>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-mockup">
+          <div class="mockup-header">
+            <div class="mockup-avatar">JP</div>
+            <div class="mockup-meta">
+              <div class="mockup-name">Joao P. Silva</div>
+              <div class="mockup-date">28 Mar 2026 &middot; 14:30</div>
+            </div>
+            <span class="mockup-status">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="6" fill="currentColor"/></svg>
+              Aprovado
+            </span>
+          </div>
+          <div class="mockup-body">
+            <h4>Queixa principal</h4>
+            <p>Dor lombar persistente ha 3 semanas, com piora ao sentar por longos periodos.</p>
+
+            <h4>Medicacoes atuais</h4>
+            <p>
+              <span class="tag">Ibuprofeno 400mg</span>
+              <span class="tag tag-blue">Paracetamol 750mg</span>
+            </p>
+
+            <h4>Conduta</h4>
+            <p>Solicitados exames de imagem (RX lombar). Prescrito relaxante muscular. Retorno em 15 dias.</p>
+          </div>
+        </div>
+
+        <div class="hero-float-card card-top">
+          <div class="float-card-icon">&#127908;</div>
+          <div class="float-card-label">Tempo economizado</div>
+          <div class="float-card-value">5 min / consulta</div>
+        </div>
+
+        <div class="hero-float-card card-bottom">
+          <div class="float-card-icon">&#9989;</div>
+          <div class="float-card-label">Nota fiscal</div>
+          <div class="float-card-value">Enviada automaticamente</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       STATS BAR
+       ============================================ -->
+  <section class="stats-bar">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item reveal">
+          <div class="stat-number">7 min</div>
+          <div class="stat-label">gastos em documentacao por consulta</div>
+        </div>
+        <div class="stat-item reveal">
+          <div class="stat-number">25h</div>
+          <div class="stat-label">por semana perdidas com burocracia</div>
+        </div>
+        <div class="stat-item reveal">
+          <div class="stat-number">50%</div>
+          <div class="stat-label">do tempo olhando para telas, nao para pacientes</div>
+        </div>
+        <div class="stat-item reveal">
+          <div class="stat-number">#1</div>
+          <div class="stat-label">causa de burnout citada por medicos no mundo</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       PROBLEM
+       ============================================ -->
+  <section class="problem" id="problema">
+    <div class="container">
+      <div class="problem-grid">
+        <div class="problem-content reveal">
+          <span class="section-label">O problema</span>
+          <h2 class="section-title">Voce estudou anos para cuidar de pessoas. Nao para preencher prontuarios.</h2>
+          <p>
+            Profissionais de saude passam metade do tempo de consulta digitando, preenchendo fichas e gerando notas fiscais.
+            O resultado? <span class="highlight-text">Menos atencao ao paciente, mais esgotamento, e consultas apressadas.</span>
+          </p>
+          <p>
+            Secretarias de documentacao custam R$1.500&ndash;3.000/mes. Sistemas de prontuario eletronico custam ate R$500.000 para implementar. Clinicas pequenas e profissionais autonomos ficam sem opcao viavel.
+          </p>
+          <p style="font-weight:600; color: var(--color-primary); margin-top: 24px;">
+            A Medic AI resolve isso por R$199/mes.
+          </p>
+        </div>
+        <div class="problem-cards reveal">
+          <div class="problem-card">
+            <div class="problem-card-icon">&#9200;</div>
+            <h4>7 min</h4>
+            <p>por consulta gastos digitando documentacao clinica</p>
+          </div>
+          <div class="problem-card">
+            <div class="problem-card-icon">&#128187;</div>
+            <h4>50%</h4>
+            <p>do tempo da consulta olhando para a tela do computador</p>
+          </div>
+          <div class="problem-card">
+            <div class="problem-card-icon">&#128176;</div>
+            <h4>R$3.000</h4>
+            <p>custo mensal de uma secretaria dedicada a documentacao</p>
+          </div>
+          <div class="problem-card">
+            <div class="problem-card-icon">&#129327;</div>
+            <h4>92%</h4>
+            <p>das instituicoes de saude no Brasil nao tem prontuario eletronico</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       HOW IT WORKS
+       ============================================ -->
+  <section class="how-it-works" id="como-funciona">
+    <div class="container text-center">
+      <span class="section-label">Como funciona</span>
+      <h2 class="section-title">Simples como apertar um botao</h2>
+      <p class="section-subtitle">
+        Sem treinamento. Sem configuracao complexa. Grave a consulta e deixe a IA cuidar do resto.
+      </p>
+
+      <div class="steps-grid">
+        <div class="step-card reveal">
+          <div class="step-number">1</div>
+          <span class="step-arrow">&#8594;</span>
+          <h3>Grave</h3>
+          <p>Aperte um botao no celular ou navegador para gravar a consulta.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-number">2</div>
+          <span class="step-arrow">&#8594;</span>
+          <h3>IA transcreve</h3>
+          <p>A Medic AI identifica quem fala (medico x paciente) e transcreve tudo com precisao.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-number">3</div>
+          <span class="step-arrow">&#8594;</span>
+          <h3>Resumo pronto</h3>
+          <p>A IA gera um resumo clinico estruturado: queixa, exame, conduta, medicacoes.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-number">4</div>
+          <h3>Revise e aprove</h3>
+          <p>Voce revisa, ajusta se necessario, e aprova. A nota fiscal e enviada automaticamente.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       FEATURES
+       ============================================ -->
+  <section class="features" id="funcionalidades">
+    <div class="container text-center">
+      <span class="section-label">Funcionalidades</span>
+      <h2 class="section-title">Tudo que voce precisa. Nada que nao precisa.</h2>
+      <p class="section-subtitle">
+        Feito para profissionais de saude que querem focar no atendimento, sem complicacao tecnologica.
+      </p>
+
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">&#127908;</div>
+          <h3>Transcricao com IA</h3>
+          <p>Audio convertido em texto com identificacao automatica de quem esta falando (medico e paciente).</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">&#128203;</div>
+          <h3>Resumo clinico estruturado</h3>
+          <p>Queixa principal, sintomas, medicacoes, conduta e proximos passos organizados automaticamente.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">&#128572;</div>
+          <h3>Notas fiscais automaticas</h3>
+          <p>A nota fiscal e gerada e enviada ao paciente sem voce precisar tocar em nada.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">&#128241;</div>
+          <h3>Funciona no celular</h3>
+          <p>Grave pelo celular na mesa ou pelo navegador. Sem equipamento especial.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">&#128274;</div>
+          <h3>Seguro e em conformidade</h3>
+          <p>Criptografia de ponta a ponta. Totalmente em conformidade com a LGPD. Seus dados nunca sao compartilhados.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">&#128100;</div>
+          <h3>Historico do paciente</h3>
+          <p>Todas as consultas anteriores organizadas e acessiveis em um clique. Busca inteligente.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SPECIALTIES
+       ============================================ -->
+  <section class="specialties">
+    <div class="container text-center">
+      <span class="section-label">Para todas as especialidades</span>
+      <h2 class="section-title">Nao e so para medicos</h2>
+      <p class="section-subtitle">
+        Qualquer profissional de saude que faz atendimentos pode usar a Medic AI.
+      </p>
+
+      <div class="specialties-scroll">
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#129657;</span> Clinica Geral</div>
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#128149;</span> Cardiologia</div>
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#129504;</span> Psicologia</div>
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#129382;</span> Psiquiatria</div>
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#129361;</span> Nutricao</div>
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#129486;</span> Fisioterapia</div>
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#128118;</span> Pediatria</div>
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#129463;</span> Ortopedia</div>
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#128064;</span> Oftalmologia</div>
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#129728;</span> Dermatologia</div>
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#127891;</span> Fonoaudiologia</div>
+        <div class="specialty-chip reveal"><span class="specialty-icon">&#9878;&#65039;</span> Direito (em breve)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       PRICING
+       ============================================ -->
+  <section class="pricing" id="precos">
+    <div class="container text-center">
+      <span class="section-label">Precos</span>
+      <h2 class="section-title">87% mais barato que uma secretaria dedicada</h2>
+      <p class="section-subtitle">
+        Consultas ilimitadas em todos os planos. Sem surpresas. Cancele quando quiser.
+      </p>
+
+      <div class="pricing-grid">
+        <!-- BASIC -->
+        <div class="pricing-card reveal">
+          <div class="pricing-name">Basico</div>
+          <div class="pricing-target">Para profissionais autonomos</div>
+          <div class="pricing-price">
+            <span class="pricing-currency">R$</span>
+            <span class="pricing-amount">199</span>
+          </div>
+          <div class="pricing-period">por mes &middot; por profissional</div>
+          <ul class="pricing-features">
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Consultas ilimitadas
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Transcricao + resumo com IA
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Nota fiscal automatica
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Historico do paciente
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Web + celular
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Exportar para PDF
+            </li>
+          </ul>
+          <a href="#comecar" class="btn btn-secondary">Comecar agora</a>
+        </div>
+
+        <!-- PRO (featured) -->
+        <div class="pricing-card featured reveal">
+          <div class="pricing-badge">Mais popular</div>
+          <div class="pricing-name">Pro</div>
+          <div class="pricing-target">Para clinicas de 2&ndash;10 profissionais</div>
+          <div class="pricing-price">
+            <span class="pricing-currency">R$</span>
+            <span class="pricing-amount">349</span>
+          </div>
+          <div class="pricing-period">por mes &middot; por profissional</div>
+          <ul class="pricing-features">
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Tudo do Basico
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Painel da clinica com analytics
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Templates personalizados por especialidade
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Suporte prioritario
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Relatorios de tempo economizado
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Multi-profissional (mesmo painel)
+            </li>
+          </ul>
+          <a href="#comecar" class="btn btn-primary">Comecar agora</a>
+        </div>
+
+        <!-- ENTERPRISE -->
+        <div class="pricing-card reveal">
+          <div class="pricing-name">Enterprise</div>
+          <div class="pricing-target">Para hospitais e redes de clinicas</div>
+          <div class="pricing-price">
+            <span class="pricing-currency"></span>
+            <span class="pricing-amount" style="font-size: 2.2rem;">Sob consulta</span>
+          </div>
+          <div class="pricing-period">preco por volume</div>
+          <ul class="pricing-features">
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Tudo do Pro
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Integracao com prontuario eletronico
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Suporte dedicado com SLA
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Deploy customizado + SSO
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Treinamento para equipe
+            </li>
+            <li>
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Contrato anual com desconto
+            </li>
+          </ul>
+          <a href="#comecar" class="btn btn-secondary">Falar com vendas</a>
+        </div>
+      </div>
+
+      <p class="pricing-note">
+        Todos os planos incluem 7 dias gratis, sem cartao de credito. Desconto de 20% no plano anual.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SOCIAL PROOF
+       ============================================ -->
+  <section class="social-proof">
+    <div class="container">
+      <div class="proof-inner">
+        <span class="section-label">O que dizem os medicos</span>
+        <blockquote class="proof-quote">
+          &ldquo;Pela primeira vez em 15 anos de carreira, consigo olhar nos olhos do meu paciente durante toda a consulta. A Medic AI mudou completamente a forma como atendo.&rdquo;
+        </blockquote>
+        <div class="proof-author">Dra. Ana Clara Mendes</div>
+        <div class="proof-role">Clinica Geral &middot; Sao Paulo, SP</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       FAQ
+       ============================================ -->
+  <section class="faq" id="faq">
+    <div class="container text-center">
+      <span class="section-label">Perguntas frequentes</span>
+      <h2 class="section-title">Tire suas duvidas</h2>
+      <p class="section-subtitle">
+        Se nao encontrar a resposta aqui, entre em contato pelo WhatsApp.
+      </p>
+
+      <div class="faq-grid">
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Os dados dos meus pacientes estao seguros?
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Sim. Todos os dados sao criptografados em transito (TLS 1.3) e em repouso. Estamos em total conformidade com a LGPD (Lei Geral de Protecao de Dados). Audios sao deletados apos 90 dias. Nenhum dado e compartilhado com terceiros. Voce tem controle total sobre os dados dos seus pacientes.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Funciona para a minha especialidade?
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              A Medic AI funciona para qualquer profissional que faz atendimentos presenciais ou por telemedicina: medicos de todas as especialidades, psicologos, nutricionistas, fisioterapeutas, fonoaudiologos e mais. A IA foi treinada com vocabulario medico brasileiro e se adapta ao contexto de cada consulta.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Preciso de algum equipamento especial?
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Nao. Basta um celular, tablet ou computador com microfone. Coloque o celular na mesa durante a consulta e pronto. Funciona no navegador (Chrome, Safari, Firefox) e teremos app nativo para iOS e Android.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            A IA faz diagnosticos ou sugere tratamentos?
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Nao. A Medic AI relata, nunca interpreta. Ela transcreve o que foi dito e organiza as informacoes em um resumo estruturado. Nao sugere diagnosticos, codigos CID ou decisoes clinicas. Voce sempre tem a palavra final e aprova cada resumo antes de salvar.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            O paciente precisa consentir com a gravacao?
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Sim. O paciente assina um termo de consentimento digital antes do primeiro atendimento e confirma verbalmente no inicio de cada consulta. O paciente pode recusar a gravacao a qualquer momento. O consentimento e armazenado de forma imutavel conforme exigido pela LGPD.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Posso testar antes de pagar?
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Sim! Oferecemos 7 dias gratis com consultas ilimitadas, sem precisar cadastrar cartao de credito. Alem disso, temos um plano gratuito permanente com 5 consultas por mes para voce experimentar sem compromisso.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       CTA
+       ============================================ -->
+  <section class="cta" id="comecar">
+    <div class="container">
+      <div class="cta-box">
+        <div class="cta-content">
+          <h2>Pronto para transformar seus atendimentos?</h2>
+          <p>
+            Comece gratis hoje. Sem cartao. Sem compromisso. Seus pacientes vao perceber a diferenca.
+          </p>
+          <div class="cta-buttons">
+            <a href="#" class="btn btn-accent btn-lg">
+              Comece gratis agora
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a href="#" class="btn btn-white btn-lg">Agendar demonstracao</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       FOOTER
+       ============================================ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <a href="#" class="footer-brand">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="36" height="36" rx="10" fill="currentColor"/>
+            <path d="M10 18C10 14 12 11 16 11C18 11 19.5 12 20.5 13.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="22" cy="16" r="3" fill="white" opacity="0.9"/>
+            <path d="M11 22H25" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+            <path d="M13 26H23" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+          </svg>
+          Medic AI
+        </a>
+
+        <div class="footer-links">
+          <a href="#">Termos de uso</a>
+          <a href="#">Politica de privacidade</a>
+          <a href="#">Contato</a>
+          <a href="#">WhatsApp</a>
+        </div>
+
+        <div class="footer-copy">
+          &copy; 2026 Medic AI. Todos os direitos reservados.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================
+       JAVASCRIPT
+       ============================================ -->
+  <script>
+    // Mobile nav toggle
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    navToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('open');
+    });
+
+    // Close mobile nav on link click
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+      });
+    });
+
+    // FAQ toggle
+    function toggleFaq(button) {
+      const item = button.parentElement;
+      const wasOpen = item.classList.contains('open');
+
+      // Close all
+      document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+
+      // Open clicked (if it wasn't already open)
+      if (!wasOpen) {
+        item.classList.add('open');
+      }
+    }
+
+    // Scroll reveal animation
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.15,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    revealElements.forEach(el => revealObserver.observe(el));
+
+    // Nav background on scroll
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        nav.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+      } else {
+        nav.style.boxShadow = 'none';
+      }
+    });
+  </script>
+
+</body>
+</html>

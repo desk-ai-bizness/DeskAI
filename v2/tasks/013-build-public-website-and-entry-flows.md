@@ -31,6 +31,10 @@ The technical specs explicitly call for standard HTML, CSS, and minimal JavaScri
 - `003-bootstrap-repository-and-engineering-foundation.md`
 - `004-provision-aws-foundation-with-cdk.md`
 
+### Required Reading
+Before implementing this task, read these documents in addition to the standard reading list in `implementation-prompt.md`:
+- `docs/architecture/01-repository-layout.md`
+
 ## 3. Scope
 
 ### In Scope

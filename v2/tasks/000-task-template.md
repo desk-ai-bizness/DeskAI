@@ -48,6 +48,11 @@ List related components when applicable:
 ### Dependencies
 List any tasks, systems, approvals, or external services this depends on.
 
+### Required Reading
+List the architecture and requirements documents that must be read before implementing this task:
+- `docs/architecture/...`
+- `docs/requirements/...`
+
 ## 3. Scope
 
 ### In Scope

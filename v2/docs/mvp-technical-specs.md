@@ -251,10 +251,10 @@ Rules:
 
 Naming examples:
 
-- `medical-ai-dev-api`
-- `medical-ai-dev-consultations`
-- `medical-ai-prod-api`
-- `medical-ai-prod-consultations`
+- `deskai-dev-api`
+- `deskai-dev-consultations`
+- `deskai-prod-api`
+- `deskai-prod-consultations`
 
 ## 6. Frontend Architecture
 
@@ -391,13 +391,12 @@ Recommended rule:
 ### Core Backend Modules
 
 - `auth`
-- `consultations`
-- `sessions`
+- `consultation`
+- `session`
 - `transcription`
 - `ai_pipeline`
-- `artifacts`
 - `review`
-- `exports`
+- `export`
 - `audit`
 - `config`
 - `shared`
@@ -549,9 +548,11 @@ Required normalized fields:
 - timestamps_when_available
 - confidence_metadata_when_available
 
-## 13. OpenAI Processing Layer
+## 13. AI Processing Layer
 
 Use strict-schema processing only.
+
+The LLM provider for the MVP is Claude API (Anthropic). See `docs/requirements/05-decision-log.md` DEC-007.
 
 ### Required Modules
 
@@ -601,7 +602,7 @@ Do not use PostgreSQL in the MVP.
 
 ### Main Table Example
 
-- table name: `consultation_records`
+- table name: `deskai-{env}-consultation-records`
 
 ### Keys
 
@@ -689,6 +690,8 @@ The frontend should speak primarily to the BFF, not to deep domain services dire
 - `POST /v1/auth/session`
 - `DELETE /v1/auth/session`
 - `GET /v1/me`
+- `POST /v1/patients`
+- `GET /v1/patients`
 - `POST /v1/consultations`
 - `GET /v1/consultations`
 - `GET /v1/consultations/{consultation_id}`
@@ -808,6 +811,7 @@ Alert on:
 - all critical errors must be logged with structured context
 - retries must be automatic only for transient failures
 - retry policies must use bounded attempts and backoff
+- see `docs/requirements/04-failure-behavior-matrix.md` for concrete retry budgets, backoff strategies, and user-facing error messages per failure path
 
 ## 21. Cost Strategy
 
@@ -909,6 +913,69 @@ Do not include in the MVP:
 - decision: use AWS CDK
 - reason: keep AWS infrastructure defined as code and aligned with the project stack
 
+### ADR-006: Transcription Provider
+
+- decision: use Deepgram (Nova-2 Medical) as the first transcription provider
+- reason: medical-specific model, native WebSocket streaming API, pt-BR support, competitive MVP pricing
+- reversibility: high — provider is behind an adapter interface
+- reference: `docs/requirements/05-decision-log.md` DEC-001
+
+### ADR-007: LLM Provider
+
+- decision: use Claude API (Anthropic) for the AI processing pipeline
+- reason: strong structured output capabilities, schema-strict generation support, aligns with project guidance
+- reversibility: high — LLM is behind an adapter interface
+- reference: `docs/requirements/05-decision-log.md` DEC-007
+
+### ADR-008: Plan Entitlement Model
+
+- decision: all three plans share core features; differentiation is by usage limits only (consultation count, session duration, audio retention)
+- reason: MVP prioritizes reliability over feature segmentation; billing is post-MVP
+- reversibility: high — limits are feature-flag-driven configuration
+- reference: `docs/requirements/03-plan-entitlements.md`
+
+### ADR-009: Repository Layout
+
+- decision: monorepo with flat top-level packages (`backend/`, `app/`, `website/`, `contracts/`, `infra/`)
+- reason: small team benefits from colocation; flat structure keeps navigation simple; shared contracts prevent schema drift
+- reversibility: medium — moving to separate repos is possible but requires CI/CD changes
+- reference: `docs/architecture/01-repository-layout.md`
+
+### ADR-010: Backend Module Organization
+
+- decision: domain-first hexagonal layout with centralized ports and grouped adapters by infrastructure concern
+- reason: keeps domain logic pure and framework-free; adapters are replaceable per concern; avoids premature per-feature module isolation for a small team
+- reversibility: high — modules can be split further as the team grows
+- reference: `docs/architecture/02-backend-architecture.md`
+
+### ADR-011: Dependency Injection
+
+- decision: use constructor injection with simple factory functions in `container.py`, no DI framework
+- reason: minimal complexity for MVP; factory functions are easy to test and replace; avoids framework lock-in
+- reversibility: high — can adopt a DI library later without changing domain or application code
+- reference: `docs/architecture/02-backend-architecture.md` section 10
+
+### ADR-012: Contract Location
+
+- decision: shared schemas in a top-level `contracts/` directory, separate from backend and frontend code
+- reason: single source of truth for API shapes, consumed by both backend (validation) and frontend (type generation); prevents schema drift
+- reversibility: high — schemas can be moved closer to consumers if the shared approach becomes unwieldy
+- reference: `docs/architecture/03-contract-inventory.md`
+
+### ADR-013: UI Configuration and Feature Flag Flow
+
+- decision: UI configuration and feature flags are stored in DynamoDB, assembled by the BFF layer, and delivered to the frontend as ready-to-render payloads; the frontend never evaluates plan-based limits, computes flag values, or hardcodes business labels
+- reason: centralizes product behavior in the backend; allows config changes without frontend deploys; enforces the backend-driven frontend principle (ADR-002) with a concrete mechanism
+- reversibility: high — storage can move from DynamoDB to S3 or a config service without changing the BFF-to-frontend contract
+- reference: `docs/architecture/04-data-flow-and-configuration.md`
+
+### ADR-014: Patient Endpoints
+
+- decision: add minimal `POST /v1/patients` and `GET /v1/patients` endpoints to the API contract
+- reason: consultations require a `patient_id`; without patient CRUD, consultations cannot be created without hardcoding IDs
+- reversibility: high — endpoints can be extended with more fields later
+- reference: `docs/architecture/03-contract-inventory.md` section 2, resolves OPEN-005
+
 ## 26. AI Agent Notes
 
 If an AI agent uses this file as project context, assume the following:
@@ -925,3 +992,5 @@ If an AI agent uses this file as project context, assume the following:
 - DynamoDB + S3 is the approved MVP storage model
 - real-time streaming is the primary MVP workflow
 - post-consultation upload is secondary and later
+- use `docs/requirements/01-requirements-traceability-matrix.md` to verify implementation completeness against business rules
+- use `docs/requirements/04-failure-behavior-matrix.md` for concrete retry budgets and error handling behavior

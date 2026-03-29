@@ -33,6 +33,14 @@ This task converts the technical specs into actual system shape: repository dire
 ### Dependencies
 - `001-refine-mvp-requirements-and-delivery-decisions.md`
 
+### Required Reading
+Before implementing this task, read these documents in addition to the standard reading list in `implementation-prompt.md`:
+- `docs/requirements/01-requirements-traceability-matrix.md`
+- `docs/requirements/02-consultation-lifecycle.md`
+- `docs/requirements/03-plan-entitlements.md`
+- `docs/requirements/04-failure-behavior-matrix.md`
+- `docs/requirements/05-decision-log.md`
+
 ## 3. Scope
 
 ### In Scope

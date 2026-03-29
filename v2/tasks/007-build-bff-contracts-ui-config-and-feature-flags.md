@@ -32,6 +32,13 @@ This task formalizes the contract between frontend and backend by shaping domain
 - `005-implement-authentication-and-plan-access-control.md`
 - `006-model-consultation-domain-persistence-and-audit.md`
 
+### Required Reading
+Before implementing this task, read these documents in addition to the standard reading list in `implementation-prompt.md`:
+- `docs/architecture/02-backend-architecture.md`
+- `docs/architecture/03-contract-inventory.md`
+- `docs/architecture/04-data-flow-and-configuration.md`
+- `docs/requirements/03-plan-entitlements.md`
+
 ## 3. Scope
 
 ### In Scope

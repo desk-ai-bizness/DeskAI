@@ -146,18 +146,33 @@ The MVP is limited to documentation assistance and review support.
 A consultation may move through these business states:
 
 - started
+- recording
 - in processing
+- processing failed
 - draft generated
 - under physician review
 - finalized
+
+Implementation note: `recording` refines `started` to indicate an active audio session. `processing failed` refines `in processing` to indicate a retryable failure. See `docs/requirements/02-consultation-lifecycle.md` for the complete state machine.
 
 Business rules:
 
 - A consultation cannot be finalized before physician review.
 - A finalized consultation must have a responsible physician associated with it.
 - If processing fails or remains incomplete, the consultation must not be treated as finalized.
+- A finalized consultation is immutable and locked from further edits.
+- Finalization is an explicit physician action, never automatic.
 
-## 17. MVP Success Criteria
+For expected failure behaviors at each lifecycle stage, see `docs/requirements/04-failure-behavior-matrix.md`.
+
+## 17. Export Rules
+
+- Only finalized consultations may be exported.
+- The MVP export produces a PDF containing: consultation metadata, finalized medical history, finalized summary, and accepted insights with evidence excerpts.
+- The raw transcript is not included in the export by default.
+- See `docs/requirements/05-decision-log.md` DEC-004 for the full decision record.
+
+## 18. MVP Success Criteria
 
 The MVP should be evaluated primarily on:
 
@@ -169,3 +184,13 @@ The MVP should be evaluated primarily on:
 - usefulness and trustworthiness of review flags
 
 For MVP success, the priority is reliability and reviewability over automation depth.
+
+## 19. Supporting Reference Documents
+
+The following documents supplement the rules defined in this file:
+
+- `docs/requirements/01-requirements-traceability-matrix.md` — maps every business rule to backend behaviors, API endpoints, data entities, UI flows, and responsible tasks
+- `docs/requirements/02-consultation-lifecycle.md` — complete consultation state machine, transitions, guards, and audit events
+- `docs/requirements/03-plan-entitlements.md` — plan authorization matrix, feature flags, and plan lifecycle rules
+- `docs/requirements/04-failure-behavior-matrix.md` — expected system behavior for every failure path, retry budgets, and user-facing error messages
+- `docs/requirements/05-decision-log.md` — resolved and open decisions with reasoning and reversibility assessments

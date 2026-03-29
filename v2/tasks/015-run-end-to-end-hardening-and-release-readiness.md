@@ -41,6 +41,14 @@ The technical specs intentionally leave the full testing strategy open. This tas
 - `013-build-public-website-and-entry-flows.md`
 - `014-add-observability-security-privacy-and-cost-controls.md`
 
+### Required Reading
+Before implementing this task, read these documents in addition to the standard reading list in `implementation-prompt.md`:
+- `docs/architecture/03-contract-inventory.md`
+- `docs/architecture/04-data-flow-and-configuration.md`
+- `docs/requirements/01-requirements-traceability-matrix.md`
+- `docs/requirements/02-consultation-lifecycle.md`
+- `docs/requirements/04-failure-behavior-matrix.md`
+
 ## 3. Scope
 
 ### In Scope

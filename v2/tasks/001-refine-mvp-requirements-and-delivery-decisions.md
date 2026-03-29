@@ -34,6 +34,9 @@ The repo currently contains only planning documents and task templates. No deliv
 - `docs/mvp-technical-specs.md`
 - `docs/ai-context-rules.md`
 
+### Required Reading
+No additional architecture or requirements documents are needed for this task. This task produces the initial requirements baseline.
+
 ## 3. Scope
 
 ### In Scope

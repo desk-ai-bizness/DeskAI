@@ -812,6 +812,7 @@ Alert on:
 - all critical errors must be logged with structured context
 - retries must be automatic only for transient failures
 - retry policies must use bounded attempts and backoff
+- see `docs/requirements/04-failure-behavior-matrix.md` for concrete retry budgets, backoff strategies, and user-facing error messages per failure path
 
 ## 21. Cost Strategy
 
@@ -992,3 +993,5 @@ If an AI agent uses this file as project context, assume the following:
 - DynamoDB + S3 is the approved MVP storage model
 - real-time streaming is the primary MVP workflow
 - post-consultation upload is secondary and later
+- use `docs/requirements/01-requirements-traceability-matrix.md` to verify implementation completeness against business rules
+- use `docs/requirements/04-failure-behavior-matrix.md` for concrete retry budgets and error handling behavior

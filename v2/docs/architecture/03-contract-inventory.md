@@ -341,7 +341,11 @@ Standard error codes:
 | `trial_expired` | 403 | Free trial has expired |
 | `session_duration_exceeded` | 403 | Session exceeded plan duration limit |
 | `feature_not_available` | 403 | Feature not available on current plan |
+| `service_unavailable` | 503 | Upstream service temporarily unavailable (retry with backoff) |
+| `export_expired` | 410 | Export download link has expired (regenerate) |
 | `internal_error` | 500 | Unexpected server error |
+
+For the complete failure behavior, retry budgets, and user-facing error messages per operation, see `docs/requirements/04-failure-behavior-matrix.md`.
 
 ---
 

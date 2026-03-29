@@ -366,7 +366,7 @@ src/deskai/adapters/
 - Each adapter implements exactly one port interface.
 - Adapters translate between domain types and infrastructure types (e.g., DynamoDB items ↔ domain entities).
 - Adapters own serialization and deserialization logic for their specific infrastructure.
-- Adapters handle retries for transient infrastructure failures (using `tenacity`).
+- Adapters handle retries for transient infrastructure failures (using `tenacity`). See `docs/requirements/04-failure-behavior-matrix.md` section 10 for concrete retry budgets and backoff strategies per adapter type.
 - Adapters log infrastructure errors with structured context (using `aws-lambda-powertools`).
 - Adapters must not contain business logic. If logic creeps in, it belongs in the domain or application layer.
 

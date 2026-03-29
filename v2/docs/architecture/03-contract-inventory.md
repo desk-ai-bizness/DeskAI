@@ -402,6 +402,8 @@ Sent by client to end the audio session.
 }
 ```
 
+**Note:** `session.stop` triggers the same backend logic as `POST /v1/consultations/{id}/session/end`. Both end the recording session and transition the consultation to `in_processing`. See `docs/requirements/02-consultation-lifecycle.md` for details.
+
 #### client.ping
 
 Sent by client for keep-alive.

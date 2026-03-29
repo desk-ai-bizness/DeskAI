@@ -34,6 +34,17 @@ DeskAI/
 - **Contracts directory**: Shared schemas live outside any single package so both backend and frontend can reference them as the source of truth.
 - **Documentation stays in v2/docs**: Architecture and requirements documentation remains centralized and version-controlled alongside task files.
 
+### CLAUDE.md
+
+The root `CLAUDE.md` file provides AI coding assistants (such as Claude Code) with project context. Its content should mirror the instructions in `v2/implementation-prompt.md`, including:
+
+- The mandatory reading order for project documentation
+- Core engineering principles and business constraints
+- The requirement to read all architecture and requirements docs referenced in task files
+- The backend-driven frontend rule, hexagonal architecture rule, and other key architectural decisions
+
+This ensures that AI agents working directly in the repository (not through the task system) receive the same context as agents following the implementation prompt.
+
 ---
 
 ## 2. Backend Package

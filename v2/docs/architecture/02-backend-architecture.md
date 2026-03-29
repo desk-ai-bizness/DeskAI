@@ -101,6 +101,11 @@ src/deskai/domain/
 │   ├── __init__.py
 │   ├── entities.py                # ExportRequest, ExportArtifact
 │   └── exceptions.py
+├── patient/
+│   ├── __init__.py
+│   ├── entities.py                # Patient entity
+│   ├── value_objects.py           # PatientId, DateOfBirth
+│   └── exceptions.py
 ├── auth/
 │   ├── __init__.py
 │   ├── entities.py                # Doctor, Clinic, PlanType
@@ -125,6 +130,7 @@ src/deskai/domain/
 | `ai_pipeline` | AI artifact structures, evidence linking, insight categories | `MedicalHistory`, `Summary`, `Insight`, `EvidenceExcerpt` |
 | `review` | Physician edit tracking, finalization guards, versioning | `ReviewState`, `PhysicianEdit`, `FinalizedRecord` |
 | `export` | Export request model, export content assembly | `ExportRequest`, `ExportArtifact` |
+| `patient` | Patient identity, clinic-scoped patient records | `Patient`, `PatientId`, `DateOfBirth` |
 | `auth` | Doctor and clinic identity, plan entitlements, access rules | `Doctor`, `Clinic`, `PlanType`, `PlanEntitlements` |
 | `audit` | Audit event structure, event type catalog | `AuditEvent`, `AuditAction` |
 | `config` | UI configuration model, feature flag model | `UIConfig`, `FeatureFlag` |

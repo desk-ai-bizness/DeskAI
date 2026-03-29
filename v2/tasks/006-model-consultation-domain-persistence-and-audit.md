@@ -33,6 +33,15 @@ The technical specs require a single-table DynamoDB design, S3 artifact storage,
 - `004-provision-aws-foundation-with-cdk.md`
 - `005-implement-authentication-and-plan-access-control.md`
 
+### Required Reading
+Before implementing this task, read these documents in addition to the standard reading list in `implementation-prompt.md`:
+- `docs/architecture/02-backend-architecture.md`
+- `docs/architecture/03-contract-inventory.md`
+- `docs/architecture/04-data-flow-and-configuration.md`
+- `docs/requirements/01-requirements-traceability-matrix.md`
+- `docs/requirements/02-consultation-lifecycle.md`
+- `docs/requirements/04-failure-behavior-matrix.md`
+
 ## 3. Scope
 
 ### In Scope
@@ -61,7 +70,7 @@ The technical specs require a single-table DynamoDB design, S3 artifact storage,
 - Storage interactions should be structured for idempotent async workflows.
 
 ### Business Rules
-- Supported consultation states are `started`, `in processing`, `draft generated`, `under physician review`, and `finalized`.
+- Supported consultation states are `started`, `recording`, `in processing`, `processing failed`, `draft generated`, `under physician review`, and `finalized`. See `docs/requirements/02-consultation-lifecycle.md` for the complete state machine, transitions, and guard conditions.
 - A consultation cannot be finalized before physician review.
 - The final confirmed version is the only version considered complete for business purposes.
 - Logs and operational records must avoid unnecessary exposure of patient-identifiable information.

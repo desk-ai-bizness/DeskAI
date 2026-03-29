@@ -251,10 +251,10 @@ Rules:
 
 Naming examples:
 
-- `medical-ai-dev-api`
-- `medical-ai-dev-consultations`
-- `medical-ai-prod-api`
-- `medical-ai-prod-consultations`
+- `deskai-dev-api`
+- `deskai-dev-consultations`
+- `deskai-prod-api`
+- `deskai-prod-consultations`
 
 ## 6. Frontend Architecture
 
@@ -391,13 +391,12 @@ Recommended rule:
 ### Core Backend Modules
 
 - `auth`
-- `consultations`
-- `sessions`
+- `consultation`
+- `session`
 - `transcription`
 - `ai_pipeline`
-- `artifacts`
 - `review`
-- `exports`
+- `export`
 - `audit`
 - `config`
 - `shared`
@@ -603,7 +602,7 @@ Do not use PostgreSQL in the MVP.
 
 ### Main Table Example
 
-- table name: `consultation_records`
+- table name: `deskai-{env}-consultation-records`
 
 ### Keys
 

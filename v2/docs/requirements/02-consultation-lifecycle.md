@@ -79,7 +79,7 @@ This lifecycle adds two clarifying states for implementation precision:
 | From | To | Trigger | Guard Conditions | Side Effects |
 |------|----|---------|-----------------|-------------|
 | `started` | `recording` | `POST /v1/consultations/{id}/session/start` | Consultation exists, belongs to requesting physician, status is `started` | WebSocket session created, audio ingestion begins |
-| `recording` | `in_processing` | `POST /v1/consultations/{id}/session/end` | Active session exists for this consultation | WebSocket closed, transcript consolidation triggered, Step Functions workflow started |
+| `recording` | `in_processing` | `POST /v1/consultations/{id}/session/end` or WebSocket `session.stop` message | Active session exists for this consultation | WebSocket closed, transcript consolidation triggered, Step Functions workflow started |
 | `in_processing` | `draft_generated` | Step Functions workflow completion | All required artifacts generated and stored | Artifacts stored in S3, metadata updated in DynamoDB, notification sent to BFF |
 | `in_processing` | `processing_failed` | Step Functions workflow failure | Any required artifact failed to generate after retries | Error details stored, DynamoDB status updated, alert triggered |
 | `processing_failed` | `in_processing` | Retry action (manual or automatic) | Previous failure recorded, retry budget not exhausted | Step Functions workflow re-triggered |
@@ -99,6 +99,15 @@ This lifecycle adds two clarifying states for implementation precision:
 | `processing_failed` | `finalized` | Cannot finalize failed processing |
 | `processing_failed` | `draft_generated` | Must go through `in_processing` again |
 | `finalized` | any state | Finalized is a terminal state; no further transitions allowed |
+
+### Session End Mechanisms
+
+Two mechanisms can end an active recording session. Both trigger the same backend logic and produce the same state transition (`recording` → `in_processing`):
+
+- **HTTP endpoint**: `POST /v1/consultations/{id}/session/end` — used by the frontend as a direct API call.
+- **WebSocket message**: `session.stop` — sent by the frontend through the active WebSocket connection.
+
+Both mechanisms invoke the same application use case (`EndSession`). The backend treats them as equivalent triggers. The frontend may use whichever is more convenient for the current context. If the WebSocket is disconnected, the HTTP endpoint serves as a reliable fallback.
 
 ---
 

@@ -4,30 +4,83 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**DeskAI — Medical AI Scribe** for Brazilian physicians. Captures doctor-patient consultation audio, transcribes with speaker diarization, generates structured summaries, and stores them for physician review and approval.
+**DeskAI — Medical AI Scribe** for Brazilian physicians. Captures consultation audio, transcribes with speaker diarization, generates structured summaries, and stores them for physician review and approval.
 
-**Status:** Pre-MVP — planning complete, ready to begin implementation (Task 001).
+**Status:** Pre-MVP — Tasks 001–002 complete (requirements + architecture design). Next: Task 003 (bootstrap repo).
 
 **Core principle:** Report, never interpret. The AI summarizes what was said, never what it means. Every summary requires physician approval before permanent storage.
+
+## Source of Truth
+
+The `v2/` directory is the current source of truth. Root-level `TECHNICAL_PLAN.md` and `blueprint-medical-ai.md` reference an **older, superseded stack** — ignore them.
+
+Before any implementation work, read these files in order:
+
+1. `v2/docs/ai-context-rules.md` — Engineering principles and AI behavior rules
+2. `v2/docs/mvp-business-rules.md` — Product boundaries, plan types, consultation rules
+3. `v2/docs/mvp-technical-specs.md` — Architecture, AWS services, ADRs
+4. The specific task file in `v2/tasks/`
+5. `v2/tasks/@task-manager.md` — Progress tracker and priority queue
+
+Follow the execution protocol in `v2/implementation-prompt.md` when implementing tasks.
+
+## Language Rules
+
+- **Code, comments, variable names, commits, PRs, docs:** English.
+- **AI prompts and output templates (scribe pipeline):** Brazilian Portuguese (pt-BR).
+- **User-facing strings and product content:** Brazilian Portuguese (pt-BR).
 
 ## Architecture
 
 AWS serverless, Hexagonal Architecture. Four layers:
 
-1. **Web Frontend** — React app (authenticated) + public marketing site. Presentation only; must be "as dumb as possible" with backend-driven UI configuration.
-2. **BFF Layer** — Frontend-specific APIs on AWS Lambda. Shapes backend data into UI-friendly payloads, injects UI config/labels.
-3. **Core Backend** — Python on AWS Lambda. Owns domain logic: consultation lifecycle, transcription integration, AI pipeline, review/finalization, audit.
-4. **Infrastructure** — Cognito (auth), API Gateway (HTTP + WebSocket), DynamoDB + S3 (data), Step Functions (orchestration), EventBridge/SQS/SNS (events).
+1. **Web Frontend** (`app/`) — React + TypeScript + Vite. Presentation only; "as dumb as possible" with backend-driven UI config.
+2. **BFF Layer** (`backend/src/deskai/bff/`) — Shapes backend data into UI-friendly payloads, injects UI config/labels/feature flags.
+3. **Core Backend** (`backend/src/deskai/`) — Python on Lambda. Owns domain logic: consultation lifecycle, transcription, AI pipeline, review/finalization, audit.
+4. **Infrastructure** (`infra/`) — AWS CDK. Cognito, API Gateway (HTTP + WebSocket), DynamoDB, S3, Step Functions, EventBridge/SQS/SNS.
 
-Key AWS services: Cognito, CloudFront, API Gateway (HTTP + WebSocket), Lambda, Step Functions, DynamoDB, S3, EventBridge, SQS, SNS, Secrets Manager, KMS, CloudWatch.
+Additional top-level packages:
+- `website/` — Static public marketing site
+- `contracts/` — Shared API schemas (HTTP, WebSocket, UI config, feature flags)
+- `tools/` — Dev scripts and utilities
+
+### Package Dependency Rules
+
+- `contracts/` depends on nothing
+- `backend/` depends on `contracts/` only
+- `app/` depends on `contracts/` only
+- `website/` depends on nothing
+- `infra/` depends on `backend/` (Lambda paths)
+
+## Backend Hexagonal Architecture
+
+```
+handlers/ → application/ → domain/  (pure Python, no deps)
+              ↓                ↑
+           ports/  ←────── adapters/  (AWS SDK, external libs)
+              ↑
+           bff/  (frontend-ready payloads)
+```
+
+| Layer | May Depend On | Must Not Depend On |
+|-------|---------------|-------------------|
+| Domain | Nothing (pure Python, stdlib) | Application, Adapters, Handlers, BFF, AWS SDK |
+| Application | Domain, Ports | Adapters, Handlers, BFF, AWS SDK |
+| Ports | Domain (type hints only) | Adapters, Handlers, BFF, AWS SDK |
+| Adapters | Domain, Ports, AWS SDK, external libs | Handlers, BFF |
+| BFF | Domain, Application, Ports | Adapters directly |
+| Handlers | Application, BFF, Domain types | Direct adapter usage |
+| Shared | Nothing (cross-cutting utils) | Domain, Application, Adapters, Handlers, BFF |
+
+**Dependency injection:** Constructor injection with simple factory (`container.py`). No DI framework. Tests create use cases with mock ports directly.
 
 ## Tech Stack (MVP)
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React (authenticated app) + public website |
+| Frontend | React + TypeScript + Vite |
 | Backend | Python, AWS Lambda |
-| IaC | AWS CDK |
+| IaC | AWS CDK (Python) |
 | Auth | Amazon Cognito (email+password only, no social login) |
 | Database | DynamoDB + S3 |
 | ASR | Deepgram (Nova-2 Medical, pt-BR) |
@@ -36,40 +89,16 @@ Key AWS services: Cognito, CloudFront, API Gateway (HTTP + WebSocket), Lambda, S
 | Events | EventBridge, SQS, SNS |
 | Environments | `dev`, `prod` |
 
-**Note:** The root-level `TECHNICAL_PLAN.md` and `blueprint-medical-ai.md` reference an older stack (FastAPI, PostgreSQL, Railway/Supabase, Celery+Redis). The `v2/` directory is the current source of truth.
-
-## Language Rules
-
-- **Code, comments, variable names, commits, PRs, docs:** English.
-- **AI prompts and output templates (scribe pipeline):** Brazilian Portuguese (pt-BR).
-- **User-facing strings and product content:** Brazilian Portuguese (pt-BR).
-
-## Source of Truth (v2/)
-
-All implementation decisions live in `v2/`. Read these before any implementation work:
-
-1. `v2/docs/ai-context-rules.md` — Engineering principles and AI behavior rules
-2. `v2/docs/mvp-business-rules.md` — Product boundaries, plan types, consultation rules
-3. `v2/docs/mvp-technical-specs.md` — Architecture, AWS services, ADRs
-4. `v2/tasks/@task-manager.md` — Progress tracker and priority queue
-5. `v2/implementation-prompt.md` — Task execution protocol
-
-When implementing a task, follow the execution protocol in `v2/implementation-prompt.md`: read context files in order, implement the assigned task file fully, update `@task-manager.md` when done.
-
-## Task Workflow
-
-Tasks are in `v2/tasks/` numbered 001–015. The task manager (`v2/tasks/@task-manager.md`) tracks status using: `planned`, `in_progress`, `blocked`, `done`, `canceled`.
-
-Current next step: Task 001 (refine MVP requirements and delivery decisions).
+Environment config: resource naming `deskai-{env}-{resource}`, values in `infra/config/`, Lambda reads `DESKAI_ENV`.
 
 ## Backend Design Rules
 
 - Hexagonal Architecture: business rules independent from frameworks and AWS services.
 - Ports and adapters boundaries between domain and infrastructure.
-- Use `asyncio` for handling async external API calls (not `httpx`).
-- Async/event-driven where it improves resilience or decoupling.
+- Use `asyncio` for async external API calls (not `httpx`).
 - Idempotent operations for async and distributed flows.
 - Business logic in backend services, never in frontend.
+- Domain entities use Result types for expected violations; exceptions only for programming errors.
 - ADRs documented in `v2/docs/mvp-technical-specs.md`.
 
 ## Security (Non-Negotiable)
@@ -86,6 +115,12 @@ Current next step: Task 001 (refine MVP requirements and delivery decisions).
 - JSON output validated against schema before storage.
 - Flag unclear/uncertain sections with confidence scores.
 - If output cannot be produced reliably, mark as incomplete — never fabricate content.
+
+## Task Workflow
+
+Tasks are in `v2/tasks/` numbered 001–015. The task manager (`v2/tasks/@task-manager.md`) tracks status: `planned`, `in_progress`, `blocked`, `done`, `canceled`.
+
+After completing a task: update status, progress %, recent changes, blockers, and milestones in `@task-manager.md`.
 
 ## Commit Messages
 

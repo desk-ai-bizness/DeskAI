@@ -46,8 +46,8 @@ Architecture design complete — ready for repository bootstrap
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
 - Task 002 completed: repository layout, backend hexagonal architecture, contract inventory, data flow and configuration architecture documented
-- Five new ADRs added (ADR-009 through ADR-013): repository layout, module organization, DI strategy, contract location, patient endpoints
-- OI-006 resolved: patient endpoints added to API contract (ADR-013)
+- Six new ADRs added (ADR-009 through ADR-014): repository layout, module organization, DI strategy, contract location, UI config/feature flag flow, patient endpoints
+- OI-006 resolved: patient endpoints added to API contract (ADR-014)
 - One open decision remains (OI-005: specialty list) — needed before Task 006
 
 ### Immediate Next Step
@@ -118,7 +118,7 @@ Track cross-task decisions, missing information, or conflicts.
 | OI-003 | Clinic audio retention defaults and deletion timing are not explicitly defined | Storage lifecycle, retention automation, and compliance behavior remain ambiguous | resolved | Plan-based retention: 7/30/90 days. See `docs/requirements/05-decision-log.md` DEC-003. |
 | OI-004 | Export output scope beyond the finalized note is not fully specified | Export implementation could diverge from stakeholder expectations | resolved | PDF with metadata + finalized history + summary + accepted insights. No transcript. See DEC-004. |
 | OI-005 | Specialty list and validation approach not defined | Domain model cannot validate specialty field | open | Product input needed before Task 006. Recommended: backend-managed enum, initially `general_practice` only. See OPEN-004. |
-| OI-006 | Patient CRUD endpoints not defined in API contract | Cannot create consultations without patient management | resolved | Minimal `POST /v1/patients` and `GET /v1/patients` added to API contract. See ADR-013 and `docs/architecture/03-contract-inventory.md`. |
+| OI-006 | Patient CRUD endpoints not defined in API contract | Cannot create consultations without patient management | resolved | Minimal `POST /v1/patients` and `GET /v1/patients` added to API contract. See ADR-014 and `docs/architecture/03-contract-inventory.md`. |
 
 ## 10. Recently Updated Tasks
 
@@ -128,7 +128,7 @@ List the most recently changed tasks first.
 | --- | --- | --- |
 | 2026-03-29 | `002-design-system-architecture-and-project-structure.md` | Completed: repository layout, backend hexagonal architecture, contract inventory, data flow and configuration documented |
 | 2026-03-29 | `@task-manager.md` | Updated for Task 002 completion: status, progress, priority queue, OI-006 resolved |
-| 2026-03-29 | `mvp-technical-specs.md` | Added ADR-009 through ADR-013, patient endpoints to API contract |
+| 2026-03-29 | `mvp-technical-specs.md` | Added ADR-009 through ADR-014, patient endpoints to API contract, UI config/feature flag flow ADR |
 | 2026-03-28 | `001-refine-mvp-requirements-and-delivery-decisions.md` | Completed: requirements baseline, lifecycle, entitlements, failure matrix, decision log. OI-001..OI-004 resolved. OI-005, OI-006 added. |
 | 2026-03-28 | `@task-manager.md` | Updated for Task 001 completion: status, progress, priority queue, open issues, milestones |
 | 2026-03-28 | `mvp-business-rules.md` | Added recording and processing_failed states, finalization immutability rules, export rules section |

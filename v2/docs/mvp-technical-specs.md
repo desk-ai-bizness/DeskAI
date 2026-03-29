@@ -962,7 +962,14 @@ Do not include in the MVP:
 - reversibility: high — schemas can be moved closer to consumers if the shared approach becomes unwieldy
 - reference: `docs/architecture/03-contract-inventory.md`
 
-### ADR-013: Patient Endpoints
+### ADR-013: UI Configuration and Feature Flag Flow
+
+- decision: UI configuration and feature flags are stored in DynamoDB, assembled by the BFF layer, and delivered to the frontend as ready-to-render payloads; the frontend never evaluates plan-based limits, computes flag values, or hardcodes business labels
+- reason: centralizes product behavior in the backend; allows config changes without frontend deploys; enforces the backend-driven frontend principle (ADR-002) with a concrete mechanism
+- reversibility: high — storage can move from DynamoDB to S3 or a config service without changing the BFF-to-frontend contract
+- reference: `docs/architecture/04-data-flow-and-configuration.md`
+
+### ADR-014: Patient Endpoints
 
 - decision: add minimal `POST /v1/patients` and `GET /v1/patients` endpoints to the API contract
 - reason: consultations require a `patient_id`; without patient CRUD, consultations cannot be created without hardcoding IDs

@@ -38,19 +38,20 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-Requirements baseline complete — ready for architecture design
+Architecture design complete — ready for repository bootstrap
 
 ### Overall Progress
-10% complete
+20% complete
 
 ### Summary
-- Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log are documented
-- All four open issues (OI-001 through OI-004) resolved with explicit decisions
-- Canonical docs updated with new states, export rules, ADRs, and provider decisions
-- Two new open decisions identified (OPEN-004: specialty list, OPEN-005: patient management) — needed before Task 006
+- Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
+- Task 002 completed: repository layout, backend hexagonal architecture, contract inventory, data flow and configuration architecture documented
+- Five new ADRs added (ADR-009 through ADR-013): repository layout, module organization, DI strategy, contract location, patient endpoints
+- OI-006 resolved: patient endpoints added to API contract (ADR-013)
+- One open decision remains (OI-005: specialty list) — needed before Task 006
 
 ### Immediate Next Step
-Start `002-design-system-architecture-and-project-structure.md`
+Start `003-bootstrap-repository-and-engineering-foundation.md`
 
 ## 5. Priority Queue
 
@@ -58,11 +59,11 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `002-design-system-architecture-and-project-structure.md` | Design system architecture and project structure | planned | Architecture, module boundaries, and folder structure must be fixed before bootstrap and feature work |
-| 2 | `003-bootstrap-repository-and-engineering-foundation.md` | Bootstrap repository and engineering foundation | planned | The repo still needs its actual working packages, tooling, and local development foundation |
-| 3 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | planned | Core AWS infrastructure is required before auth, sessions, storage, and workflows can be implemented safely |
-| 4 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | planned | Secure physician access and backend-enforced plan rules are prerequisites for all protected product flows |
-| 5 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | planned | Consultation domain model, state machine, and audit events are prerequisites for all feature work |
+| 1 | `003-bootstrap-repository-and-engineering-foundation.md` | Bootstrap repository and engineering foundation | planned | The repo still needs its actual working packages, tooling, and local development foundation |
+| 2 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | planned | Core AWS infrastructure is required before auth, sessions, storage, and workflows can be implemented safely |
+| 3 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | planned | Secure physician access and backend-enforced plan rules are prerequisites for all protected product flows |
+| 4 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | planned | Consultation domain model, state machine, and audit events are prerequisites for all feature work |
+| 5 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
 
 ## 6. Active Blockers
 
@@ -79,7 +80,7 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | Task # | Task File | Title | Type | Priority | Status | Depends On | Progress % | Summary |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 001 | `001-refine-mvp-requirements-and-delivery-decisions.md` | Refine MVP requirements and delivery decisions | Full Stack | Critical | done | None | 100 | Requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented. All four open issues resolved. Two new open decisions identified (specialty list, patient management). |
-| 002 | `002-design-system-architecture-and-project-structure.md` | Design system architecture and project structure | Full Stack | Critical | planned | `001-refine-mvp-requirements-and-delivery-decisions.md` | 0 | Defines module boundaries, repository layout, contracts, and ADR updates for the MVP architecture |
+| 002 | `002-design-system-architecture-and-project-structure.md` | Design system architecture and project structure | Full Stack | Critical | done | `001-refine-mvp-requirements-and-delivery-decisions.md` | 100 | Repository layout, hexagonal backend architecture, contract inventory, data flow, and 5 new ADRs documented. OI-006 resolved. |
 | 003 | `003-bootstrap-repository-and-engineering-foundation.md` | Bootstrap repository and engineering foundation | DevOps | High | planned | `002-design-system-architecture-and-project-structure.md` | 0 | Creates the working repo layout, tooling, package scaffolding, and local development conventions |
 | 004 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | Infrastructure | Critical | planned | `001-refine-mvp-requirements-and-delivery-decisions.md`, `002-design-system-architecture-and-project-structure.md`, `003-bootstrap-repository-and-engineering-foundation.md` | 0 | Provisions isolated `dev` and `prod` AWS foundations with security, storage, APIs, and monitoring baselines |
 | 005 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | Security | Critical | planned | `004-provision-aws-foundation-with-cdk.md` | 0 | Implements email/password auth, doctor and clinic context resolution, and backend-enforced plan authorization |
@@ -117,7 +118,7 @@ Track cross-task decisions, missing information, or conflicts.
 | OI-003 | Clinic audio retention defaults and deletion timing are not explicitly defined | Storage lifecycle, retention automation, and compliance behavior remain ambiguous | resolved | Plan-based retention: 7/30/90 days. See `docs/requirements/05-decision-log.md` DEC-003. |
 | OI-004 | Export output scope beyond the finalized note is not fully specified | Export implementation could diverge from stakeholder expectations | resolved | PDF with metadata + finalized history + summary + accepted insights. No transcript. See DEC-004. |
 | OI-005 | Specialty list and validation approach not defined | Domain model cannot validate specialty field | open | Product input needed before Task 006. Recommended: backend-managed enum, initially `general_practice` only. See OPEN-004. |
-| OI-006 | Patient CRUD endpoints not defined in API contract | Cannot create consultations without patient management | open | Product input needed before Task 006. Recommended: minimal `POST /v1/patients` and `GET /v1/patients`. See OPEN-005. |
+| OI-006 | Patient CRUD endpoints not defined in API contract | Cannot create consultations without patient management | resolved | Minimal `POST /v1/patients` and `GET /v1/patients` added to API contract. See ADR-013 and `docs/architecture/03-contract-inventory.md`. |
 
 ## 10. Recently Updated Tasks
 
@@ -125,6 +126,9 @@ List the most recently changed tasks first.
 
 | Date | Task File | Change |
 | --- | --- | --- |
+| 2026-03-29 | `002-design-system-architecture-and-project-structure.md` | Completed: repository layout, backend hexagonal architecture, contract inventory, data flow and configuration documented |
+| 2026-03-29 | `@task-manager.md` | Updated for Task 002 completion: status, progress, priority queue, OI-006 resolved |
+| 2026-03-29 | `mvp-technical-specs.md` | Added ADR-009 through ADR-013, patient endpoints to API contract |
 | 2026-03-28 | `001-refine-mvp-requirements-and-delivery-decisions.md` | Completed: requirements baseline, lifecycle, entitlements, failure matrix, decision log. OI-001..OI-004 resolved. OI-005, OI-006 added. |
 | 2026-03-28 | `@task-manager.md` | Updated for Task 001 completion: status, progress, priority queue, open issues, milestones |
 | 2026-03-28 | `mvp-business-rules.md` | Added recording and processing_failed states, finalization immutability rules, export rules section |

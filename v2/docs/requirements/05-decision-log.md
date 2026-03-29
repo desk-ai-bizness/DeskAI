@@ -85,6 +85,17 @@ Each decision includes the context, the chosen option, the reasoning, and the re
 | **Reversibility** | High. LLM provider is behind an adapter interface. |
 | **Impact on Tasks** | Task 010 uses Claude API. Technical specs section 13 title should be updated to "AI Processing Layer." |
 
+### DEC-008: Patient Creation and Management
+
+| Field | Value |
+|-------|-------|
+| **Context** | Consultations require a `patient_id`, but no patient CRUD endpoints were defined in the API contract. |
+| **Decision** | Add minimal `POST /v1/patients` and `GET /v1/patients` endpoints. Fields: `name`, `date_of_birth`, `clinic_id`. |
+| **Reasoning** | (1) Consultations cannot be created without patient references. (2) Minimal patient CRUD is sufficient for MVP. (3) Endpoints can be extended later without breaking changes. |
+| **Reversibility** | High. Endpoints can be extended with additional fields without breaking existing consumers. |
+| **Resolves** | Open Issue OI-006, previously OPEN-005 |
+| **Impact on Tasks** | Task 006 includes patient domain model. Task 012 includes patient creation UI. |
+
 ---
 
 ## Open Decisions (Deferred)
@@ -129,17 +140,6 @@ Each decision includes the context, the chosen option, the reasoning, and the re
 | **Recommended** | Option (b): Backend-managed enum list, initially containing `general_practice` only (matching MVP scope of "general practice/generalist consultations"). Expandable via configuration. |
 | **When to Decide** | Before Task 006 (domain model) |
 | **Impact if Delayed** | Domain model cannot validate specialty; may need migration later |
-
-### OPEN-005: Patient Creation and Management
-
-| Field | Value |
-|-------|-------|
-| **Context** | Consultations require a `patient_id`, but no patient CRUD endpoints are defined in the API contract. |
-| **Status** | Open — needs product input |
-| **Options** | (a) Minimal patient creation endpoint in MVP, (b) Inline patient creation during consultation creation |
-| **Recommended** | Option (a): Add minimal `POST /v1/patients` and `GET /v1/patients` endpoints. Keep fields minimal: `name`, `date_of_birth`, `clinic_id`. |
-| **When to Decide** | Before Task 006 (domain model) |
-| **Impact if Delayed** | Cannot create consultations without hardcoding patient IDs |
 
 ---
 

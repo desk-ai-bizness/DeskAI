@@ -30,6 +30,14 @@ The provider must sit behind an internal adapter interface and all provider outp
 ### Dependencies
 - `008-implement-realtime-consultation-session-transport.md`
 
+### Required Reading
+Before implementing this task, read these documents in addition to the standard reading list in `implementation-prompt.md`:
+- `docs/architecture/02-backend-architecture.md`
+- `docs/architecture/03-contract-inventory.md`
+- `docs/architecture/04-data-flow-and-configuration.md`
+- `docs/requirements/04-failure-behavior-matrix.md`
+- `docs/requirements/05-decision-log.md`
+
 ## 3. Scope
 
 ### In Scope

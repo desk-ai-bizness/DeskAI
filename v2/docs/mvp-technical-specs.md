@@ -691,6 +691,8 @@ The frontend should speak primarily to the BFF, not to deep domain services dire
 - `POST /v1/auth/session`
 - `DELETE /v1/auth/session`
 - `GET /v1/me`
+- `POST /v1/patients`
+- `GET /v1/patients`
 - `POST /v1/consultations`
 - `GET /v1/consultations`
 - `GET /v1/consultations/{consultation_id}`
@@ -931,6 +933,48 @@ Do not include in the MVP:
 - reason: MVP prioritizes reliability over feature segmentation; billing is post-MVP
 - reversibility: high — limits are feature-flag-driven configuration
 - reference: `docs/requirements/03-plan-entitlements.md`
+
+### ADR-009: Repository Layout
+
+- decision: monorepo with flat top-level packages (`backend/`, `app/`, `website/`, `contracts/`, `infra/`)
+- reason: small team benefits from colocation; flat structure keeps navigation simple; shared contracts prevent schema drift
+- reversibility: medium — moving to separate repos is possible but requires CI/CD changes
+- reference: `docs/architecture/01-repository-layout.md`
+
+### ADR-010: Backend Module Organization
+
+- decision: domain-first hexagonal layout with centralized ports and grouped adapters by infrastructure concern
+- reason: keeps domain logic pure and framework-free; adapters are replaceable per concern; avoids premature per-feature module isolation for a small team
+- reversibility: high — modules can be split further as the team grows
+- reference: `docs/architecture/02-backend-architecture.md`
+
+### ADR-011: Dependency Injection
+
+- decision: use constructor injection with simple factory functions in `container.py`, no DI framework
+- reason: minimal complexity for MVP; factory functions are easy to test and replace; avoids framework lock-in
+- reversibility: high — can adopt a DI library later without changing domain or application code
+- reference: `docs/architecture/02-backend-architecture.md` section 10
+
+### ADR-012: Contract Location
+
+- decision: shared schemas in a top-level `contracts/` directory, separate from backend and frontend code
+- reason: single source of truth for API shapes, consumed by both backend (validation) and frontend (type generation); prevents schema drift
+- reversibility: high — schemas can be moved closer to consumers if the shared approach becomes unwieldy
+- reference: `docs/architecture/03-contract-inventory.md`
+
+### ADR-013: UI Configuration and Feature Flag Flow
+
+- decision: UI configuration and feature flags are stored in DynamoDB, assembled by the BFF layer, and delivered to the frontend as ready-to-render payloads; the frontend never evaluates plan-based limits, computes flag values, or hardcodes business labels
+- reason: centralizes product behavior in the backend; allows config changes without frontend deploys; enforces the backend-driven frontend principle (ADR-002) with a concrete mechanism
+- reversibility: high — storage can move from DynamoDB to S3 or a config service without changing the BFF-to-frontend contract
+- reference: `docs/architecture/04-data-flow-and-configuration.md`
+
+### ADR-014: Patient Endpoints
+
+- decision: add minimal `POST /v1/patients` and `GET /v1/patients` endpoints to the API contract
+- reason: consultations require a `patient_id`; without patient CRUD, consultations cannot be created without hardcoding IDs
+- reversibility: high — endpoints can be extended with more fields later
+- reference: `docs/architecture/03-contract-inventory.md` section 2, resolves OPEN-005
 
 ## 26. AI Agent Notes
 

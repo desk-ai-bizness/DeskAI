@@ -33,6 +33,15 @@ The technical specs require a single-table DynamoDB design, S3 artifact storage,
 - `004-provision-aws-foundation-with-cdk.md`
 - `005-implement-authentication-and-plan-access-control.md`
 
+### Required Reading
+Before implementing this task, read these documents in addition to the standard reading list in `implementation-prompt.md`:
+- `docs/architecture/02-backend-architecture.md`
+- `docs/architecture/03-contract-inventory.md`
+- `docs/architecture/04-data-flow-and-configuration.md`
+- `docs/requirements/01-requirements-traceability-matrix.md`
+- `docs/requirements/02-consultation-lifecycle.md`
+- `docs/requirements/04-failure-behavior-matrix.md`
+
 ## 3. Scope
 
 ### In Scope

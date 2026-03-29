@@ -30,6 +30,12 @@ Bootstrap must align with the architecture blueprint and make it easy to add Lam
 ### Dependencies
 - `002-design-system-architecture-and-project-structure.md`
 
+### Required Reading
+Before implementing this task, read these documents in addition to the standard reading list in `implementation-prompt.md`:
+- `docs/architecture/01-repository-layout.md`
+- `docs/architecture/02-backend-architecture.md`
+- `docs/architecture/03-contract-inventory.md`
+
 ## 3. Scope
 
 ### In Scope

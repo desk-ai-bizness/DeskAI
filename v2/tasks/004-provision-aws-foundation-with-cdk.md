@@ -34,6 +34,13 @@ This task creates the AWS resources that later backend, BFF, frontend, and proce
 - `002-design-system-architecture-and-project-structure.md`
 - `003-bootstrap-repository-and-engineering-foundation.md`
 
+### Required Reading
+Before implementing this task, read these documents in addition to the standard reading list in `implementation-prompt.md`:
+- `docs/architecture/01-repository-layout.md`
+- `docs/architecture/04-data-flow-and-configuration.md`
+- `docs/requirements/03-plan-entitlements.md`
+- `docs/requirements/04-failure-behavior-matrix.md`
+
 ## 3. Scope
 
 ### In Scope

@@ -2,16 +2,29 @@ name: Infra CI
 
 on:
   pull_request:
-    paths:
-      - 'infra/**'
-      - '.github/workflows/infra-ci.yml'
   push:
     branches: [main]
     paths:
       - 'infra/**'
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      infra: ${{ steps.filter.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            infra:
+              - 'infra/**'
+              - '.github/workflows/infra-ci.yml'
+
   infra:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,3 +59,16 @@ jobs:
         run: |
           . .venv/bin/activate
           make synth
+
+  infra-gate:
+    if: always()
+    needs: [infra]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check infra result
+        run: |
+          if [[ "${{ needs.infra.result }}" == "failure" ]]; then
+            echo "Infra CI failed"
+            exit 1
+          fi
+          echo "Infra CI passed or was skipped"

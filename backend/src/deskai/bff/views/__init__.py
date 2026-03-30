@@ -1,0 +1,1 @@
+"""BFF module bootstrap."""

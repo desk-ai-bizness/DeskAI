@@ -55,12 +55,34 @@ Use the files below as the canonical MVP definition:
 4. [`tasks/@task-manager.md`](/Users/gabrielsantiago/Documents/DeskAI/tasks/@task-manager.md)
 5. [`docs/implementation-prompt.md`](/Users/gabrielsantiago/Documents/DeskAI/docs/implementation-prompt.md)
 
+## Repository Layout
+
+```text
+DeskAI/
+├── backend/      # Python backend (core + BFF + handlers)
+├── app/          # Authenticated React + TypeScript app
+├── website/      # Public static website
+├── contracts/    # Shared API and schema contracts
+├── infra/        # AWS CDK infrastructure
+├── tools/        # Repo-level helper scripts
+├── docs/         # Product and architecture documentation
+└── tasks/        # Task execution tracking
+```
+
+## Quick Start
+
+1. Read [`docs/local-development.md`](/Users/gabrielsantiago/Documents/DeskAI/docs/local-development.md).
+2. Copy root and package `.env.example` files as needed.
+3. Install and run package-level commands:
+   - `backend/`: `make install`, `make lint`, `make test`
+   - `infra/`: `make install`, `make synth`
+   - `app/`: `npm install`, `npm run dev`
+   - `website/`: `npm install`, `npm run dev`
+
 ## Current Delivery State
 
-Planning and architecture are in place.
+- Task `001` completed: requirements, lifecycle, entitlements, failure behavior, and decision log.
+- Task `002` completed: architecture and project structure decisions.
+- Task `003` establishes repository scaffolding, tooling conventions, local setup docs, and CI placeholders.
 
-- Task `001` completed: requirements, lifecycle, entitlements, failure behavior, and decision log
-- Task `002` completed: repository architecture, backend structure, contracts, and data flow
-- Next implementation step: Task `003` bootstrap repository and engineering foundation
-
-For day-to-day progress tracking, use [`tasks/@task-manager.md`](/Users/gabrielsantiago/Documents/DeskAI/tasks/@task-manager.md).
+For execution progress, use [`tasks/@task-manager.md`](/Users/gabrielsantiago/Documents/DeskAI/tasks/@task-manager.md).

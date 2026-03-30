@@ -1,0 +1,16 @@
+openapi: 3.1.0
+info:
+  title: DeskAI Auth API
+  version: v1
+paths:
+  /v1/auth/session:
+    post:
+      summary: Create authentication session
+      responses:
+        '200':
+          description: Session created
+    delete:
+      summary: Delete authentication session
+      responses:
+        '204':
+          description: Session deleted

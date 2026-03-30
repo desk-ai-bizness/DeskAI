@@ -1,0 +1,41 @@
+"""Environment-driven application settings."""
+
+from dataclasses import dataclass
+from os import getenv
+
+
+@dataclass(frozen=True)
+class Settings:
+    """Runtime settings loaded from environment variables."""
+
+    environment: str
+    contract_version: str
+    dynamodb_table: str
+    artifacts_bucket: str
+    ui_config_key: str
+    deepgram_secret_name: str
+    claude_secret_name: str
+    cognito_secret_name: str
+
+
+DEFAULT_DYNAMODB_TABLE = "deskai-dev-consultation-records"
+DEFAULT_ARTIFACTS_BUCKET = "deskai-dev-artifacts"
+DEFAULT_UI_CONFIG_KEY = "CONFIG#ui"
+
+
+def load_settings() -> Settings:
+    """Load backend settings from process environment."""
+
+    return Settings(
+        environment=getenv("DESKAI_ENV", "dev"),
+        contract_version=getenv("DESKAI_CONTRACT_VERSION", "v1"),
+        dynamodb_table=getenv("DESKAI_DYNAMODB_TABLE", DEFAULT_DYNAMODB_TABLE),
+        artifacts_bucket=getenv("DESKAI_ARTIFACTS_BUCKET", DEFAULT_ARTIFACTS_BUCKET),
+        ui_config_key=getenv("DESKAI_UI_CONFIG_KEY", DEFAULT_UI_CONFIG_KEY),
+        deepgram_secret_name=getenv("DESKAI_DEEPGRAM_SECRET_NAME", "deskai/dev/deepgram"),
+        claude_secret_name=getenv("DESKAI_CLAUDE_SECRET_NAME", "deskai/dev/claude"),
+        cognito_secret_name=getenv(
+            "DESKAI_COGNITO_CLIENT_SECRET_NAME",
+            "deskai/dev/cognito",
+        ),
+    )

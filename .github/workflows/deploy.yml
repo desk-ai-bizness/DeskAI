@@ -1,0 +1,19 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy (dev or prod)'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  deploy-placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder
+        run: echo "Deployment pipeline placeholder. Implement in Task 004+."

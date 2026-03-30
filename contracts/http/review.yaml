@@ -1,0 +1,22 @@
+openapi: 3.1.0
+info:
+  title: DeskAI Review API
+  version: v1
+paths:
+  /v1/consultations/{consultation_id}/review:
+    get:
+      summary: Open consultation review
+      responses:
+        '200':
+          description: Review payload
+    put:
+      summary: Update consultation review
+      responses:
+        '200':
+          description: Updated review payload
+  /v1/consultations/{consultation_id}/finalize:
+    post:
+      summary: Finalize consultation
+      responses:
+        '200':
+          description: Consultation finalized

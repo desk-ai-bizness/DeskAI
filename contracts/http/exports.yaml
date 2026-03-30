@@ -1,0 +1,11 @@
+openapi: 3.1.0
+info:
+  title: DeskAI Export API
+  version: v1
+paths:
+  /v1/consultations/{consultation_id}/export:
+    post:
+      summary: Generate consultation export
+      responses:
+        '200':
+          description: Export URL generated

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=70.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deskai-infra"
+version = "0.1.0"
+description = "DeskAI AWS CDK infrastructure"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "aws-cdk-lib>=2.181.0",
+  "constructs>=10.4.2"
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.7.0",
+  "mypy>=1.11.0"
+]
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

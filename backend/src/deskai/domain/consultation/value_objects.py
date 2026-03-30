@@ -1,0 +1,1 @@
+"""Consultation value objects."""

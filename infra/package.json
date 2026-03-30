@@ -1,0 +1,11 @@
+{
+  "name": "deskai-infra-tools",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "synth": "cdk synth"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.1027.0"
+  }
+}

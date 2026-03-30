@@ -38,10 +38,10 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-Architecture design complete — ready for repository bootstrap
+Repository bootstrap complete — ready for AWS foundation provisioning
 
 ### Overall Progress
-20% complete
+30% complete
 
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
@@ -49,9 +49,10 @@ Architecture design complete — ready for repository bootstrap
 - Six new ADRs added (ADR-009 through ADR-014): repository layout, module organization, DI strategy, contract location, UI config/feature flag flow, patient endpoints
 - OI-006 resolved: patient endpoints added to API contract (ADR-014)
 - One open decision remains (OI-005: specialty list) — needed before Task 006
+- Task 003 completed: monorepo scaffold, backend/app/website/infra bootstrap, contracts baseline, lint/format conventions, and CI placeholders are in place
 
 ### Immediate Next Step
-Start `003-bootstrap-repository-and-engineering-foundation.md`
+Start `004-provision-aws-foundation-with-cdk.md`
 
 ## 5. Priority Queue
 
@@ -59,11 +60,11 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `003-bootstrap-repository-and-engineering-foundation.md` | Bootstrap repository and engineering foundation | planned | The repo still needs its actual working packages, tooling, and local development foundation |
-| 2 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | planned | Core AWS infrastructure is required before auth, sessions, storage, and workflows can be implemented safely |
-| 3 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | planned | Secure physician access and backend-enforced plan rules are prerequisites for all protected product flows |
-| 4 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | planned | Consultation domain model, state machine, and audit events are prerequisites for all feature work |
-| 5 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
+| 1 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | planned | Core AWS infrastructure is required before auth, sessions, storage, and workflows can be implemented safely |
+| 2 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | planned | Secure physician access and backend-enforced plan rules are prerequisites for all protected product flows |
+| 3 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | planned | Consultation domain model, state machine, and audit events are prerequisites for all feature work |
+| 4 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
+| 5 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | planned | Real-time session transport depends on foundation infrastructure, consultation model, and BFF contracts |
 
 ## 6. Active Blockers
 
@@ -71,7 +72,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 003 |
+| None | No active blockers | N/A | N/A | Begin Task 004 |
 
 ## 7. Task Index
 
@@ -81,7 +82,7 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 001 | `001-refine-mvp-requirements-and-delivery-decisions.md` | Refine MVP requirements and delivery decisions | Full Stack | Critical | done | None | 100 | Requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented. All four open issues resolved. Two new open decisions identified (specialty list, patient management). |
 | 002 | `002-design-system-architecture-and-project-structure.md` | Design system architecture and project structure | Full Stack | Critical | done | `001-refine-mvp-requirements-and-delivery-decisions.md` | 100 | Repository layout, hexagonal backend architecture, contract inventory, data flow, and 5 new ADRs documented. OI-006 resolved. |
-| 003 | `003-bootstrap-repository-and-engineering-foundation.md` | Bootstrap repository and engineering foundation | DevOps | High | planned | `002-design-system-architecture-and-project-structure.md` | 0 | Creates the working repo layout, tooling, package scaffolding, and local development conventions |
+| 003 | `003-bootstrap-repository-and-engineering-foundation.md` | Bootstrap repository and engineering foundation | DevOps | High | done | `002-design-system-architecture-and-project-structure.md` | 100 | Monorepo scaffold, package bootstraps, lint/format tooling, shared contracts baseline, setup docs, and CI placeholders delivered |
 | 004 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | Infrastructure | Critical | planned | `001-refine-mvp-requirements-and-delivery-decisions.md`, `002-design-system-architecture-and-project-structure.md`, `003-bootstrap-repository-and-engineering-foundation.md` | 0 | Provisions isolated `dev` and `prod` AWS foundations with security, storage, APIs, and monitoring baselines |
 | 005 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | Security | Critical | planned | `004-provision-aws-foundation-with-cdk.md` | 0 | Implements email/password auth, doctor and clinic context resolution, and backend-enforced plan authorization |
 | 006 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | Backend | Critical | planned | `001-refine-mvp-requirements-and-delivery-decisions.md`, `004-provision-aws-foundation-with-cdk.md`, `005-implement-authentication-and-plan-access-control.md` | 0 | Builds the consultation domain model, storage patterns, status rules, and attributable audit foundation |
@@ -126,6 +127,10 @@ List the most recently changed tasks first.
 
 | Date | Task File | Change |
 | --- | --- | --- |
+| 2026-03-30 | `003-bootstrap-repository-and-engineering-foundation.md` | Completed: repository scaffold, package bootstraps, linting/formatting conventions, setup docs, and baseline CI workflows |
+| 2026-03-30 | `@task-manager.md` | Updated Task 003 to done; refreshed snapshot, priority queue, next step, and progress |
+| 2026-03-30 | `003-bootstrap-repository-and-engineering-foundation.md` | Started implementation: task moved to in-progress, bootstrap and tooling work underway |
+| 2026-03-30 | `@task-manager.md` | Updated snapshot, priority queue, and Task 003 status to in-progress |
 | 2026-03-29 | `002-design-system-architecture-and-project-structure.md` | Completed: repository layout, backend hexagonal architecture, contract inventory, data flow and configuration documented |
 | 2026-03-29 | `@task-manager.md` | Updated for Task 002 completion: status, progress, priority queue, OI-006 resolved |
 | 2026-03-29 | `mvp-technical-specs.md` | Added ADR-009 through ADR-014, patient endpoints to API contract, UI config/feature flag flow ADR |

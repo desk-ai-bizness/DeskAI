@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$title: SessionServerEvent
+$type: object
+required:
+  - event
+  - data
+properties:
+  event:
+    type: string
+    enum:
+      [
+        transcript.partial,
+        transcript.final,
+        session.status,
+        session.warning,
+        session.ended,
+        server.pong,
+      ]
+  data:
+    type: object
+    additionalProperties: true

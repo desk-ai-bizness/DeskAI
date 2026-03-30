@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "locale": "pt-BR",
+  "labels": {
+    "review_title": "Revisao da Consulta",
+    "ai_disclaimer": "Conteudo gerado por IA. Sujeito a revisao medica."
+  }
+}

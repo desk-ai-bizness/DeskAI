@@ -1,0 +1,5 @@
+config
+constructs
+node_modules
+stacks
+tests

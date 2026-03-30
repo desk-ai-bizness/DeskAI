@@ -36,6 +36,11 @@ jobs:
         run: |
           . .venv/bin/activate
           make lint
+      - name: Test
+        working-directory: infra
+        run: |
+          . .venv/bin/activate
+          make test
       - name: Synth
         working-directory: infra
         run: |

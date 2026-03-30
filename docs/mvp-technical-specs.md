@@ -870,13 +870,90 @@ CDK should provision:
 
 ## 23. Testing Strategy
 
-Testing strategy will be defined later.
+### TDD Workflow
 
-Current rule:
+All code where tests are applicable must follow strict Test-Driven Development:
 
-- do not assume a finalized testing pyramid yet
-- design code so tests can be added easily later
-- preserve testability as a non-negotiable design constraint
+1. **Red** — Write a failing test that defines the expected behavior. Run it. It must fail.
+2. **Green** — Write the minimum implementation code to make the test pass.
+3. **Refactor** — Clean up the code while keeping all tests green.
+
+Rules:
+
+- Every new function, module, endpoint, adapter, handler, or infrastructure construct gets its test first.
+- Every bug fix starts with a failing test that reproduces the bug before fixing it.
+- No speculative implementation code that is not driven by a test.
+- All tests must pass before committing.
+- No production code may be merged without corresponding tests passing in CI.
+
+### Test Types and Scope
+
+| Type | Scope | Tools | TDD Applies |
+| --- | --- | --- | --- |
+| Unit | Domain entities, value objects, services, business rules | pytest | Yes — always |
+| Application | Use cases with mocked port interfaces | pytest, unittest.mock | Yes — always |
+| Integration (adapter) | DynamoDB, S3, Cognito, Secrets Manager adapters against emulated services | pytest, moto or localstack | Yes — write expected behavior first |
+| Integration (handler) | Lambda handlers with event fixtures and context mocks | pytest | Yes — write expected response first |
+| BFF | View models, feature flag evaluation, UI config assembly | pytest | Yes — always |
+| Infrastructure | CDK stack synthesis resource and property assertions | unittest, aws_cdk.assertions | Yes — assert resource properties before adding constructs |
+| Contract | YAML schema validation, API response shape compliance | pytest, schema validators | Yes — validate contract compliance before implementation |
+| API | HTTP request/response round-trips against running or mocked endpoints | pytest, httpx or test client | Yes — write expected status and body first |
+| End-to-end | Full consultation lifecycle through the deployed stack | pytest (integration suite) | Acceptance-driven — write expected outcomes first |
+
+### What Does Not Require TDD
+
+- Pure configuration files (`.env`, `cdk.json`, YAML configs without logic).
+- Static assets (HTML, CSS, images, fonts).
+- One-off migration scripts — but must have verification tests before execution.
+- Exploratory prototypes — but tests must exist before merging to main.
+
+### Test Organization
+
+```
+backend/
+├── tests/
+│   ├── unit/
+│   │   ├── domain/                # Pure unit tests, no mocks needed
+│   │   ├── application/           # Use case tests, mocked ports
+│   │   └── bff/                   # View model and feature flag tests
+│   ├── integration/
+│   │   ├── adapters/              # Adapter tests against emulated services
+│   │   └── handlers/              # Lambda handler tests with event fixtures
+│   └── conftest.py                # Shared fixtures
+
+infra/
+├── tests/
+│   ├── test_config.py             # Environment configuration assertions
+│   └── test_stacks.py             # CDK stack synthesis assertions
+
+app/
+├── src/**/*.test.ts               # Frontend component and integration tests (colocated)
+
+contracts/
+├── tests/                         # Contract schema validation tests
+```
+
+### Test Quality Rules
+
+- Tests must be deterministic. No flaky tests. No time-dependent assertions without mocking.
+- Tests must be fast. Unit tests should complete in under one second each. Integration tests should complete in under ten seconds each.
+- Tests must be isolated. No shared mutable state between tests. Each test sets up and tears down its own context.
+- Test names must clearly describe the expected behavior, not the implementation.
+- Prefer explicit assertions over broad catch-all checks.
+- Test coverage is a signal, not a target. One hundred percent coverage is not required, but untested critical paths are not acceptable.
+
+### Per-Layer Testing Rules
+
+These complement the existing rules in `docs/architecture/02-backend-architecture.md` section 9:
+
+- Domain tests are pure unit tests. No mocks needed because domain has no external dependencies.
+- Application tests mock port interfaces using standard Python mocking. The port contract is the test boundary.
+- Adapter integration tests use moto or localstack to emulate AWS services. They validate that the adapter correctly translates domain operations into service calls.
+- Handler tests use Lambda event fixtures that match the API Gateway or Step Functions event format. They validate routing, input parsing, and response shape.
+- BFF tests verify view model transformation, feature flag evaluation, and UI configuration assembly without real backend calls.
+- Infrastructure tests use CDK assertions to validate synthesized CloudFormation templates. They guard structural invariants like encryption, access controls, and resource counts.
+- Contract tests validate that backend responses match the YAML contract schemas in `contracts/`.
+- E2E tests are driven by acceptance criteria from task files. They exercise the full flow from API request to storage and back.
 
 ## 24. Technical Non-Goals For MVP
 

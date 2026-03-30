@@ -11,14 +11,92 @@ AWS CDK package for DeskAI MVP infrastructure.
 - Step Functions orchestration
 - Monitoring, security, and budgets
 
-Task 003 provides stack scaffolding only. Concrete resources are added in Task 004+.
+Task 004 provisions the baseline resources for `dev` and `prod` with isolated naming and
+environment-bound configuration.
 
 ## Local Commands
 
 ```bash
 make install
 make lint
+make test
 make synth
 ```
 
 `make install` prepares both Python dependencies and the local CDK CLI dependency.
+
+## Environment Selection
+
+Set `DESKAI_ENV` before running synth/deploy:
+
+```bash
+export DESKAI_ENV=dev
+make synth
+```
+
+Supported environments:
+- `dev`
+- `prod`
+
+Environment definitions:
+- `dev`: AWS-hosted shared development environment used for integration and end-to-end testing
+- `prod`: AWS-hosted production environment
+
+Important distinction:
+- Local execution on a developer machine is not an AWS environment.
+- `DESKAI_ENV` selects which AWS stack configuration is synthesized/deployed.
+- Localhost origins are intentionally not part of the AWS `dev` CORS/callback defaults.
+
+## Same-Account Hardening
+
+When `dev` and `prod` share the same AWS account, the CDK app applies extra protections:
+- Environment tags on resources (`project=deskai`, `environment=dev|prod`,
+  `account-mode=shared|dedicated`, `managed-by=cdk`, `data-classification=sensitive-health`)
+- `prod` stacks use CloudFormation termination protection in shared-account mode
+- Budget strategy:
+  - one account-wide budget is owned by `prod`
+  - each environment has an environment-scoped budget filtered by the `environment` tag
+  - both ACTUAL and FORECASTED alerts route to SNS
+
+Important:
+- Environment-scoped budgets depend on cost allocation tags being activated in AWS Billing.
+- Without activated cost allocation tags, scoped budget values may be incomplete.
+
+## Baseline Resources (Task 004)
+
+- Security: two KMS keys (`data`, `secrets`), provider secret placeholders, and a reusable
+  Lambda/Step Functions permissions boundary
+- Storage: DynamoDB single-table baseline (`PK`/`SK` + three GSIs) with PITR enabled and an
+  encrypted/versioned artifacts bucket with plan-driven audio retention lifecycle rules
+- Auth: Cognito User Pool + app client (email/password only, no social providers)
+- APIs: API Gateway HTTP API with explicit CORS origins per environment, and WebSocket API with
+  consultation route scaffolding
+- Compute: reusable Lambda execution role and baseline handlers for BFF, WebSocket, pipeline, and
+  export flows
+- Orchestration: EventBridge bus/rule, Step Functions standard workflow, processing queue + DLQ,
+  and SNS alerts topic
+- Monitoring: CloudWatch dashboard + alarms for Lambda errors, HTTP 5xx, workflow failures, and
+  DLQ growth
+- Cost guardrail: AWS Budget alert when monthly spend exceeds `$5`, routed to SNS
+- CDN: separate CloudFront distributions and S3 origins for `website` and authenticated `app`
+  assets (decision: split distributions to keep cache/security policy isolation by frontend type)
+
+Current deployed origins:
+- `dev` app: `https://app.dev.deskai.com.br`
+- `dev` website: `https://dev.deskai.com.br`
+- `prod` app: `https://app.deskai.com.br`
+- `prod` website: `https://deskai.com.br`, `https://www.deskai.com.br`
+
+## Deploy
+
+```bash
+export DESKAI_ENV=dev
+cdk deploy --all
+```
+
+For production:
+
+```bash
+export DESKAI_ENV=prod
+cdk deploy --all
+```

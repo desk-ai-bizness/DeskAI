@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: install lint format typecheck synth
+.PHONY: install lint format typecheck test synth
 
 install:
 	$(PYTHON) -m pip install --upgrade pip
@@ -15,6 +15,9 @@ format:
 
 typecheck:
 	$(PYTHON) -m mypy .
+
+test:
+	$(PYTHON) -m unittest discover -s tests
 
 synth:
 	JSII_RUNTIME_PACKAGE_CACHE=.jsii-cache npm run synth

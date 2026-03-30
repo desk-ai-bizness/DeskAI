@@ -36,6 +36,10 @@ Core rule: report what was said, never interpret what it means.
 - Infrastructure: AWS CDK, Cognito, API Gateway, DynamoDB, S3, Step Functions, EventBridge/SQS/SNS
 - Environments: `dev`, `prod`
 
+Environment distinction:
+- `dev` and `prod` are AWS deployment environments.
+- Local execution on developer machines is separate and does not define a third AWS environment.
+
 ## Non-Negotiables
 
 - User-facing content must default to Brazilian Portuguese (`pt-BR`).

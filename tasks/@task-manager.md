@@ -38,10 +38,10 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-Repository bootstrap complete — ready for AWS foundation provisioning
+AWS foundation provisioned — ready for authentication and access control implementation
 
 ### Overall Progress
-30% complete
+40% complete
 
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
@@ -50,9 +50,12 @@ Repository bootstrap complete — ready for AWS foundation provisioning
 - OI-006 resolved: patient endpoints added to API contract (ADR-014)
 - One open decision remains (OI-005: specialty list) — needed before Task 006
 - Task 003 completed: monorepo scaffold, backend/app/website/infra bootstrap, contracts baseline, lint/format conventions, and CI placeholders are in place
+- Task 004 completed: AWS CDK baseline provisioned for `dev` and `prod` with isolated stacks for security, storage, auth, APIs, compute, orchestration, monitoring, CDN, and budget alerting
+- Task 004 follow-up refinement completed: clarified that AWS `dev` is not localhost, updated deployed-origin config/CORS/callbacks, and aligned docs/tasks with this environment distinction
+- Task 004 same-account hardening completed: added shared-account guardrails (environment tags, scoped budgets, and prod termination protection) for safer `dev`/`prod` coexistence in one AWS account
 
 ### Immediate Next Step
-Start `004-provision-aws-foundation-with-cdk.md`
+Start `005-implement-authentication-and-plan-access-control.md`
 
 ## 5. Priority Queue
 
@@ -60,11 +63,11 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | planned | Core AWS infrastructure is required before auth, sessions, storage, and workflows can be implemented safely |
-| 2 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | planned | Secure physician access and backend-enforced plan rules are prerequisites for all protected product flows |
-| 3 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | planned | Consultation domain model, state machine, and audit events are prerequisites for all feature work |
-| 4 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
-| 5 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | planned | Real-time session transport depends on foundation infrastructure, consultation model, and BFF contracts |
+| 1 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | planned | Secure physician access and backend-enforced plan rules are prerequisites for all protected product flows |
+| 2 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | planned | Consultation domain model, state machine, and audit events are prerequisites for all feature work |
+| 3 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
+| 4 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | planned | Real-time session transport depends on foundation infrastructure, consultation model, and BFF contracts |
+| 5 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | planned | Provider integration depends on realtime transport and the AWS foundation provisioned in Task 004 |
 
 ## 6. Active Blockers
 
@@ -72,7 +75,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 004 |
+| None | No active blockers | N/A | N/A | Begin Task 005 |
 
 ## 7. Task Index
 
@@ -83,7 +86,7 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | 001 | `001-refine-mvp-requirements-and-delivery-decisions.md` | Refine MVP requirements and delivery decisions | Full Stack | Critical | done | None | 100 | Requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented. All four open issues resolved. Two new open decisions identified (specialty list, patient management). |
 | 002 | `002-design-system-architecture-and-project-structure.md` | Design system architecture and project structure | Full Stack | Critical | done | `001-refine-mvp-requirements-and-delivery-decisions.md` | 100 | Repository layout, hexagonal backend architecture, contract inventory, data flow, and 5 new ADRs documented. OI-006 resolved. |
 | 003 | `003-bootstrap-repository-and-engineering-foundation.md` | Bootstrap repository and engineering foundation | DevOps | High | done | `002-design-system-architecture-and-project-structure.md` | 100 | Monorepo scaffold, package bootstraps, lint/format tooling, shared contracts baseline, setup docs, and CI placeholders delivered |
-| 004 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | Infrastructure | Critical | planned | `001-refine-mvp-requirements-and-delivery-decisions.md`, `002-design-system-architecture-and-project-structure.md`, `003-bootstrap-repository-and-engineering-foundation.md` | 0 | Provisions isolated `dev` and `prod` AWS foundations with security, storage, APIs, and monitoring baselines |
+| 004 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | Infrastructure | Critical | done | `001-refine-mvp-requirements-and-delivery-decisions.md`, `002-design-system-architecture-and-project-structure.md`, `003-bootstrap-repository-and-engineering-foundation.md` | 100 | CDK app and stacks implemented for isolated `dev`/`prod` foundations including Cognito, API Gateway HTTP/WS, Lambda baseline, Step Functions, EventBridge, SQS/DLQ, SNS, DynamoDB PITR, S3 versioning/encryption, KMS, Secrets Manager, CloudWatch dashboard/alarms, CloudFront, AWS Budget alerting, and shared-account hardening guardrails |
 | 005 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | Security | Critical | planned | `004-provision-aws-foundation-with-cdk.md` | 0 | Implements email/password auth, doctor and clinic context resolution, and backend-enforced plan authorization |
 | 006 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | Backend | Critical | planned | `001-refine-mvp-requirements-and-delivery-decisions.md`, `004-provision-aws-foundation-with-cdk.md`, `005-implement-authentication-and-plan-access-control.md` | 0 | Builds the consultation domain model, storage patterns, status rules, and attributable audit foundation |
 | 007 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | Full Stack | High | planned | `005-implement-authentication-and-plan-access-control.md`, `006-model-consultation-domain-persistence-and-audit.md` | 0 | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
@@ -103,7 +106,7 @@ Track major delivery checkpoints for the MVP.
 | Milestone | Target Outcome | Status | Notes |
 | --- | --- | --- | --- |
 | Project Setup | Task system ready for execution | done | Template and manager files created |
-| Infrastructure Ready | AWS baseline in place | planned | Covered by Tasks 003 and 004 |
+| Infrastructure Ready | AWS baseline in place | done | Tasks 003 and 004 completed |
 | Backend Ready | Core API and business logic in place | planned | Covered by Tasks 005 through 011 |
 | Frontend Ready | Core MVP interface in place | planned | Covered by Tasks 012 and 013 |
 | MVP Ready | End-to-end usable first version | planned | Covered by Tasks 014 and 015 |
@@ -127,6 +130,14 @@ List the most recently changed tasks first.
 
 | Date | Task File | Change |
 | --- | --- | --- |
+| 2026-03-30 | `004-provision-aws-foundation-with-cdk.md` | Same-account hardening: environment tagging, scoped budgets, forecast alerts, and prod termination protection when `dev`/`prod` share one AWS account |
+| 2026-03-30 | `@task-manager.md` | Updated Task 004 summary and recent changes with shared-account hardening follow-up |
+| 2026-03-30 | `004-provision-aws-foundation-with-cdk.md` | Refined post-completion: separated AWS `dev` environment origins from localhost development assumptions and aligned CORS/callback configuration |
+| 2026-03-30 | `@task-manager.md` | Updated summary and recent changes for Task 004 environment distinction clarification |
+| 2026-03-30 | `004-provision-aws-foundation-with-cdk.md` | Completed: isolated `dev`/`prod` CDK foundations delivered with security, storage, API, orchestration, monitoring, CDN, and budget baselines |
+| 2026-03-30 | `@task-manager.md` | Updated for Task 004 completion: status, progress, next step, priority queue, and milestone movement |
+| 2026-03-30 | `004-provision-aws-foundation-with-cdk.md` | Started implementation: task moved to in-progress and baseline CDK resource provisioning underway |
+| 2026-03-30 | `@task-manager.md` | Updated snapshot, priority queue, and Task 004 status to in-progress |
 | 2026-03-30 | `003-bootstrap-repository-and-engineering-foundation.md` | Completed: repository scaffold, package bootstraps, linting/formatting conventions, setup docs, and baseline CI workflows |
 | 2026-03-30 | `@task-manager.md` | Updated Task 003 to done; refreshed snapshot, priority queue, next step, and progress |
 | 2026-03-30 | `003-bootstrap-repository-and-engineering-foundation.md` | Started implementation: task moved to in-progress, bootstrap and tooling work underway |

@@ -248,6 +248,12 @@ Rules:
 - do not create a `staging` environment for the MVP
 - all infrastructure must be isolated per environment
 - Cognito, API Gateway, Lambda, DynamoDB, S3, and secrets must be separated between `dev` and `prod`
+- treat `dev` as an AWS-hosted development environment, not as localhost runtime
+- local developer machine execution is separate from AWS environment definitions
+- if `dev` and `prod` share one AWS account, apply hardening controls:
+  - environment tags on resources
+  - environment-scoped budget filters
+  - termination protection on `prod` stacks
 
 Naming examples:
 

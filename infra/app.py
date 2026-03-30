@@ -25,23 +25,109 @@ CONFIG_BY_ENV: dict[str, EnvironmentConfig] = {
 
 def main() -> None:
     env_name = getenv("DESKAI_ENV", "dev")
+    if env_name not in CONFIG_BY_ENV:
+        supported_envs = ", ".join(sorted(CONFIG_BY_ENV))
+        raise ValueError(
+            f"Unsupported DESKAI_ENV '{env_name}'. Supported values: {supported_envs}."
+        )
+
     config = CONFIG_BY_ENV[env_name]
+    aws_env = cdk.Environment(account=config.aws_account_id, region=config.aws_region)
+    shared_account_mode = DEV_CONFIG.aws_account_id == PROD_CONFIG.aws_account_id
 
     app = cdk.App()
+    cdk.Tags.of(app).add("project", "deskai")
+    cdk.Tags.of(app).add("environment", config.environment)
+    cdk.Tags.of(app).add("managed-by", "cdk")
+    cdk.Tags.of(app).add(
+        "account-mode",
+        "shared" if shared_account_mode else "dedicated",
+    )
+    cdk.Tags.of(app).add("data-classification", "sensitive-health")
 
-    security = SecurityStack(app, f"deskai-{config.environment}-security", config=config)
-    storage = StorageStack(app, f"deskai-{config.environment}-storage", config=config)
-    auth = AuthStack(app, f"deskai-{config.environment}-auth", config=config)
-    compute = ComputeStack(app, f"deskai-{config.environment}-compute", config=config)
-    api = ApiStack(app, f"deskai-{config.environment}-api", config=config)
+    stack_hardening_kwargs = {
+        "env": aws_env,
+        "termination_protection": config.is_production and shared_account_mode,
+    }
+
+    security = SecurityStack(
+        app,
+        f"deskai-{config.environment}-security",
+        config=config,
+        **stack_hardening_kwargs,
+    )
+    storage = StorageStack(
+        app,
+        f"deskai-{config.environment}-storage",
+        config=config,
+        data_key=security.data_key,
+        **stack_hardening_kwargs,
+    )
+    auth = AuthStack(
+        app,
+        f"deskai-{config.environment}-auth",
+        config=config,
+        **stack_hardening_kwargs,
+    )
+    compute = ComputeStack(
+        app,
+        f"deskai-{config.environment}-compute",
+        config=config,
+        permissions_boundary=security.permissions_boundary,
+        consultation_table=storage.consultation_table,
+        artifacts_bucket=storage.artifacts_bucket,
+        data_key=security.data_key,
+        deepgram_secret=security.deepgram_secret,
+        claude_secret=security.claude_secret,
+        **stack_hardening_kwargs,
+    )
+    api = ApiStack(
+        app,
+        f"deskai-{config.environment}-api",
+        config=config,
+        user_pool=auth.user_pool,
+        user_pool_client=auth.user_pool_client,
+        bff_handler=compute.bff_handler,
+        websocket_handler=compute.websocket_handler,
+        **stack_hardening_kwargs,
+    )
     orchestration = OrchestrationStack(
         app,
         f"deskai-{config.environment}-orchestration",
         config=config,
+        permissions_boundary=security.permissions_boundary,
+        data_key=security.data_key,
+        pipeline_handler=compute.pipeline_handler,
+        **stack_hardening_kwargs,
     )
-    monitoring = MonitoringStack(app, f"deskai-{config.environment}-monitoring", config=config)
-    budget = BudgetStack(app, f"deskai-{config.environment}-budget", config=config)
-    cdn = CdnStack(app, f"deskai-{config.environment}-cdn", config=config)
+    monitoring = MonitoringStack(
+        app,
+        f"deskai-{config.environment}-monitoring",
+        config=config,
+        alarm_topic=orchestration.alerts_topic,
+        bff_handler=compute.bff_handler,
+        websocket_handler=compute.websocket_handler,
+        pipeline_handler=compute.pipeline_handler,
+        http_api_id=api.http_api.api_id,
+        websocket_api_id=api.websocket_api.api_id,
+        consultation_workflow=orchestration.consultation_workflow,
+        processing_dlq=orchestration.processing_dlq,
+        **stack_hardening_kwargs,
+    )
+    budget = BudgetStack(
+        app,
+        f"deskai-{config.environment}-budget",
+        config=config,
+        budget_alert_topic=orchestration.alerts_topic,
+        shared_account_mode=shared_account_mode,
+        **stack_hardening_kwargs,
+    )
+    cdn = CdnStack(
+        app,
+        f"deskai-{config.environment}-cdn",
+        config=config,
+        **stack_hardening_kwargs,
+    )
 
     compute.add_dependency(storage)
     compute.add_dependency(security)

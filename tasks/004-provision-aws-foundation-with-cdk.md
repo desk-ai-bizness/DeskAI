@@ -79,6 +79,8 @@ Before implementing this task, read these documents in addition to the standard 
 - Only `dev` and `prod` environments are allowed.
 - Primary storage is DynamoDB + S3.
 - Use explicit CORS policies and avoid production wildcards.
+- Keep AWS `dev` environment origins/callbacks distinct from localhost development origins.
+- If `dev` and `prod` share one AWS account, add same-account guardrails (environment tags, scoped budgets, and `prod` termination protection).
 
 ## 5. Implementation Notes
 
@@ -106,11 +108,11 @@ The task should produce:
 
 ## 7. Acceptance Criteria
 
-- [ ] `dev` and `prod` infrastructure definitions exist and are isolated.
-- [ ] Required MVP AWS services are provisioned in CDK with least-privilege defaults.
-- [ ] DynamoDB and S3 recovery-related settings are configured.
-- [ ] Budget alerting is defined for monthly spend above `$5`.
-- [ ] Documentation is updated if behavior or setup changed
+- [x] `dev` and `prod` infrastructure definitions exist and are isolated.
+- [x] Required MVP AWS services are provisioned in CDK with least-privilege defaults.
+- [x] DynamoDB and S3 recovery-related settings are configured.
+- [x] Budget alerting is defined for monthly spend above `$5`.
+- [x] Documentation is updated if behavior or setup changed
 
 ## 8. Testing
 
@@ -135,10 +137,10 @@ Deploy to `dev` and confirm core resources exist, encryption is enabled, alarms 
 
 ## 10. Definition of Done
 
-- [ ] Implementation is complete
-- [ ] Acceptance criteria are met
-- [ ] Tests pass
-- [ ] No obvious regressions were introduced
-- [ ] Logs, metrics, and error handling were considered
-- [ ] Security and permissions were reviewed if relevant
-- [ ] Task is ready for review or merge
+- [x] Implementation is complete
+- [x] Acceptance criteria are met
+- [x] Tests pass
+- [x] No obvious regressions were introduced
+- [x] Logs, metrics, and error handling were considered
+- [x] Security and permissions were reviewed if relevant
+- [x] Task is ready for review or merge

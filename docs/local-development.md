@@ -35,6 +35,8 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -e .[dev]
 npm install
+export DESKAI_ENV=dev
+make test
 make synth
 ```
 
@@ -67,6 +69,10 @@ npm run format:check
 
 ## Notes
 
+- `dev` and `prod` are AWS deployment environments; they are not local machine environments.
+- Exporting `DESKAI_ENV=dev` in `infra/` selects AWS `dev` stack configuration for synth/deploy.
+- Running frontend/backend on localhost is local development only and is configured separately from
+  AWS-origin allowlists.
 - The frontend app is intentionally backend-driven.
 - Do not add business logic to `app/`.
 - Keep `contracts/` as the shared source of truth for API shapes.

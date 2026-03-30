@@ -253,6 +253,13 @@ tools/
 | `dev` | Development and testing | Separate resources, same or different account |
 | `prod` | Production | Separate resources, hardened permissions |
 
+Clarification:
+- Localhost execution on developer machines is not an AWS environment and is configured separately.
+- If `dev` and `prod` use the same AWS account, apply additional guardrails:
+  - explicit environment tags on resources
+  - budget scoping by environment tag
+  - termination protection for `prod` stacks
+
 ### Configuration Approach
 
 - CDK stacks accept an `environment` parameter (`dev` or `prod`).

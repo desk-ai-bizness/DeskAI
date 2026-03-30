@@ -1,5 +1,6 @@
 config
 constructs
+lambda_handlers
 node_modules
 stacks
 tests

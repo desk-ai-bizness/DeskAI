@@ -5,6 +5,11 @@ pyproject.toml
 ./config/dev.py
 ./config/prod.py
 ./constructs/tagged_construct.py
+./lambda_handlers/__init__.py
+./lambda_handlers/bff.py
+./lambda_handlers/exporter.py
+./lambda_handlers/pipeline.py
+./lambda_handlers/websocket.py
 ./node_modules/aws-cdk/lib/init-templates/app/python/app.template.py
 ./node_modules/aws-cdk/lib/init-templates/app/python/tests/__init__.py
 ./node_modules/aws-cdk/lib/init-templates/app/python/tests/unit/__init__.py
@@ -24,6 +29,7 @@ pyproject.toml
 ./stacks/security_stack.py
 ./stacks/storage_stack.py
 ./tests/test_config.py
+./tests/test_stacks.py
 config/__init__.py
 config/base.py
 config/dev.py
@@ -34,6 +40,14 @@ deskai_infra.egg-info/SOURCES.txt
 deskai_infra.egg-info/dependency_links.txt
 deskai_infra.egg-info/requires.txt
 deskai_infra.egg-info/top_level.txt
+node_modules/aws-cdk/lib/init-templates/app/python/app.template.py
+node_modules/aws-cdk/lib/init-templates/app/python/tests/__init__.py
+node_modules/aws-cdk/lib/init-templates/app/python/tests/unit/__init__.py
+node_modules/aws-cdk/lib/init-templates/app/python/tests/unit/test_%name.PythonModule%_stack.template.py
+node_modules/aws-cdk/lib/init-templates/sample-app/python/app.template.py
+node_modules/aws-cdk/lib/init-templates/sample-app/python/tests/__init__.py
+node_modules/aws-cdk/lib/init-templates/sample-app/python/tests/unit/__init__.py
+node_modules/aws-cdk/lib/init-templates/sample-app/python/tests/unit/test_%name.PythonModule%_stack.template.py
 stacks/__init__.py
 stacks/api_stack.py
 stacks/auth_stack.py
@@ -45,3 +59,4 @@ stacks/orchestration_stack.py
 stacks/security_stack.py
 stacks/storage_stack.py
 tests/test_config.py
+tests/test_stacks.py

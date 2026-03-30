@@ -53,7 +53,17 @@ Priority:
 - prefer idempotent operations for async and distributed flows
 - do not hide failures silently
 
-## 6. Security Expectations
+## 6. Testing Expectations
+
+- Always follow TDD: write a failing test first, then implement the minimum code to pass, then refactor.
+- Never write implementation code without a corresponding failing test.
+- Apply TDD across all applicable test types: unit, integration, handler, contract, API, infrastructure, and end-to-end.
+- Every bug fix must start with a failing test that reproduces the bug.
+- No code may be merged without tests passing in CI.
+- Tests must be deterministic, fast, and isolated.
+- See `docs/mvp-technical-specs.md` section 23 for the full testing strategy, tools, and scope definitions.
+
+## 7. Security Expectations
 
 - always treat consultation and user data as sensitive
 - always minimize exposure of sensitive data
@@ -61,13 +71,13 @@ Priority:
 - always follow least-privilege access principles
 - never introduce broader permissions than necessary
 
-## 7. Change Management Expectations
+## 8. Change Management Expectations
 
 - document important technical decisions as short ADR entries in `docs/mvp-technical-specs.md`
 - keep ADRs summarized, explicit, and easy to scan
 - if a new feature may need controlled rollout, prefer using feature flags instead of hard-coded branching
 
-## 8. What Belongs In Other Files
+## 9. What Belongs In Other Files
 
 These items belong in `docs/mvp-technical-specs.md`, not here:
 

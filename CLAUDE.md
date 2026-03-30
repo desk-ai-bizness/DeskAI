@@ -130,6 +130,44 @@ Design constraints:
 - Keep modules highly cohesive and loosely coupled.
 - Design for testability, observability, and replaceability from the start.
 
+## Testing and TDD Rules
+
+All code where tests are applicable must follow strict Test-Driven Development.
+
+TDD workflow:
+
+1. **Red** — Write a failing test that defines the expected behavior. Run it. It must fail.
+2. **Green** — Write the minimum implementation code to make the test pass.
+3. **Refactor** — Clean up while keeping all tests green.
+
+Mandatory rules:
+
+- Never write implementation code without a failing test first.
+- Every new function, module, endpoint, adapter, handler, or infrastructure construct gets its test first.
+- Every bug fix starts with a failing test that reproduces the bug before fixing it.
+- All tests must pass before committing.
+- No production code may be merged without corresponding tests passing in CI.
+
+TDD applies to all test types, not just unit tests:
+
+- Unit tests — domain entities, value objects, services, business rules.
+- Application tests — use cases with mocked port interfaces.
+- Integration tests — adapters against real or emulated services (localstack, moto).
+- Handler tests — Lambda handlers with event fixtures.
+- BFF tests — view models, feature flag evaluation, UI config assembly.
+- Infrastructure tests — CDK stack synthesis assertions.
+- Contract tests — YAML schema validation, API response shape.
+- API tests — HTTP request/response round-trips.
+- End-to-end tests — acceptance-driven, write expected outcomes first.
+
+TDD does not apply to:
+
+- Pure configuration files (`.env`, `cdk.json`, YAML configs).
+- Static assets (HTML, CSS, images).
+- Exploratory prototypes — but tests must exist before merging to main.
+
+See `docs/mvp-technical-specs.md` section 23 for the full testing strategy.
+
 ## Reliability Rules
 
 - Always implement error handling deliberately.

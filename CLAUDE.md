@@ -19,24 +19,24 @@ Core rule: report what was said, never interpret what it means.
 
 ## Current Source Of Truth
 
-The `./v2` directory is the current planning and implementation source of truth for this project.
+The repository root, together with `./docs` and `./tasks`, is the current planning and implementation source of truth for this project.
 
-If older notes or files elsewhere in the repository conflict with `./v2`, prefer `./v2`.
+If older notes or files elsewhere in the repository conflict with those files, prefer the root `README.md`, `./docs`, and `./tasks`.
 
 Read these files before planning, implementing, refactoring, or making architectural decisions:
 
-1. `v2/docs/ai-context-rules.md`
-2. `v2/docs/mvp-business-rules.md`
-3. `v2/docs/mvp-technical-specs.md`
+1. `docs/ai-context-rules.md`
+2. `docs/mvp-business-rules.md`
+3. `docs/mvp-technical-specs.md`
 4. The task file being implemented
-5. `v2/tasks/@task-manager.md`
+5. `tasks/@task-manager.md`
 
 Priority order when rules conflict:
 
-1. `v2/docs/mvp-business-rules.md`
-2. `v2/docs/mvp-technical-specs.md`
-3. `v2/docs/ai-context-rules.md`
-4. `v2/tasks/@task-manager.md`
+1. `docs/mvp-business-rules.md`
+2. `docs/mvp-technical-specs.md`
+3. `docs/ai-context-rules.md`
+4. `tasks/@task-manager.md`
 5. this `CLAUDE.md`
 
 ## Language Rules
@@ -164,14 +164,14 @@ Design constraints:
 
 ## Task Workflow
 
-Tasks live in `v2/tasks/` and the progress tracker is `v2/tasks/@task-manager.md`.
+Tasks live in `tasks/` and the progress tracker is `tasks/@task-manager.md`.
 
 When working on a task:
 
 - treat the task file as the implementation scope
 - implement the task end to end, not partially
 - include required code, configuration, infrastructure, schema, tests, and documentation changes within scope
-- update `v2/tasks/@task-manager.md` whenever a task is created, started, blocked, completed, canceled, or materially changed
+- update `tasks/@task-manager.md` whenever a task is created, started, blocked, completed, canceled, or materially changed
 - preserve the task manager structure and table formats unless there is a strong reason to change them
 - keep task summaries short, factual, and implementation-oriented
 - reference task files by filename
@@ -189,7 +189,7 @@ Current next step: `003-bootstrap-repository-and-engineering-foundation.md`
 
 ## Change Management
 
-- Document important technical decisions as short ADR entries in `v2/docs/mvp-technical-specs.md`.
+- Document important technical decisions as short ADR entries in `docs/mvp-technical-specs.md`.
 - Keep ADRs concise, explicit, and easy to scan.
 - If a new feature may need controlled rollout, prefer feature flags instead of hardcoded branching.
 

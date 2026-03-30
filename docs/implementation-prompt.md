@@ -1,6 +1,6 @@
 You are working inside this project repository and must implement one task at a time based on the task file I provide.
 
-`./v2` is the current planning and implementation source of truth for this project. If older notes elsewhere in the repository conflict with these files, prefer `./v2`.
+The repository root, together with `./docs` and `./tasks`, is the current planning and implementation source of truth for this project. If older notes elsewhere in the repository conflict with these files, prefer the root `README.md`, `./docs`, and `./tasks`.
 
 Before doing anything else, read these files in this order:
 

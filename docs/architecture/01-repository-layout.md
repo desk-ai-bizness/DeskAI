@@ -18,9 +18,8 @@ DeskAI/
 ├── contracts/                     # Shared schemas and API contracts
 ├── infra/                         # AWS CDK infrastructure
 ├── tools/                         # Development scripts and utilities
-├── v2/
-│   ├── docs/                      # Architecture, requirements, specs
-│   └── tasks/                     # Task files and manager
+├── docs/                          # Architecture, requirements, specs, implementation guidance
+├── tasks/                         # Task files and manager
 ├── .github/                       # CI/CD workflows
 ├── CLAUDE.md                      # AI agent project context
 ├── README.md                      # Project README
@@ -32,11 +31,11 @@ DeskAI/
 - **Flat top-level packages**: Each major component is a direct child of the repository root. This keeps navigation simple and avoids deep nesting for a small team.
 - **Single backend package**: The BFF and core backend share the same Python package because they share the same domain models, ports, and adapters. Separating them into two packages would create duplication and synchronization overhead. The boundary between BFF and core is enforced by module structure, not separate deployments.
 - **Contracts directory**: Shared schemas live outside any single package so both backend and frontend can reference them as the source of truth.
-- **Documentation stays in v2/docs**: Architecture and requirements documentation remains centralized and version-controlled alongside task files.
+- **Documentation stays in docs/**: Architecture and requirements documentation remains centralized at the repository root alongside `tasks/`.
 
 ### CLAUDE.md
 
-The root `CLAUDE.md` file provides AI coding assistants (such as Claude Code) with project context. Its content should mirror the instructions in `v2/implementation-prompt.md`, including:
+The root `CLAUDE.md` file provides AI coding assistants (such as Claude Code) with project context. Its content should mirror the instructions in `docs/implementation-prompt.md`, including:
 
 - The mandatory reading order for project documentation
 - Core engineering principles and business constraints

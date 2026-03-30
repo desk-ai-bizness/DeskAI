@@ -49,11 +49,11 @@ Core rule: report what was said, never interpret what it means.
 
 Use the files below as the canonical MVP definition:
 
-1. [`docs/ai-context-rules.md`](/Users/gabrielsantiago/Documents/DeskAI/v2/docs/ai-context-rules.md)
-2. [`docs/mvp-business-rules.md`](/Users/gabrielsantiago/Documents/DeskAI/v2/docs/mvp-business-rules.md)
-3. [`docs/mvp-technical-specs.md`](/Users/gabrielsantiago/Documents/DeskAI/v2/docs/mvp-technical-specs.md)
-4. [`tasks/@task-manager.md`](/Users/gabrielsantiago/Documents/DeskAI/v2/tasks/@task-manager.md)
-5. [`implementation-prompt.md`](/Users/gabrielsantiago/Documents/DeskAI/v2/implementation-prompt.md)
+1. [`docs/ai-context-rules.md`](/Users/gabrielsantiago/Documents/DeskAI/docs/ai-context-rules.md)
+2. [`docs/mvp-business-rules.md`](/Users/gabrielsantiago/Documents/DeskAI/docs/mvp-business-rules.md)
+3. [`docs/mvp-technical-specs.md`](/Users/gabrielsantiago/Documents/DeskAI/docs/mvp-technical-specs.md)
+4. [`tasks/@task-manager.md`](/Users/gabrielsantiago/Documents/DeskAI/tasks/@task-manager.md)
+5. [`docs/implementation-prompt.md`](/Users/gabrielsantiago/Documents/DeskAI/docs/implementation-prompt.md)
 
 ## Current Delivery State
 
@@ -63,4 +63,4 @@ Planning and architecture are in place.
 - Task `002` completed: repository architecture, backend structure, contracts, and data flow
 - Next implementation step: Task `003` bootstrap repository and engineering foundation
 
-For day-to-day progress tracking, use [`tasks/@task-manager.md`](/Users/gabrielsantiago/Documents/DeskAI/v2/tasks/@task-manager.md).
+For day-to-day progress tracking, use [`tasks/@task-manager.md`](/Users/gabrielsantiago/Documents/DeskAI/tasks/@task-manager.md).

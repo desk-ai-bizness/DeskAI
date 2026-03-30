@@ -22,6 +22,12 @@ class EnvironmentConfigTest(unittest.TestCase):
         self.assertEqual(DEV_CONFIG.monthly_budget_limit_usd, 5)
         self.assertEqual(PROD_CONFIG.monthly_budget_limit_usd, 5)
 
+    def test_prod_and_dev_origins_are_disjoint(self) -> None:
+        dev_origins = set(DEV_CONFIG.allowed_cors_origins)
+        prod_origins = set(PROD_CONFIG.allowed_cors_origins)
+        overlap = dev_origins & prod_origins
+        self.assertEqual(overlap, set(), f"dev and prod origins must not overlap: {overlap}")
+
 
 if __name__ == "__main__":
     unittest.main()

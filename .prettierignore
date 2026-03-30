@@ -1,0 +1,12 @@
+.git
+node_modules
+**/node_modules
+**/dist
+infra/cdk.out
+tasks
+docs/architecture
+docs/requirements
+.poc-frontend
+.vscode
+**/.venv
+**/__pycache__

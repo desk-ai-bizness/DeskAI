@@ -1,0 +1,21 @@
+{
+  "name": "deskai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "DeskAI monorepo tooling",
+  "scripts": {
+    "lint": "npm run lint:markdown && npm run lint:css && npm run lint:contracts",
+    "lint:markdown": "markdownlint-cli2",
+    "lint:css": "stylelint \"app/src/**/*.css\" \"website/assets/css/**/*.css\"",
+    "lint:contracts": "bash ./tools/lint-contracts.sh",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1.31.0",
+    "markdownlint-cli2": "^0.18.1",
+    "prettier": "^3.4.2",
+    "stylelint": "^16.15.0",
+    "stylelint-config-standard": "^37.0.0"
+  }
+}

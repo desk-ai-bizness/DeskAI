@@ -1,0 +1,43 @@
+Metadata-Version: 2.4
+Name: deskai-backend
+Version: 0.1.0
+Summary: DeskAI backend core and BFF
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: aws-lambda-powertools>=2.40.0
+Requires-Dist: boto3>=1.35.0
+Requires-Dist: httpx>=0.27.0
+Requires-Dist: pydantic>=2.9.0
+Requires-Dist: tenacity>=9.0.0
+Provides-Extra: dev
+Requires-Dist: ruff>=0.7.0; extra == "dev"
+Requires-Dist: mypy>=1.11.0; extra == "dev"
+Requires-Dist: pytest>=8.3.0; extra == "dev"
+
+# Backend
+
+Python backend for DeskAI MVP using a hexagonal architecture.
+
+## Structure
+
+- `src/deskai/domain`: pure domain entities, value objects, services, rules
+- `src/deskai/application`: use cases and orchestration
+- `src/deskai/ports`: abstract interfaces for repositories and providers
+- `src/deskai/adapters`: concrete infrastructure implementations
+- `src/deskai/handlers`: inbound Lambda entrypoints
+- `src/deskai/bff`: frontend-facing view model assembly
+- `src/deskai/shared`: cross-cutting utilities
+
+## Local Commands
+
+```bash
+make install
+make lint
+make test
+```
+
+## Security Notes
+
+- Do not log raw medical transcript content.
+- Do not log CPF or direct PII.
+- Log only diagnostic metadata needed for troubleshooting.

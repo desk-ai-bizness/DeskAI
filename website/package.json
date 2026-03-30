@@ -1,0 +1,14 @@
+{
+  "name": "deskai-website",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "python3 -m http.server 4174",
+    "lint": "stylelint \"assets/css/**/*.css\" && prettier --check \"pages/**/*.html\" \"assets/js/**/*.js\""
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "stylelint": "^16.15.0",
+    "stylelint-config-standard": "^37.0.0"
+  }
+}

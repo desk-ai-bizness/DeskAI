@@ -1,0 +1,13 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$title: SessionClientMessage
+$type: object
+required:
+  - action
+  - data
+properties:
+  action:
+    type: string
+    enum: [session.init, audio.chunk, session.stop, client.ping]
+  data:
+    type: object
+    additionalProperties: true

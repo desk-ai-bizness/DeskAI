@@ -7,3 +7,30 @@
 *.code-workspace
 .history/
 .claude
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+**/.venv/
+
+# Node
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+npm-debug.log*
+yarn-error.log*
+infra/cdk.out/
+
+# Environment
+.env
+.env.local
+.env.*.local

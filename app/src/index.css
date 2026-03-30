@@ -1,0 +1,51 @@
+:root {
+  color: #11203b;
+  background: linear-gradient(180deg, #eef3ff 0%, #f7fbff 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.app-shell {
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 24px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.app-header p {
+  margin-top: 4px;
+  color: #42597d;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 16px;
+}
+
+.status-card,
+.panel {
+  border: 1px solid #c8d7ef;
+  border-radius: 12px;
+  background-color: #fff;
+  padding: 16px;
+}
+
+.error {
+  border-color: #d12e2e;
+  color: #b10000;
+}

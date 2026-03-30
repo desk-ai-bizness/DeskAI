@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$title: UiConfigScreenSchema
+$type: object
+required:
+  - version
+  - locale
+  - review_screen
+properties:
+  version:
+    type: string
+  locale:
+    type: string
+    const: pt-BR
+  review_screen:
+    type: object
+    additionalProperties: true

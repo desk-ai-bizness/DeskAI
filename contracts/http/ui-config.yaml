@@ -1,0 +1,11 @@
+openapi: 3.1.0
+info:
+  title: DeskAI UI Config API
+  version: v1
+paths:
+  /v1/ui-config:
+    get:
+      summary: Fetch backend-driven UI configuration
+      responses:
+        '200':
+          description: UI config payload

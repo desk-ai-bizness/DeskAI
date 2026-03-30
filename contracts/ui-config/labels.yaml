@@ -1,0 +1,10 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$title: UiLabelsSchema
+$type: object
+required:
+  - labels
+properties:
+  labels:
+    type: object
+    additionalProperties:
+      type: string

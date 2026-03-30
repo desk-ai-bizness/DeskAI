@@ -1,0 +1,1 @@
+"""BFF placeholder module."""

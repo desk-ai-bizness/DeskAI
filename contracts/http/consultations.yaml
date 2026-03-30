@@ -1,0 +1,28 @@
+openapi: 3.1.0
+info:
+  title: DeskAI Consultation API
+  version: v1
+paths:
+  /v1/consultations:
+    post:
+      summary: Create consultation
+      responses:
+        '201':
+          description: Consultation created
+    get:
+      summary: List consultations
+      responses:
+        '200':
+          description: Consultation list
+  /v1/consultations/{consultation_id}:
+    get:
+      summary: Get consultation details
+      parameters:
+        - in: path
+          name: consultation_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Consultation detail

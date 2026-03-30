@@ -1,0 +1,136 @@
+:root {
+  --ink: #1f2f4c;
+  --paper: #f7fafc;
+  --brand: #0f4c81;
+  --brand-soft: #d8e9f8;
+  --line: #c7d8e8;
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at 20% 20%, #ebf4ff 0%, var(--paper) 45%, #fdfefe 100%);
+  color: var(--ink);
+  font-family: 'Trebuchet MS', 'Gill Sans', sans-serif;
+}
+
+.container {
+  width: min(1040px, 92vw);
+  margin: 0 auto;
+}
+
+.site-header {
+  border-bottom: 1px solid var(--line);
+  background-color: #fff;
+  position: sticky;
+  top: 0;
+}
+
+.nav-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 68px;
+}
+
+.brand {
+  color: var(--ink);
+  font-size: 1.3rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.menu-toggle {
+  display: none;
+}
+
+.main-nav {
+  display: flex;
+  gap: 16px;
+}
+
+.main-nav a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.main-nav .cta,
+.btn {
+  border: 1px solid var(--brand);
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  display: inline-block;
+  padding: 10px 16px;
+  text-decoration: none;
+}
+
+.hero {
+  padding: 64px 0 28px;
+}
+
+.hero h1 {
+  font-size: clamp(1.8rem, 3.4vw, 3rem);
+  margin: 10px 0;
+}
+
+.kicker {
+  color: #4a6b90;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  padding-bottom: 40px;
+}
+
+.highlights article,
+.page-block article {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 16px;
+}
+
+.page-block {
+  padding: 40px 0;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+@media (width <= 720px) {
+  .menu-toggle {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    padding: 8px 10px;
+  }
+
+  .main-nav {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    right: 4vw;
+    top: 60px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    padding: 14px;
+  }
+
+  .main-nav.is-open {
+    display: flex;
+  }
+}

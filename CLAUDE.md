@@ -1,98 +1,206 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working in this repository.
 
 ## Project Overview
 
-**DeskAI — Medical AI Scribe** for Brazilian physicians. Captures doctor-patient consultation audio, transcribes with speaker diarization, generates structured summaries, and stores them for physician review and approval.
+DeskAI is an AI-assisted medical documentation product for Brazilian physicians.
 
-**Status:** Pre-MVP — planning complete, ready to begin implementation (Task 001).
+The MVP supports consultation documentation by:
 
-**Core principle:** Report, never interpret. The AI summarizes what was said, never what it means. Every summary requires physician approval before permanent storage.
+- producing a consultation transcript
+- generating a draft structured medical history
+- generating a consultation summary
+- highlighting reviewable documentation, consistency, and clinical attention flags
 
-## Architecture
+DeskAI is a documentation support tool. It is not a clinical decision-maker.
 
-AWS serverless, Hexagonal Architecture. Four layers:
+Core rule: report what was said, never interpret what it means.
 
-1. **Web Frontend** — React app (authenticated) + public marketing site. Presentation only; must be "as dumb as possible" with backend-driven UI configuration.
-2. **BFF Layer** — Frontend-specific APIs on AWS Lambda. Shapes backend data into UI-friendly payloads, injects UI config/labels.
-3. **Core Backend** — Python on AWS Lambda. Owns domain logic: consultation lifecycle, transcription integration, AI pipeline, review/finalization, audit.
-4. **Infrastructure** — Cognito (auth), API Gateway (HTTP + WebSocket), DynamoDB + S3 (data), Step Functions (orchestration), EventBridge/SQS/SNS (events).
+## Current Source Of Truth
 
-Key AWS services: Cognito, CloudFront, API Gateway (HTTP + WebSocket), Lambda, Step Functions, DynamoDB, S3, EventBridge, SQS, SNS, Secrets Manager, KMS, CloudWatch.
+The `./v2` directory is the current planning and implementation source of truth for this project.
 
-## Tech Stack (MVP)
+If older notes or files elsewhere in the repository conflict with `./v2`, prefer `./v2`.
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React (authenticated app) + public website |
-| Backend | Python, AWS Lambda |
-| IaC | AWS CDK |
-| Auth | Amazon Cognito (email+password only, no social login) |
-| Database | DynamoDB + S3 |
-| ASR | Deepgram (Nova-2 Medical, pt-BR) |
-| LLM | Claude API (Anthropic) |
-| Orchestration | AWS Step Functions |
-| Events | EventBridge, SQS, SNS |
-| Environments | `dev`, `prod` |
+Read these files before planning, implementing, refactoring, or making architectural decisions:
 
-**Note:** The root-level `TECHNICAL_PLAN.md` and `blueprint-medical-ai.md` reference an older stack (FastAPI, PostgreSQL, Railway/Supabase, Celery+Redis). The `v2/` directory is the current source of truth.
+1. `v2/docs/ai-context-rules.md`
+2. `v2/docs/mvp-business-rules.md`
+3. `v2/docs/mvp-technical-specs.md`
+4. The task file being implemented
+5. `v2/tasks/@task-manager.md`
+
+Priority order when rules conflict:
+
+1. `v2/docs/mvp-business-rules.md`
+2. `v2/docs/mvp-technical-specs.md`
+3. `v2/docs/ai-context-rules.md`
+4. `v2/tasks/@task-manager.md`
+5. this `CLAUDE.md`
 
 ## Language Rules
 
-- **Code, comments, variable names, commits, PRs, docs:** English.
-- **AI prompts and output templates (scribe pipeline):** Brazilian Portuguese (pt-BR).
-- **User-facing strings and product content:** Brazilian Portuguese (pt-BR).
+- Code, code comments, and technical documentation must be written in English.
+- User-facing product content must be written in Brazilian Portuguese (`pt-BR`).
+- Consultation transcripts must be generated in Brazilian Portuguese (`pt-BR`).
+- AI prompts and output templates for the medical scribe flow should remain in Brazilian Portuguese (`pt-BR`) where applicable.
 
-## Source of Truth (v2/)
+## Product Boundaries
 
-All implementation decisions live in `v2/`. Read these before any implementation work:
+- The MVP operates in Brazil.
+- The initial target user is a physician.
+- The MVP is limited to general practice/generalist consultations.
+- Each consultation belongs to one physician, one patient, and one clinic context.
+- The MVP supports one specialty per consultation.
+- Authentication is email + password only.
+- Do not add Google login, Facebook login, social login, or SSO alternatives.
+- The supported MVP plan types are `free_trial`, `plus`, and `pro`.
+- Plan-based access control is part of the MVP business model and must be enforced consistently.
 
-1. `v2/docs/ai-context-rules.md` — Engineering principles and AI behavior rules
-2. `v2/docs/mvp-business-rules.md` — Product boundaries, plan types, consultation rules
-3. `v2/docs/mvp-technical-specs.md` — Architecture, AWS services, ADRs
-4. `v2/tasks/@task-manager.md` — Progress tracker and priority queue
-5. `v2/implementation-prompt.md` — Task execution protocol
+The MVP must not:
 
-When implementing a task, follow the execution protocol in `v2/implementation-prompt.md`: read context files in order, implement the assigned task file fully, update `@task-manager.md` when done.
+- generate automatic diagnoses
+- generate automatic prescriptions
+- act without physician review
+- support multi-specialty handling within the same consultation
+- present clinical suggestions as authoritative decisions
+- deeply integrate with external medical record systems as part of the MVP
 
-## Task Workflow
+## Required Output Rules
 
-Tasks are in `v2/tasks/` numbered 001–015. The task manager (`v2/tasks/@task-manager.md`) tracks status using: `planned`, `in_progress`, `blocked`, `done`, `canceled`.
+For each successfully processed consultation, the MVP must produce:
 
-Current next step: Task 001 (refine MVP requirements and delivery decisions).
+- a raw transcript
+- a draft structured medical history
+- a consultation summary
+- a list of flagged insights for review
+- evidence excerpts linking each flagged insight to the related consultation dialogue
 
-## Backend Design Rules
+If an output cannot be produced reliably, mark it as incomplete or pending review instead of inventing content.
 
-- Hexagonal Architecture: business rules independent from frameworks and AWS services.
-- Ports and adapters boundaries between domain and infrastructure.
-- Async/event-driven where it improves resilience or decoupling.
-- Idempotent operations for async and distributed flows.
-- Business logic in backend services, never in frontend.
-- ADRs documented in `v2/docs/mvp-technical-specs.md`.
+## Physician Review Rules
 
-## Security (Non-Negotiable)
+- No AI-generated output is final until reviewed by the physician.
+- The physician must be able to edit draft medical history, summary, and insights.
+- Finalization must be an explicit physician action.
+- A finalized consultation is immutable and locked from further edits.
+- Only finalized consultations may be exported.
 
-- All consultation and user data is sensitive — never log PII, CPF, or medical records.
-- Encrypt sensitive fields at rest (KMS). Mask sensitive data in logs/traces.
-- Least-privilege IAM. Do not introduce broader permissions than necessary.
-- LGPD compliance required — audit trail for every data access.
+## Architecture Rules
+
+The MVP uses an AWS serverless-first architecture with four layers:
+
+1. Web frontend
+2. BFF layer
+3. Core backend layer
+4. Infrastructure and data layer
+
+Implementation rules:
+
+- Backend language: Python
+- Authenticated app: React + TypeScript + Vite
+- Public website: standard HTML/CSS with minimal JavaScript when needed
+- Infrastructure as code: AWS CDK
+- Primary data storage: DynamoDB + S3
+- Environments: `dev` and `prod` only
+
+Design constraints:
+
+- Follow Hexagonal Architecture principles.
+- Keep business rules independent from frameworks, AWS services, and delivery mechanisms.
+- Keep infrastructure concerns outside the domain core whenever possible.
+- Favor explicit ports and adapters boundaries.
+- Keep business logic out of the frontend.
+- Keep the frontend as backend-driven as practical.
+- Prefer configuration over hardcoded frontend workflow behavior where practical.
+- Prefer async and event-driven interactions when they improve resilience, scale, or decoupling.
+
+## Engineering Rules
+
+- Do not invent product behavior that is not documented.
+- Prefer small, maintainable, explicit solutions.
+- Prefer clarity over cleverness.
+- Prefer consistency over novelty.
+- When in doubt, keep decisions reversible.
+- Apply SOLID where appropriate.
+- Avoid unnecessary duplication and prefer DRY solutions.
+- Preserve separation of concerns.
+- Prefer composition over inheritance.
+- Keep modules highly cohesive and loosely coupled.
+- Design for testability, observability, and replaceability from the start.
+
+## Reliability Rules
+
+- Always implement error handling deliberately.
+- Always log failures with enough context for diagnosis.
+- Never hide failures silently.
+- Use retries only when they make technical and operational sense.
+- Prefer idempotent operations for async and distributed flows.
+
+## Security And Privacy Rules
+
+- Always treat consultation and user data as sensitive health information.
+- Always minimize exposure of sensitive data.
+- Never log raw medical content, CPF, PII, or unnecessary patient-identifiable data.
+- Prefer masking or obfuscation in logs, traces, and debugging outputs.
+- Follow least-privilege IAM and access principles.
+- Never introduce broader permissions than necessary.
+- Access to consultation data must be limited to authorized users in the correct clinic context.
+- Preserve auditability for edits, approvals, and sensitive access.
 
 ## AI Pipeline Rules
 
-- System prompt enforces "report only, never interpret" — no diagnoses, no ICD codes, no clinical decisions.
-- Every summary field must link to transcript timestamps.
-- JSON output validated against schema before storage.
-- Flag unclear/uncertain sections with confidence scores.
-- If output cannot be produced reliably, mark as incomplete — never fabricate content.
+- Enforce the report-only rule: summarize what was said, never what it means.
+- Do not fabricate symptoms, diagnoses, medications, allergies, findings, plans, or follow-up instructions.
+- Separate confirmed facts from uncertain or incomplete information.
+- Insights are review flags, not conclusions.
+- Insight categories are limited to documentation gaps, consistency issues, and clinical attention flags based on explicit consultation statements.
+- Every insight must include supporting evidence from the consultation.
+- Clinical attention flags must never be presented as diagnoses.
+- Use strict schema validation before accepting generated artifacts.
+- Keep timestamps and confidence metadata when available from the provider or pipeline.
+- If support is insufficient, surface the output as incomplete or needing review rather than inventing content.
+
+## Task Workflow
+
+Tasks live in `v2/tasks/` and the progress tracker is `v2/tasks/@task-manager.md`.
+
+When working on a task:
+
+- treat the task file as the implementation scope
+- implement the task end to end, not partially
+- include required code, configuration, infrastructure, schema, tests, and documentation changes within scope
+- update `v2/tasks/@task-manager.md` whenever a task is created, started, blocked, completed, canceled, or materially changed
+- preserve the task manager structure and table formats unless there is a strong reason to change them
+- keep task summaries short, factual, and implementation-oriented
+- reference task files by filename
+- if a task file and the manager conflict, note the conflict in `Open Issues`
+
+Task manager statuses:
+
+- `planned`
+- `in_progress`
+- `blocked`
+- `done`
+- `canceled`
+
+Current next step: `003-bootstrap-repository-and-engineering-foundation.md`
+
+## Change Management
+
+- Document important technical decisions as short ADR entries in `v2/docs/mvp-technical-specs.md`.
+- Keep ADRs concise, explicit, and easy to scan.
+- If a new feature may need controlled rollout, prefer feature flags instead of hardcoded branching.
 
 ## Commit Messages
 
-Conventional commits:
-```
-feat: add consultation upload endpoint
-fix: handle empty transcript from Deepgram
-chore: update dependencies
-docs: add API documentation
-test: add consultation service tests
-```
+Use conventional commit style when creating or proposing commits.
+
+Examples:
+
+- `feat: add consultation review endpoint`
+- `fix: handle incomplete transcript artifact state`
+- `docs: update MVP architecture guidance`
+- `test: add consultation lifecycle unit tests`
+- `chore: align tooling configuration`

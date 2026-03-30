@@ -71,7 +71,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 002 |
+| None | No active blockers | N/A | N/A | Begin Task 003 |
 
 ## 7. Task Index
 

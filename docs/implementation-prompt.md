@@ -1,5 +1,7 @@
 You are working inside this project repository and must implement one task at a time based on the task file I provide.
 
+`./v2` is the current planning and implementation source of truth for this project. If older notes elsewhere in the repository conflict with these files, prefer `./v2`.
+
 Before doing anything else, read these files in this order:
 
 1. `./docs/ai-context-rules.md`
@@ -21,8 +23,11 @@ Core instructions:
 - Keep business logic out of the frontend.
 - Keep the frontend backend-driven wherever practical.
 - Code, comments, and documentation must be written in English.
+- AI prompts, transcript-oriented generation instructions, and product-facing copy must remain in Brazilian Portuguese (`pt-BR`) where applicable.
 - User-facing product content must remain in Brazilian Portuguese (`pt-BR`) where applicable.
 - Treat consultation and user data as sensitive.
+- Never log raw medical content, PII, CPF, or unnecessary patient-identifiable data.
+- Preserve the rule: report what was said, never interpret what it means.
 
 Execution requirements:
 
@@ -31,6 +36,8 @@ Execution requirements:
 - If the task reveals missing but necessary supporting work inside its scope, include it.
 - If something is ambiguous or blocked by an undecided requirement, clearly document the blocker and proceed with the safest compliant implementation possible.
 - Do not go outside the task scope unless it is required to make the task work correctly.
+- For AI-processing work, enforce schema-validated outputs, evidence traceability, and incomplete-state handling instead of fabricated content.
+- Keep timestamps and confidence metadata when the selected provider or pipeline makes them available.
 
 Task tracking requirements:
 
@@ -38,6 +45,11 @@ Task tracking requirements:
 - When you start, mark the task appropriately in the task manager.
 - When you finish, update status, progress, recent changes, blockers, and any milestone movement if relevant.
 - If you discover a cross-task issue, add it to the `Open Issues` section in the task manager.
+
+Commit convention:
+
+- Use conventional commit style when proposing or creating commits.
+- Examples: `feat: ...`, `fix: ...`, `docs: ...`, `test: ...`, `chore: ...`
 
 Output requirements:
 

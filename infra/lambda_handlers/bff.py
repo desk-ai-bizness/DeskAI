@@ -1,24 +1,100 @@
-"""Placeholder HTTP Lambda handler for the MVP BFF foundation."""
+"""BFF Lambda handler -- lightweight path/method router for HTTP API Gateway v2."""
 
 from __future__ import annotations
 
 import json
+import sys
+from pathlib import Path
 from typing import Any
 
+# Add the backend source to the Python path so Lambda can import deskai.
+_BACKEND_SRC = str(
+    Path(__file__).resolve().parent.parent.parent
+    / "backend"
+    / "src"
+)
+if _BACKEND_SRC not in sys.path:
+    sys.path.insert(0, _BACKEND_SRC)
 
-def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
-    """Return a minimal health payload for foundation environments."""
+_container = None
 
+
+def _get_container():
+    """Lazy-initialize the container on first invocation (cold start)."""
+    global _container
+    if _container is None:
+        from deskai.container import build_container
+
+        _container = build_container()
+    return _container
+
+
+def handler(
+    event: dict[str, Any], context: Any
+) -> dict[str, Any]:
+    """Route incoming HTTP API Gateway v2 events to the handler."""
     path = event.get("rawPath", "/")
-    request_id = getattr(context, "aws_request_id", "unknown")
+    method = (
+        event.get("requestContext", {})
+        .get("http", {})
+        .get("method", "GET")
+        .upper()
+    )
 
-    body = {
-        "message": "DeskAI BFF foundation endpoint",
-        "path": path,
-        "request_id": request_id,
+    if path == "/health" and method == "GET":
+        return _health_response(context)
+
+    container = _get_container()
+
+    from deskai.handlers.http import auth_handler, me_handler
+
+    routes: dict[tuple[str, str], Any] = {
+        ("/v1/auth/session", "POST"): lambda: (
+            auth_handler.handle_login(event, container)
+        ),
+        ("/v1/auth/session", "DELETE"): lambda: (
+            auth_handler.handle_logout(event, container)
+        ),
+        ("/v1/auth/forgot-password", "POST"): lambda: (
+            auth_handler.handle_forgot_password(event, container)
+        ),
+        (
+            "/v1/auth/confirm-forgot-password",
+            "POST",
+        ): lambda: (
+            auth_handler.handle_confirm_forgot_password(
+                event, container
+            )
+        ),
+        ("/v1/me", "GET"): lambda: (
+            me_handler.handle_get_me(event, container)
+        ),
     }
+
+    route_handler = routes.get((path, method))
+    if route_handler is not None:
+        return route_handler()
+
+    return {
+        "statusCode": 404,
+        "headers": {"Content-Type": "application/json"},
+        "body": json.dumps({
+            "error": {
+                "code": "not_found",
+                "message": "Recurso nao encontrado.",
+            }
+        }),
+    }
+
+
+def _health_response(context: Any) -> dict[str, Any]:
+    """Return a minimal health check payload."""
+    request_id = getattr(context, "aws_request_id", "unknown")
     return {
         "statusCode": 200,
         "headers": {"Content-Type": "application/json"},
-        "body": json.dumps(body),
+        "body": json.dumps({
+            "status": "healthy",
+            "request_id": request_id,
+        }),
     }

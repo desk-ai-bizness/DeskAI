@@ -111,6 +111,18 @@ class SecurityStack(Stack):
                     ],
                     resources=[self.data_key.key_arn, self.secrets_key.key_arn],
                 ),
+                iam.PolicyStatement(
+                    sid="AllowCognitoAuth",
+                    actions=[
+                        "cognito-idp:InitiateAuth",
+                        "cognito-idp:GlobalSignOut",
+                        "cognito-idp:ForgotPassword",
+                        "cognito-idp:ConfirmForgotPassword",
+                    ],
+                    resources=[
+                        f"arn:aws:cognito-idp:{self.region}:{self.account}:userpool/{config.resource_prefix}-*"
+                    ],
+                ),
             ],
         )
 

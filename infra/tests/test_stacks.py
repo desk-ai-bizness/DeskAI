@@ -77,6 +77,9 @@ class StackSynthesisTest(unittest.TestCase):
             data_key=security.data_key,
             deepgram_secret=security.deepgram_secret,
             claude_secret=security.claude_secret,
+            user_pool_id=auth.user_pool.user_pool_id,
+            user_pool_client_id=auth.user_pool_client.user_pool_client_id,
+            user_pool_arn=auth.user_pool.user_pool_arn,
             env=aws_env,
         )
         api = ApiStack(

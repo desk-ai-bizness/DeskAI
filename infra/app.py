@@ -79,6 +79,9 @@ def main() -> None:
         data_key=security.data_key,
         deepgram_secret=security.deepgram_secret,
         claude_secret=security.claude_secret,
+        user_pool_id=auth.user_pool.user_pool_id,
+        user_pool_client_id=auth.user_pool_client.user_pool_client_id,
+        user_pool_arn=auth.user_pool.user_pool_arn,
         **stack_hardening_kwargs,
     )
     api = ApiStack(
@@ -131,6 +134,7 @@ def main() -> None:
 
     compute.add_dependency(storage)
     compute.add_dependency(security)
+    compute.add_dependency(auth)
     api.add_dependency(auth)
     api.add_dependency(compute)
     orchestration.add_dependency(compute)

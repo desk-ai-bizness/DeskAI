@@ -16,6 +16,8 @@ class Settings:
     deepgram_secret_name: str
     claude_secret_name: str
     cognito_secret_name: str
+    cognito_user_pool_id: str
+    cognito_client_id: str
 
 
 DEFAULT_DYNAMODB_TABLE = "deskai-dev-consultation-records"
@@ -38,4 +40,6 @@ def load_settings() -> Settings:
             "DESKAI_COGNITO_CLIENT_SECRET_NAME",
             "deskai/dev/cognito",
         ),
+        cognito_user_pool_id=getenv("DESKAI_COGNITO_USER_POOL_ID", ""),
+        cognito_client_id=getenv("DESKAI_COGNITO_CLIENT_ID", ""),
     )

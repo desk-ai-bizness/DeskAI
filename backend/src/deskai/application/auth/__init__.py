@@ -1,1 +1,1 @@
-"""Application use cases module."""
+"""Auth application use cases — authentication, profile resolution, and entitlements."""

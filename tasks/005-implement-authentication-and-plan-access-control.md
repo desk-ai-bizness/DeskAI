@@ -132,6 +132,15 @@ Sign in as a valid user, confirm authorized access to allowed resources, confirm
 - A doctor’s plan changes while a session is still active.
 - An account is disabled after a valid session is issued.
 
+## Post-Completion Follow-ups (from PR #12 review)
+
+The following items were identified during code review and deferred for follow-up:
+
+- **Token delivery strategy**: `handle_login` returns `access_token` and `refresh_token` in the JSON body. For browser-based SPAs the `refresh_token` should be delivered as an `HttpOnly; Secure; SameSite=Strict` cookie to mitigate XSS token theft. Decide based on client architecture (SPA vs mobile) and implement accordingly. Impacts Task 012 (React app).
+- **`DoctorProfile.created_at` should be `datetime`, not `str`**: The domain entity stores a raw ISO string that every consumer must parse. Refactor to `datetime` in the entity and parse at the DynamoDB adapter boundary. Touches `entities.py`, `dynamodb_doctor_repository.py`, `services.py`, and related tests.
+- **`bff.py` sys.path manipulation is fragile**: The Lambda handler inserts `backend/src` into `sys.path` at runtime. If Lambda packaging or layer structure changes this breaks silently. Should be resolved when Lambda packaging strategy is finalized.
+- **Verify DynamoDB GSI attribute naming**: `DynamoDBDoctorRepository.count_consultations_this_month` queries index `gsi_doctor_date` using attributes `GSI1PK`/`GSI1SK`. Confirm these attribute names match the actual DynamoDB table definition created by CDK (or updated in Task 006).
+
 ## 10. Definition of Done
 
 - [ ] Implementation is complete

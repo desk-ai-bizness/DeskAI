@@ -91,6 +91,8 @@ Implement domain models and repositories that expose consultation use cases whil
 ### Backend Notes
 - Implement application services for create consultation, update status, fetch consultation detail, list consultations, and append audit events.
 - Define artifact metadata structures for transcript, AI outputs, and exports.
+- **BFF router upgrade needed**: The current `bff.py` Lambda handler uses `(path, method)` dict lookup for routing, which does not support path parameters. This task will introduce `/v1/consultations/{id}` routes — the router must be upgraded to support parameterized paths (e.g., regex matching or a micro-framework).
+- **Verify GSI attribute naming**: Task 005 created `DynamoDBDoctorRepository` referencing `GSI1PK`/`GSI1SK` on index `gsi_doctor_date`. Confirm these attribute names match the DynamoDB table schema, and align naming conventions for any new GSIs added in this task.
 
 ### Frontend Notes
 - BFF and frontend should receive backend-shaped identifiers and statuses instead of inferring state from raw data.

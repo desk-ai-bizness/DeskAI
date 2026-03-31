@@ -123,6 +123,10 @@ Track cross-task decisions, missing information, or conflicts.
 | OI-004 | Export output scope beyond the finalized note is not fully specified | Export implementation could diverge from stakeholder expectations | resolved | PDF with metadata + finalized history + summary + accepted insights. No transcript. See DEC-004. |
 | OI-005 | Specialty list and validation approach not defined | Domain model cannot validate specialty field | open | Product input needed before Task 006. Recommended: backend-managed enum, initially `general_practice` only. See OPEN-004. |
 | OI-006 | Patient CRUD endpoints not defined in API contract | Cannot create consultations without patient management | resolved | Minimal `POST /v1/patients` and `GET /v1/patients` added to API contract. See ADR-014 and `docs/architecture/03-contract-inventory.md`. |
+| OI-007 | Token delivery strategy (body vs HttpOnly cookie) | XSS risk for browser-based clients if refresh_token stays in JSON body | open | Decide based on client architecture before Task 012 (React app). See Task 005 follow-ups. |
+| OI-008 | `DoctorProfile.created_at` is `str` instead of `datetime` | Every consumer must parse ISO strings; domain model is not self-descriptive | open | Refactor entity + adapter before Task 006 adds more entities following same pattern. See Task 005 follow-ups. |
+| OI-009 | BFF Lambda `sys.path` manipulation is fragile | Lambda packaging changes will silently break imports | open | Resolve when Lambda packaging strategy is finalized. See Task 005 follow-ups. |
+| OI-010 | BFF router does not support path parameters | Cannot route `/v1/consultations/{id}` style endpoints | open | Must be upgraded in Task 006 when parameterized routes are introduced. See Task 006 backend notes. |
 
 ## 10. Recently Updated Tasks
 
@@ -130,6 +134,9 @@ List the most recently changed tasks first.
 
 | Date | Task File | Change |
 | --- | --- | --- |
+| 2026-03-30 | `005-implement-authentication-and-plan-access-control.md` | Added post-completion follow-ups from PR #12 code review: token delivery, created_at typing, sys.path, GSI naming |
+| 2026-03-30 | `006-model-consultation-domain-persistence-and-audit.md` | Added backend notes: BFF router upgrade needed for path params, GSI naming verification |
+| 2026-03-30 | `@task-manager.md` | Added OI-007 through OI-010 for deferred PR #12 review items |
 | 2026-03-30 | `005-implement-authentication-and-plan-access-control.md` | Completed: Cognito auth, DynamoDB doctor profiles, plan entitlements, middleware, handlers, BFF views, feature flags, CDK route/IAM updates, 49 tests |
 | 2026-03-30 | `@task-manager.md` | Updated for Task 005 completion: status, progress, next step, priority queue |
 | 2026-03-30 | `004-provision-aws-foundation-with-cdk.md` | Same-account hardening: environment tagging, scoped budgets, forecast alerts, and prod termination protection when `dev`/`prod` share one AWS account |

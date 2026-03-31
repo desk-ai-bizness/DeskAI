@@ -8,9 +8,11 @@ domain concern) and therefore defined here.
 from deskai.domain.auth.services import (
     PLAN_MAX_DURATION_MINUTES,
     PLAN_MONTHLY_LIMITS,
-    TRIAL_DURATION_DAYS,
+    TRIAL_DURATION_DAYS,  # re-exported for evaluator.py
 )
 from deskai.domain.auth.value_objects import PlanType
+
+__all__ = ["PLAN_LIMITS", "TRIAL_DURATION_DAYS", "AUDIO_RETENTION_DAYS"]
 
 AUDIO_RETENTION_DAYS: dict[PlanType, int] = {
     PlanType.FREE_TRIAL: 7,

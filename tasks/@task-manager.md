@@ -38,10 +38,10 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-AWS foundation provisioned — ready for authentication and access control implementation
+Authentication and plan access control implemented — ready for consultation domain modeling
 
 ### Overall Progress
-40% complete
+47% complete
 
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
@@ -53,9 +53,10 @@ AWS foundation provisioned — ready for authentication and access control imple
 - Task 004 completed: AWS CDK baseline provisioned for `dev` and `prod` with isolated stacks for security, storage, auth, APIs, compute, orchestration, monitoring, CDN, and budget alerting
 - Task 004 follow-up refinement completed: clarified that AWS `dev` is not localhost, updated deployed-origin config/CORS/callbacks, and aligned docs/tasks with this environment distinction
 - Task 004 same-account hardening completed: added shared-account guardrails (environment tags, scoped budgets, and prod termination protection) for safer `dev`/`prod` coexistence in one AWS account
+- Task 005 completed: email/password auth via Cognito, doctor profile resolution via DynamoDB, plan-aware entitlements, auth middleware, BFF user view, feature flag evaluator, HTTP handlers for login/logout/password-reset/me, unauthenticated CDK routes, 49 tests passing
 
 ### Immediate Next Step
-Start `005-implement-authentication-and-plan-access-control.md`
+Start `006-model-consultation-domain-persistence-and-audit.md`
 
 ## 5. Priority Queue
 
@@ -63,8 +64,8 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | planned | Secure physician access and backend-enforced plan rules are prerequisites for all protected product flows |
-| 2 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | planned | Consultation domain model, state machine, and audit events are prerequisites for all feature work |
+| 1 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | planned | Consultation domain model, state machine, and audit events are prerequisites for all feature work |
+| 2 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
 | 3 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
 | 4 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | planned | Real-time session transport depends on foundation infrastructure, consultation model, and BFF contracts |
 | 5 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | planned | Provider integration depends on realtime transport and the AWS foundation provisioned in Task 004 |
@@ -75,7 +76,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 005 |
+| None | No active blockers | N/A | N/A | Begin Task 006 |
 
 ## 7. Task Index
 
@@ -87,7 +88,7 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | 002 | `002-design-system-architecture-and-project-structure.md` | Design system architecture and project structure | Full Stack | Critical | done | `001-refine-mvp-requirements-and-delivery-decisions.md` | 100 | Repository layout, hexagonal backend architecture, contract inventory, data flow, and 5 new ADRs documented. OI-006 resolved. |
 | 003 | `003-bootstrap-repository-and-engineering-foundation.md` | Bootstrap repository and engineering foundation | DevOps | High | done | `002-design-system-architecture-and-project-structure.md` | 100 | Monorepo scaffold, package bootstraps, lint/format tooling, shared contracts baseline, setup docs, and CI placeholders delivered |
 | 004 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | Infrastructure | Critical | done | `001-refine-mvp-requirements-and-delivery-decisions.md`, `002-design-system-architecture-and-project-structure.md`, `003-bootstrap-repository-and-engineering-foundation.md` | 100 | CDK app and stacks implemented for isolated `dev`/`prod` foundations including Cognito, API Gateway HTTP/WS, Lambda baseline, Step Functions, EventBridge, SQS/DLQ, SNS, DynamoDB PITR, S3 versioning/encryption, KMS, Secrets Manager, CloudWatch dashboard/alarms, CloudFront, AWS Budget alerting, and shared-account hardening guardrails |
-| 005 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | Security | Critical | planned | `004-provision-aws-foundation-with-cdk.md` | 0 | Implements email/password auth, doctor and clinic context resolution, and backend-enforced plan authorization |
+| 005 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | Security | Critical | done | `004-provision-aws-foundation-with-cdk.md` | 100 | Email/password auth via Cognito, DynamoDB doctor profile resolution, plan-aware entitlements (free_trial/plus/pro), auth middleware, BFF user view, feature flag evaluator, HTTP handlers, unauthenticated CDK routes, 49 tests passing |
 | 006 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | Backend | Critical | planned | `001-refine-mvp-requirements-and-delivery-decisions.md`, `004-provision-aws-foundation-with-cdk.md`, `005-implement-authentication-and-plan-access-control.md` | 0 | Builds the consultation domain model, storage patterns, status rules, and attributable audit foundation |
 | 007 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | Full Stack | High | planned | `005-implement-authentication-and-plan-access-control.md`, `006-model-consultation-domain-persistence-and-audit.md` | 0 | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
 | 008 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | Backend | Critical | planned | `006-model-consultation-domain-persistence-and-audit.md`, `007-build-bff-contracts-ui-config-and-feature-flags.md` | 0 | Implements session lifecycle, WebSocket routes, audio ingestion, and processing handoff for live consultations |
@@ -130,6 +131,8 @@ List the most recently changed tasks first.
 
 | Date | Task File | Change |
 | --- | --- | --- |
+| 2026-03-30 | `005-implement-authentication-and-plan-access-control.md` | Completed: Cognito auth, DynamoDB doctor profiles, plan entitlements, middleware, handlers, BFF views, feature flags, CDK route/IAM updates, 49 tests |
+| 2026-03-30 | `@task-manager.md` | Updated for Task 005 completion: status, progress, next step, priority queue |
 | 2026-03-30 | `004-provision-aws-foundation-with-cdk.md` | Same-account hardening: environment tagging, scoped budgets, forecast alerts, and prod termination protection when `dev`/`prod` share one AWS account |
 | 2026-03-30 | `@task-manager.md` | Updated Task 004 summary and recent changes with shared-account hardening follow-up |
 | 2026-03-30 | `004-provision-aws-foundation-with-cdk.md` | Refined post-completion: separated AWS `dev` environment origins from localhost development assumptions and aligned CORS/callback configuration |

@@ -65,6 +65,25 @@ class ApiStack(Stack):
             methods=[apigwv2.HttpMethod.GET],
             integration=bff_integration,
         )
+
+        # Auth endpoints are unauthenticated — explicit routes take precedence
+        # over the /v1/{proxy+} catch-all in API Gateway v2.
+        for auth_path in [
+            "/v1/auth/session",
+            "/v1/auth/forgot-password",
+            "/v1/auth/confirm-forgot-password",
+        ]:
+            self.http_api.add_routes(
+                path=auth_path,
+                methods=[apigwv2.HttpMethod.POST],
+                integration=bff_integration,
+            )
+        self.http_api.add_routes(
+            path="/v1/auth/session",
+            methods=[apigwv2.HttpMethod.DELETE],
+            integration=bff_integration,
+        )
+
         self.http_api.add_routes(
             path="/v1/{proxy+}",
             methods=[apigwv2.HttpMethod.ANY],

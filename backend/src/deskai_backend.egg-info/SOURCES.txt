@@ -5,7 +5,6 @@ src/deskai/container.py
 src/deskai/adapters/__init__.py
 src/deskai/adapters/auth/__init__.py
 src/deskai/adapters/auth/cognito_provider.py
-src/deskai/adapters/auth/placeholder.py
 src/deskai/adapters/events/__init__.py
 src/deskai/adapters/events/eventbridge_publisher.py
 src/deskai/adapters/events/placeholder.py
@@ -20,6 +19,7 @@ src/deskai/adapters/persistence/dynamodb_audit_repository.py
 src/deskai/adapters/persistence/dynamodb_client.py
 src/deskai/adapters/persistence/dynamodb_config_repository.py
 src/deskai/adapters/persistence/dynamodb_consultation_repository.py
+src/deskai/adapters/persistence/dynamodb_doctor_repository.py
 src/deskai/adapters/persistence/dynamodb_patient_repository.py
 src/deskai/adapters/persistence/dynamodb_session_repository.py
 src/deskai/adapters/persistence/placeholder.py
@@ -43,7 +43,9 @@ src/deskai/application/ai_pipeline/store_artifacts.py
 src/deskai/application/auth/__init__.py
 src/deskai/application/auth/authenticate.py
 src/deskai/application/auth/check_entitlements.py
-src/deskai/application/auth/placeholder.py
+src/deskai/application/auth/forgot_password.py
+src/deskai/application/auth/get_current_user.py
+src/deskai/application/auth/sign_out.py
 src/deskai/application/config/__init__.py
 src/deskai/application/config/get_ui_config.py
 src/deskai/application/config/placeholder.py
@@ -73,16 +75,13 @@ src/deskai/bff/response.py
 src/deskai/bff/feature_flags/__init__.py
 src/deskai/bff/feature_flags/evaluator.py
 src/deskai/bff/feature_flags/flags.py
-src/deskai/bff/feature_flags/placeholder.py
 src/deskai/bff/ui_config/__init__.py
 src/deskai/bff/ui_config/assembler.py
 src/deskai/bff/ui_config/labels.py
-src/deskai/bff/ui_config/placeholder.py
 src/deskai/bff/ui_config/screen_config.py
 src/deskai/bff/views/__init__.py
 src/deskai/bff/views/consultation_view.py
 src/deskai/bff/views/export_view.py
-src/deskai/bff/views/placeholder.py
 src/deskai/bff/views/review_view.py
 src/deskai/bff/views/user_view.py
 src/deskai/config/__init__.py
@@ -171,6 +170,7 @@ src/deskai/ports/audit_repository.py
 src/deskai/ports/auth_provider.py
 src/deskai/ports/config_repository.py
 src/deskai/ports/consultation_repository.py
+src/deskai/ports/doctor_repository.py
 src/deskai/ports/event_publisher.py
 src/deskai/ports/export_generator.py
 src/deskai/ports/llm_provider.py

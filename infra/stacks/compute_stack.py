@@ -30,6 +30,9 @@ class ComputeStack(Stack):
         data_key: kms.IKey,
         deepgram_secret: secretsmanager.ISecret,
         claude_secret: secretsmanager.ISecret,
+        user_pool_id: str,
+        user_pool_client_id: str,
+        user_pool_arn: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -42,6 +45,8 @@ class ComputeStack(Stack):
             "DESKAI_ARTIFACTS_BUCKET": artifacts_bucket.bucket_name,
             "DESKAI_DEEPGRAM_SECRET_ARN": deepgram_secret.secret_arn,
             "DESKAI_CLAUDE_SECRET_ARN": claude_secret.secret_arn,
+            "DESKAI_COGNITO_USER_POOL_ID": user_pool_id,
+            "DESKAI_COGNITO_CLIENT_ID": user_pool_client_id,
         }
 
         self.lambda_execution_role = iam.Role(
@@ -83,6 +88,18 @@ class ComputeStack(Stack):
             iam.PolicyStatement(
                 actions=["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
                 resources=[deepgram_secret.secret_arn, claude_secret.secret_arn],
+            )
+        )
+        self.lambda_execution_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "cognito-idp:InitiateAuth",
+                    "cognito-idp:GlobalSignOut",
+                    "cognito-idp:ForgotPassword",
+                    "cognito-idp:ConfirmForgotPassword",
+                    "cognito-idp:AdminGetUser",
+                ],
+                resources=[user_pool_arn],
             )
         )
 

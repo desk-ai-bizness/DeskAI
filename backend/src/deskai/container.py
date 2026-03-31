@@ -42,6 +42,12 @@ def build_container() -> Container:
     """Create the dependency container with all auth wiring."""
     settings = load_settings()
 
+    if not settings.cognito_user_pool_id or not settings.cognito_client_id:
+        raise RuntimeError(
+            "DESKAI_COGNITO_USER_POOL_ID and DESKAI_COGNITO_CLIENT_ID "
+            "environment variables are required."
+        )
+
     auth_provider = CognitoAuthProvider(
         user_pool_id=settings.cognito_user_pool_id,
         client_id=settings.cognito_client_id,

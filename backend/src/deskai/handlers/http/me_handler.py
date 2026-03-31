@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from deskai.bff.views.user_view import build_user_profile_view
+from deskai.domain.auth.exceptions import AuthenticationError
 from deskai.handlers.http.middleware import (
     handle_domain_errors,
     json_response,
@@ -26,8 +27,6 @@ def handle_get_me(
         .get("claims", {})
     )
     cognito_sub = claims.get("sub", "")
-
-    from deskai.domain.auth.exceptions import AuthenticationError
 
     if not cognito_sub:
         raise AuthenticationError("Missing user identity in request.")

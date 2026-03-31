@@ -84,7 +84,9 @@ class CognitoAuthProvider(AuthProvider):
                 raise AuthenticationError(
                     "Invalid or expired token."
                 ) from exc
-            raise
+            raise AuthenticationError(
+                "Sign-out failed."
+            ) from exc
 
     def forgot_password(self, email: str) -> None:
         try:
@@ -104,7 +106,9 @@ class CognitoAuthProvider(AuthProvider):
                 return  # Do not reveal whether the email exists
             if error_code == "InvalidParameterException":
                 return  # Unverified users -- still do not reveal
-            raise
+            raise AuthenticationError(
+                "Password reset failed."
+            ) from exc
 
     def confirm_forgot_password(
         self,
@@ -138,4 +142,6 @@ class CognitoAuthProvider(AuthProvider):
                 raise AuthenticationError(
                     "Invalid or expired confirmation code."
                 ) from exc
-            raise
+            raise AuthenticationError(
+                "Password confirmation failed."
+            ) from exc

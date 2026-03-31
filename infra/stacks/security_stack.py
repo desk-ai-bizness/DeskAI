@@ -118,7 +118,6 @@ class SecurityStack(Stack):
                         "cognito-idp:GlobalSignOut",
                         "cognito-idp:ForgotPassword",
                         "cognito-idp:ConfirmForgotPassword",
-                        "cognito-idp:AdminGetUser",
                     ],
                     resources=[
                         f"arn:aws:cognito-idp:{self.region}:{self.account}:userpool/{config.resource_prefix}-*"

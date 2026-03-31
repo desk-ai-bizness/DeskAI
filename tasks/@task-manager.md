@@ -66,9 +66,8 @@ List the most important tasks to work on next, in order.
 | --- | --- | --- | --- | --- |
 | 1 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | planned | Consultation domain model, state machine, and audit events are prerequisites for all feature work |
 | 2 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
-| 3 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
-| 4 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | planned | Real-time session transport depends on foundation infrastructure, consultation model, and BFF contracts |
-| 5 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | planned | Provider integration depends on realtime transport and the AWS foundation provisioned in Task 004 |
+| 3 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | planned | Real-time session transport depends on foundation infrastructure, consultation model, and BFF contracts |
+| 4 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | planned | Provider integration depends on realtime transport and the AWS foundation provisioned in Task 004 |
 
 ## 6. Active Blockers
 

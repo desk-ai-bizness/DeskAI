@@ -97,7 +97,6 @@ class ComputeStack(Stack):
                     "cognito-idp:GlobalSignOut",
                     "cognito-idp:ForgotPassword",
                     "cognito-idp:ConfirmForgotPassword",
-                    "cognito-idp:AdminGetUser",
                 ],
                 resources=[user_pool_arn],
             )

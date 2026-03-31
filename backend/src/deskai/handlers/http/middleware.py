@@ -122,7 +122,11 @@ def handle_domain_errors(
         try:
             return fn(*args, **kwargs)
         except tuple(_EXCEPTION_MAP) as exc:
-            status_code, code = _EXCEPTION_MAP[type(exc)]
+            status_code, code = next(
+                (sc, c)
+                for cls, (sc, c) in _EXCEPTION_MAP.items()
+                if isinstance(exc, cls)
+            )
             logger.warning(
                 "domain_error",
                 extra={

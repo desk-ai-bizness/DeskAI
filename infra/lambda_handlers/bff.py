@@ -45,6 +45,7 @@ def handler(
         consultation_handler,
         me_handler,
         patient_handler,
+        ui_config_handler,
     )
 
     # Exact-match routes
@@ -86,6 +87,11 @@ def handler(
         ),
         ("/v1/patients", "GET"): lambda: (
             patient_handler.handle_list_patients(
+                event, container
+            )
+        ),
+        ("/v1/ui-config", "GET"): lambda: (
+            ui_config_handler.handle_get_ui_config(
                 event, container
             )
         ),

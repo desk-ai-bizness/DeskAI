@@ -38,10 +38,10 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-Consultation domain model, persistence, and audit implemented — ready for BFF contracts and UI config
+BFF contracts, UI config, and feature flags implemented — ready for real-time consultation session transport
 
 ### Overall Progress
-53% complete
+60% complete
 
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
@@ -58,9 +58,10 @@ Consultation domain model, persistence, and audit implemented — ready for BFF 
 - Task 006 completed: consultation domain model with 7-state machine, patient and audit entities, DynamoDB repos (consultation/patient/audit), S3 artifact key strategy, 5 use cases, HTTP handlers for consultations and patients, BFF views, BFF router upgrade with path parameter support, container wiring, 117 new tests (271 total), zero regressions
 - OI-010 resolved: BFF router upgraded with regex-based parameterized routing for `/v1/consultations/{id}` style endpoints
 - OI-005 addressed: Specialty enum implemented with `general_practice` as initial value, expandable via configuration
+- Task 007 completed: BFF contracts with UI config endpoint (GET /v1/ui-config), pt-BR labels (10 UI labels, 7 status labels, 3 insight categories), review screen config (4 sections with order/editable/visible), consultation list config, action availability per consultation status (7 actions), enhanced consultation detail views with actions and warnings, user profile view with feature flags, container and BFF router wiring, 62 new tests (333 total), zero regressions, lint clean
 
 ### Immediate Next Step
-Start `007-build-bff-contracts-ui-config-and-feature-flags.md`
+Start `008-implement-realtime-consultation-session-transport.md`
 
 ## 5. Priority Queue
 
@@ -68,10 +69,10 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
-| 2 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | planned | Real-time session transport depends on foundation infrastructure, consultation model, and BFF contracts |
-| 3 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | planned | Provider integration depends on realtime transport and the AWS foundation provisioned in Task 004 |
-| 4 | `010-build-ai-processing-pipeline-and-artifacts.md` | Build AI processing pipeline and artifacts | planned | Orchestrates transcript-to-artifact generation with strict schemas and evidence linking |
+| 1 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | planned | Real-time session transport depends on foundation infrastructure, consultation model, and BFF contracts |
+| 2 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | planned | Provider integration depends on realtime transport and the AWS foundation provisioned in Task 004 |
+| 3 | `010-build-ai-processing-pipeline-and-artifacts.md` | Build AI processing pipeline and artifacts | planned | Orchestrates transcript-to-artifact generation with strict schemas and evidence linking |
+| 4 | `011-implement-review-finalization-and-export-workflows.md` | Implement review, finalization, and export workflows | planned | Adds physician edits, explicit final approval, audit attribution, and export generation |
 
 ## 6. Active Blockers
 
@@ -93,7 +94,7 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | 004 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | Infrastructure | Critical | done | `001-refine-mvp-requirements-and-delivery-decisions.md`, `002-design-system-architecture-and-project-structure.md`, `003-bootstrap-repository-and-engineering-foundation.md` | 100 | CDK app and stacks implemented for isolated `dev`/`prod` foundations including Cognito, API Gateway HTTP/WS, Lambda baseline, Step Functions, EventBridge, SQS/DLQ, SNS, DynamoDB PITR, S3 versioning/encryption, KMS, Secrets Manager, CloudWatch dashboard/alarms, CloudFront, AWS Budget alerting, and shared-account hardening guardrails |
 | 005 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | Security | Critical | done | `004-provision-aws-foundation-with-cdk.md` | 100 | Email/password auth via Cognito, DynamoDB doctor profile resolution, plan-aware entitlements (free_trial/plus/pro), auth middleware, BFF user view, feature flag evaluator, HTTP handlers, unauthenticated CDK routes, 49 tests passing |
 | 006 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | Backend | Critical | done | `001-refine-mvp-requirements-and-delivery-decisions.md`, `004-provision-aws-foundation-with-cdk.md`, `005-implement-authentication-and-plan-access-control.md` | 100 | Consultation domain (7-state machine, transitions, guards), patient and audit entities, DynamoDB repos (consultation/patient/audit), S3 artifact key strategy (8 types), 5 use cases (create/get/list consultation, create/list patient), HTTP handlers, BFF views, BFF router with path param support, container wiring, 117 new tests (271 total) |
-| 007 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | Full Stack | High | planned | `005-implement-authentication-and-plan-access-control.md`, `006-model-consultation-domain-persistence-and-audit.md` | 0 | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
+| 007 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | Full Stack | High | done | `005-implement-authentication-and-plan-access-control.md`, `006-model-consultation-domain-persistence-and-audit.md` | 100 | BFF UI config endpoint (GET /v1/ui-config), pt-BR labels, review screen config, consultation list config, action availability per status (7 actions), consultation detail views with actions/warnings, user profile with feature flags, container/router wiring, 62 new tests (333 total) |
 | 008 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | Backend | Critical | planned | `006-model-consultation-domain-persistence-and-audit.md`, `007-build-bff-contracts-ui-config-and-feature-flags.md` | 0 | Implements session lifecycle, WebSocket routes, audio ingestion, and processing handoff for live consultations |
 | 009 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | Backend | Critical | planned | `008-implement-realtime-consultation-session-transport.md` | 0 | Adds the first `pt-BR` transcription provider, transcript normalization, and artifact persistence |
 | 010 | `010-build-ai-processing-pipeline-and-artifacts.md` | Build AI processing pipeline and artifacts | Backend | Critical | planned | `006-model-consultation-domain-persistence-and-audit.md`, `009-integrate-transcription-provider-and-normalization.md` | 0 | Orchestrates transcript-to-artifact generation with strict schemas, evidence linking, and failure handling |
@@ -139,6 +140,8 @@ List the most recently changed tasks first.
 
 | Date | Task File | Change |
 | --- | --- | --- |
+| 2026-04-02 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Completed: BFF UI config endpoint, pt-BR labels (10 UI + 7 status + 3 insight categories), review screen config, consultation list config, action availability module (7 actions per status), enhanced consultation detail views with actions/warnings, user profile with feature flags, container/router wiring, 62 new tests (333 total) |
+| 2026-04-02 | `@task-manager.md` | Updated for Task 007 completion: status, progress 60%, priority queue, next step set to Task 008 |
 | 2026-04-02 | `006-model-consultation-domain-persistence-and-audit.md` | Completed: consultation domain (7-state machine), patient/audit entities, DynamoDB repos, S3 artifact keys, 5 use cases, HTTP handlers, BFF views, router upgrade, container wiring, 117 new tests |
 | 2026-04-02 | `@task-manager.md` | Updated for Task 006 completion: status, progress, priority queue, OI-010 resolved, next step set to Task 007 |
 | 2026-04-02 | `005-implement-authentication-and-plan-access-control.md` | Post-completion fix: Lambda packaging (Makefile build step), env var alignment, CDK test repair, stage prefix stripping in BFF handler |

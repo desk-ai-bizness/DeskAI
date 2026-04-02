@@ -1,5 +1,6 @@
 """BFF view builders for consultation and patient responses."""
 
+from deskai.bff.action_availability import compute_actions, compute_warnings
 from deskai.domain.consultation.entities import Consultation
 from deskai.domain.patient.entities import Patient
 
@@ -43,6 +44,10 @@ def build_consultation_detail_view(consultation: Consultation) -> dict:
         },
         "finalized_at": consultation.finalized_at,
         "finalized_by": consultation.finalized_by,
+        "actions": compute_actions(consultation.status),
+        "warnings": compute_warnings(
+            consultation.status, consultation.error_details
+        ),
     })
     return base
 

@@ -1,5 +1,6 @@
 """BFF view builder for the current-user profile response."""
 
+from deskai.bff.feature_flags.evaluator import evaluate_flags
 from deskai.domain.auth.entities import DoctorProfile
 from deskai.domain.auth.value_objects import Entitlements
 
@@ -37,4 +38,15 @@ def build_user_profile_view(
                 entitlements.trial_days_remaining
             ),
         },
+        "feature_flags": _build_feature_flags(profile.plan_type),
+    }
+
+
+def _build_feature_flags(plan_type) -> dict[str, object]:
+    """Extract the UI-relevant feature flag subset."""
+    flags = evaluate_flags(plan_type)
+    return {
+        "export_enabled": flags["export_pdf_enabled"],
+        "insights_enabled": flags["insights_enabled"],
+        "audio_playback_enabled": flags["audio_playback_enabled"],
     }

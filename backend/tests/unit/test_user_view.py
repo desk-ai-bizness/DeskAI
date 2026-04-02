@@ -83,5 +83,60 @@ class UserViewTest(unittest.TestCase):
         )
 
 
+    def test_view_includes_feature_flags(self) -> None:
+        profile = DoctorProfile(
+            doctor_id="d1",
+            cognito_sub="sub-1",
+            email="doc@test.com",
+            name="Dr. Test",
+            clinic_id="c1",
+            clinic_name="Clinic",
+            plan_type=PlanType.PLUS,
+            created_at="2026-01-01T00:00:00+00:00",
+        )
+        entitlements = Entitlements(
+            can_create_consultation=True,
+            consultations_remaining=42,
+            consultations_used_this_month=8,
+            max_duration_minutes=60,
+            export_enabled=True,
+            trial_expired=False,
+            trial_days_remaining=None,
+        )
+        view = build_user_profile_view(
+            profile, entitlements
+        )
+        self.assertIn("feature_flags", view)
+        self.assertIsInstance(view["feature_flags"], dict)
+
+    def test_feature_flags_contains_required_keys(self) -> None:
+        profile = DoctorProfile(
+            doctor_id="d1",
+            cognito_sub="sub-1",
+            email="doc@test.com",
+            name="Dr. Test",
+            clinic_id="c1",
+            clinic_name="Clinic",
+            plan_type=PlanType.PRO,
+            created_at="2026-01-01T00:00:00+00:00",
+        )
+        entitlements = Entitlements(
+            can_create_consultation=True,
+            consultations_remaining=99,
+            consultations_used_this_month=1,
+            max_duration_minutes=120,
+            export_enabled=True,
+            trial_expired=False,
+            trial_days_remaining=None,
+        )
+        view = build_user_profile_view(
+            profile, entitlements
+        )
+        flags = view["feature_flags"]
+        self.assertIn("export_enabled", flags)
+        self.assertIn("insights_enabled", flags)
+        self.assertIn("audio_playback_enabled", flags)
+
+
 if __name__ == "__main__":
     unittest.main()

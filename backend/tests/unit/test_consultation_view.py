@@ -2,6 +2,7 @@
 
 import unittest
 
+from deskai.domain.consultation.entities import ConsultationStatus
 from tests.conftest import make_sample_consultation, make_sample_patient
 
 
@@ -79,6 +80,62 @@ class BuildConsultationViewTest(unittest.TestCase):
         self.assertEqual(view["name"], "Joao Silva")
         self.assertEqual(view["date_of_birth"], "1990-05-15")
         self.assertEqual(view["clinic_id"], "clinic-001")
+
+
+    def test_detail_view_includes_actions(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_detail_view,
+        )
+
+        consultation = make_sample_consultation(
+            status=ConsultationStatus.STARTED,
+        )
+        view = build_consultation_detail_view(consultation)
+
+        self.assertIn("actions", view)
+        self.assertIsInstance(view["actions"], dict)
+        self.assertTrue(view["actions"]["can_start_recording"])
+
+    def test_detail_view_includes_warnings(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_detail_view,
+        )
+
+        consultation = make_sample_consultation(
+            status=ConsultationStatus.STARTED,
+        )
+        view = build_consultation_detail_view(consultation)
+
+        self.assertIn("warnings", view)
+        self.assertIsInstance(view["warnings"], list)
+
+    def test_detail_view_processing_failed_warning(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_detail_view,
+        )
+
+        consultation = make_sample_consultation(
+            status=ConsultationStatus.PROCESSING_FAILED,
+            error_details={"reason": "timeout"},
+        )
+        view = build_consultation_detail_view(consultation)
+
+        self.assertEqual(len(view["warnings"]), 1)
+        self.assertEqual(
+            view["warnings"][0]["type"], "processing_failed"
+        )
+
+    def test_detail_view_started_no_warnings(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_detail_view,
+        )
+
+        consultation = make_sample_consultation(
+            status=ConsultationStatus.STARTED,
+        )
+        view = build_consultation_detail_view(consultation)
+
+        self.assertEqual(view["warnings"], [])
 
 
 if __name__ == "__main__":

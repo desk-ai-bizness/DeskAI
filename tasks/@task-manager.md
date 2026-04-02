@@ -241,7 +241,13 @@ Use the structure below when adding a new task summary.
 | 001 | `001-example-task.md` | Example task title | Backend | High | planned | None | 0 | Short implementation-ready summary |
 ```
 
-## 14. Notes
+## 14. Lessons Learned
+
+### Lint Validation Must Match CI Exactly (Task 008)
+
+When agents generate code in parallel, always run the **exact same lint command CI uses** (`make lint` or `python -m ruff check src tests`) before committing — not a hand-picked file list. During Task 008, agent-generated test files had unsorted imports, unused imports, and `assert False` patterns that passed a narrow manual lint check but failed CI. The fix is simple: run `make lint` as the final gate, every time.
+
+## 15. Notes
 
 - This file summarizes progress. Detailed requirements belong in individual task files.
 - The task manager should stay concise even as the number of tasks grows.

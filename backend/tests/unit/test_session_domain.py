@@ -1,9 +1,8 @@
 """Unit tests for session domain: entities, value objects, services, exceptions."""
 
+import unittest
 from dataclasses import FrozenInstanceError
 from datetime import UTC, datetime
-
-import pytest
 
 from deskai.domain.consultation.entities import ConsultationStatus
 from deskai.domain.session.entities import Session, SessionState
@@ -25,7 +24,7 @@ from deskai.shared.errors import DeskAIError
 # ---------------------------------------------------------------------------
 
 
-class TestSessionState:
+class TestSessionState(unittest.TestCase):
     def test_all_states_exist(self):
         assert SessionState.CONNECTING == "connecting"
         assert SessionState.ACTIVE == "active"
@@ -43,7 +42,7 @@ class TestSessionState:
 # ---------------------------------------------------------------------------
 
 
-class TestSession:
+class TestSession(unittest.TestCase):
     def test_creation_with_defaults(self):
         s = Session(
             session_id="s-1",
@@ -99,7 +98,7 @@ class TestSession:
 # ---------------------------------------------------------------------------
 
 
-class TestAudioChunk:
+class TestAudioChunk(unittest.TestCase):
     def test_creation(self):
         chunk = AudioChunk(
             chunk_index=0,
@@ -118,7 +117,7 @@ class TestAudioChunk:
             timestamp="2026-04-01T10:00:01+00:00",
             session_id="s-1",
         )
-        with pytest.raises(FrozenInstanceError):
+        with self.assertRaises(FrozenInstanceError):
             chunk.chunk_index = 5
 
 
@@ -127,7 +126,7 @@ class TestAudioChunk:
 # ---------------------------------------------------------------------------
 
 
-class TestConnectionInfo:
+class TestConnectionInfo(unittest.TestCase):
     def test_creation(self):
         conn = ConnectionInfo(
             connection_id="conn-1",
@@ -149,7 +148,7 @@ class TestConnectionInfo:
             clinic_id="cl-1",
             connected_at="2026-04-01T10:00:00+00:00",
         )
-        with pytest.raises(FrozenInstanceError):
+        with self.assertRaises(FrozenInstanceError):
             conn.connection_id = "conn-2"
 
 
@@ -158,7 +157,7 @@ class TestConnectionInfo:
 # ---------------------------------------------------------------------------
 
 
-class TestExceptions:
+class TestExceptions(unittest.TestCase):
     def test_all_exceptions_inherit_from_deskai_error(self):
         exceptions = [
             SessionNotFoundError,
@@ -191,7 +190,7 @@ class TestExceptions:
 # ---------------------------------------------------------------------------
 
 
-class TestValidateSessionStart:
+class TestValidateSessionStart(unittest.TestCase):
     def test_success_when_started_and_correct_doctor(self):
         SessionService.validate_session_start(
             consultation_status=ConsultationStatus.STARTED,
@@ -200,7 +199,7 @@ class TestValidateSessionStart:
         )
 
     def test_raises_when_consultation_not_started_recording(self):
-        with pytest.raises(InvalidSessionStateError):
+        with self.assertRaises(InvalidSessionStateError):
             SessionService.validate_session_start(
                 consultation_status=ConsultationStatus.RECORDING,
                 consultation_doctor_id="d-1",
@@ -208,7 +207,7 @@ class TestValidateSessionStart:
             )
 
     def test_raises_when_consultation_finalized(self):
-        with pytest.raises(InvalidSessionStateError):
+        with self.assertRaises(InvalidSessionStateError):
             SessionService.validate_session_start(
                 consultation_status=ConsultationStatus.FINALIZED,
                 consultation_doctor_id="d-1",
@@ -216,7 +215,7 @@ class TestValidateSessionStart:
             )
 
     def test_raises_when_consultation_in_processing(self):
-        with pytest.raises(InvalidSessionStateError):
+        with self.assertRaises(InvalidSessionStateError):
             SessionService.validate_session_start(
                 consultation_status=ConsultationStatus.IN_PROCESSING,
                 consultation_doctor_id="d-1",
@@ -224,7 +223,7 @@ class TestValidateSessionStart:
             )
 
     def test_raises_when_wrong_doctor(self):
-        with pytest.raises(SessionOwnershipError):
+        with self.assertRaises(SessionOwnershipError):
             SessionService.validate_session_start(
                 consultation_status=ConsultationStatus.STARTED,
                 consultation_doctor_id="d-1",
@@ -237,7 +236,7 @@ class TestValidateSessionStart:
 # ---------------------------------------------------------------------------
 
 
-class TestValidateAudioChunk:
+class TestValidateAudioChunk(unittest.TestCase):
     def test_success_when_recording_and_correct_doctor(self):
         SessionService.validate_audio_chunk(
             session_state=SessionState.RECORDING,
@@ -253,7 +252,7 @@ class TestValidateAudioChunk:
         )
 
     def test_raises_when_ended(self):
-        with pytest.raises(AudioChunkRejectedError):
+        with self.assertRaises(AudioChunkRejectedError):
             SessionService.validate_audio_chunk(
                 session_state=SessionState.ENDED,
                 session_doctor_id="d-1",
@@ -261,7 +260,7 @@ class TestValidateAudioChunk:
             )
 
     def test_raises_when_stopping(self):
-        with pytest.raises(AudioChunkRejectedError):
+        with self.assertRaises(AudioChunkRejectedError):
             SessionService.validate_audio_chunk(
                 session_state=SessionState.STOPPING,
                 session_doctor_id="d-1",
@@ -269,7 +268,7 @@ class TestValidateAudioChunk:
             )
 
     def test_raises_when_wrong_doctor(self):
-        with pytest.raises(SessionOwnershipError):
+        with self.assertRaises(SessionOwnershipError):
             SessionService.validate_audio_chunk(
                 session_state=SessionState.RECORDING,
                 session_doctor_id="d-1",
@@ -282,7 +281,7 @@ class TestValidateAudioChunk:
 # ---------------------------------------------------------------------------
 
 
-class TestValidateSessionEnd:
+class TestValidateSessionEnd(unittest.TestCase):
     def test_success_when_recording(self):
         SessionService.validate_session_end(session_state=SessionState.RECORDING)
 
@@ -290,11 +289,11 @@ class TestValidateSessionEnd:
         SessionService.validate_session_end(session_state=SessionState.ACTIVE)
 
     def test_raises_when_ended(self):
-        with pytest.raises(InvalidSessionStateError):
+        with self.assertRaises(InvalidSessionStateError):
             SessionService.validate_session_end(session_state=SessionState.ENDED)
 
     def test_raises_when_connecting(self):
-        with pytest.raises(InvalidSessionStateError):
+        with self.assertRaises(InvalidSessionStateError):
             SessionService.validate_session_end(session_state=SessionState.CONNECTING)
 
 
@@ -303,7 +302,7 @@ class TestValidateSessionEnd:
 # ---------------------------------------------------------------------------
 
 
-class TestComputeGracePeriodExpiry:
+class TestComputeGracePeriodExpiry(unittest.TestCase):
     def test_default_five_minutes(self):
         disconnect_time = "2026-04-01T10:00:00+00:00"
         result = SessionService.compute_grace_period_expiry(disconnect_time)
@@ -324,7 +323,7 @@ class TestComputeGracePeriodExpiry:
 # ---------------------------------------------------------------------------
 
 
-class TestIsGracePeriodExpired:
+class TestIsGracePeriodExpired(unittest.TestCase):
     def test_expired_when_current_time_past_expiry(self):
         expiry = "2026-04-01T10:05:00+00:00"
         current = "2026-04-01T10:06:00+00:00"
@@ -346,7 +345,7 @@ class TestIsGracePeriodExpired:
 # ---------------------------------------------------------------------------
 
 
-class TestCanReconnect:
+class TestCanReconnect(unittest.TestCase):
     def test_true_when_disconnected_and_grace_not_expired(self):
         s = Session(
             session_id="s-1",

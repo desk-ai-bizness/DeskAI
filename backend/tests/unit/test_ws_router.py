@@ -4,7 +4,7 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 
-_ROUTER = "deskai.infra.lambda_handlers.websocket"
+_ROUTER = "deskai.handlers.websocket.router"
 
 
 def _noop():
@@ -44,7 +44,7 @@ class WebSocketRouterTest(unittest.TestCase):
     @patch(f"{_ROUTER}._get_connection_repo", new=_noop)
     @patch("deskai.handlers.websocket.connect_handler.handle_connect")
     def test_route_connect(self, mock_handler):
-        from deskai.infra.lambda_handlers.websocket import handler
+        from deskai.handlers.websocket.router import handler
 
         mock_handler.return_value = {"statusCode": 200}
         event = self._make_connect_event()
@@ -58,7 +58,7 @@ class WebSocketRouterTest(unittest.TestCase):
     @patch(f"{_ROUTER}._get_connection_repo", new=_noop)
     @patch("deskai.handlers.websocket.disconnect_handler.handle_disconnect")
     def test_route_disconnect(self, mock_handler):
-        from deskai.infra.lambda_handlers.websocket import handler
+        from deskai.handlers.websocket.router import handler
 
         mock_handler.return_value = {"statusCode": 200}
         event = self._make_disconnect_event()
@@ -73,7 +73,7 @@ class WebSocketRouterTest(unittest.TestCase):
     @patch(f"{_ROUTER}._get_connection_repo", new=_noop)
     @patch("deskai.handlers.websocket.session_init_handler.handle_session_init")
     def test_route_session_init(self, mock_handler):
-        from deskai.infra.lambda_handlers.websocket import handler
+        from deskai.handlers.websocket.router import handler
 
         mock_handler.return_value = {"statusCode": 200}
         event = self._make_default_event("session.init")
@@ -88,7 +88,7 @@ class WebSocketRouterTest(unittest.TestCase):
     @patch(f"{_ROUTER}._get_connection_repo", new=_noop)
     @patch("deskai.handlers.websocket.audio_chunk_handler.handle_audio_chunk")
     def test_route_audio_chunk(self, mock_handler):
-        from deskai.infra.lambda_handlers.websocket import handler
+        from deskai.handlers.websocket.router import handler
 
         mock_handler.return_value = {"statusCode": 200}
         event = self._make_default_event("audio.chunk")
@@ -103,7 +103,7 @@ class WebSocketRouterTest(unittest.TestCase):
     @patch(f"{_ROUTER}._get_connection_repo", new=_noop)
     @patch("deskai.handlers.websocket.session_stop_handler.handle_session_stop")
     def test_route_session_stop(self, mock_handler):
-        from deskai.infra.lambda_handlers.websocket import handler
+        from deskai.handlers.websocket.router import handler
 
         mock_handler.return_value = {"statusCode": 200}
         event = self._make_default_event("session.stop")
@@ -115,7 +115,7 @@ class WebSocketRouterTest(unittest.TestCase):
 
     @patch("deskai.handlers.websocket.ping_handler.handle_ping")
     def test_route_client_ping(self, mock_handler):
-        from deskai.infra.lambda_handlers.websocket import handler
+        from deskai.handlers.websocket.router import handler
 
         mock_handler.return_value = {"statusCode": 200}
         event = self._make_default_event("client.ping")
@@ -126,7 +126,7 @@ class WebSocketRouterTest(unittest.TestCase):
         mock_handler.assert_called_once()
 
     def test_route_unknown_action(self):
-        from deskai.infra.lambda_handlers.websocket import handler
+        from deskai.handlers.websocket.router import handler
 
         event = self._make_default_event("unknown.action")
 

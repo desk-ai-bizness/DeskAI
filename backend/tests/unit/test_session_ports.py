@@ -1,9 +1,8 @@
 """Unit tests for session port interfaces (ABCs)."""
 
 import inspect
+import unittest
 from abc import ABC
-
-import pytest
 
 from deskai.ports.connection_repository import ConnectionRepository
 from deskai.ports.session_repository import SessionRepository
@@ -13,7 +12,7 @@ from deskai.ports.session_repository import SessionRepository
 # ---------------------------------------------------------------------------
 
 
-class TestSessionRepository:
+class TestSessionRepository(unittest.TestCase):
     def test_is_abstract_base_class(self):
         assert issubclass(SessionRepository, ABC)
 
@@ -40,7 +39,7 @@ class TestSessionRepository:
         assert "session_id" in params
 
     def test_cannot_instantiate_directly(self):
-        with pytest.raises(TypeError):
+        with self.assertRaises(TypeError):
             SessionRepository()
 
 
@@ -49,7 +48,7 @@ class TestSessionRepository:
 # ---------------------------------------------------------------------------
 
 
-class TestConnectionRepository:
+class TestConnectionRepository(unittest.TestCase):
     def test_is_abstract_base_class(self):
         assert issubclass(ConnectionRepository, ABC)
 
@@ -67,5 +66,5 @@ class TestConnectionRepository:
         assert "connection_id" in params
 
     def test_cannot_instantiate_directly(self):
-        with pytest.raises(TypeError):
+        with self.assertRaises(TypeError):
             ConnectionRepository()

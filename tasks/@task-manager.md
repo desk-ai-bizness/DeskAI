@@ -261,6 +261,33 @@ Three classes of errors from parallel agents, all caused by not reading existing
 
 **Root cause:** Agents optimize for speed and correctness of logic but skip convention alignment unless explicitly told. Future agent prompts must include: (a) an existing file to copy the pattern from, (b) the exact CI commands to run before marking done, (c) the test framework and base class to use.
 
+### Always `cdk diff` Before `cdk deploy` (Task 009)
+
+During the ElevenLabs provider migration, a blind `cdk deploy` triggered a cross-stack export failure that cascaded into `UPDATE_ROLLBACK_FAILED` state, required `continue-update-rollback --resources-to-skip` (nuclear last-resort), and resulted in an orphaned resource plus a wildcard IAM regression. A `cdk diff` would have shown the replacement and export deletion in 10 seconds — before any damage.
+
+**Rule:** Treat `cdk diff` like `git diff` — never deploy without it. Never push infra changes directly to main; always use a PR.
+
+### CDK Cross-Stack Reference Renames Require Two-Phase Deploy (Task 009)
+
+Renaming a CDK construct ID (`DeepgramSecret` → `ElevenLabsSecret`) that has cross-stack exports causes CloudFormation to fail: it can't delete the old export while another stack imports it. The fix is two phases:
+
+1. **Phase 1:** Deploy the consumer stack (compute) to stop importing the old export. Use string-literal ARN patterns derived from config instead of cross-stack references.
+2. **Phase 2:** Deploy the provider stack (security) to remove the old export and create the new resource.
+
+**Rule:** When renaming CDK constructs with cross-stack references, always plan a two-phase deploy. Avoid cross-stack exports for values that can be derived from config (like secret ARNs).
+
+### IAM Policies Must Use Config-Derived Values, Not Hardcoded Names (Task 009)
+
+An initial fix hardcoded secret names in IAM ARN patterns (`"elevenlabs-*"`). If someone later changes the secret name in config, the IAM policy would grant access to the old name and deny the new one.
+
+**Rule:** Derive IAM resource ARNs from the same config that defines the resource names. Use `config.elevenlabs_secret_name` not `"elevenlabs"`. Single source of truth. Use `-??????` suffix (6 random chars) instead of `-*` for tighter matching.
+
+### Preserve Secret Values During CDK Migration (Task 009)
+
+Deleting a secret to let CDK recreate it causes downtime: between delete and manual `put-secret-value`, every Lambda call to that secret fails.
+
+**Rule:** Before deleting a secret for CDK adoption: (1) save the real value with `get-secret-value`, (2) delete, (3) CDK deploy, (4) immediately restore with `put-secret-value`. Or better: use `cdk import` to adopt the existing resource without any deletion. Zero downtime.
+
 ## 15. Notes
 
 - This file summarizes progress. Detailed requirements belong in individual task files.

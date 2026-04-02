@@ -20,6 +20,16 @@ from deskai.domain.auth.exceptions import (
     UnauthorizedAccessError,
 )
 from deskai.domain.auth.value_objects import AuthContext
+from deskai.domain.consultation.exceptions import (
+    ConsultationAlreadyFinalizedError,
+    ConsultationNotFoundError,
+    ConsultationOwnershipError,
+    InvalidStatusTransitionError,
+)
+from deskai.domain.patient.exceptions import (
+    PatientNotFoundError,
+    PatientValidationError,
+)
 from deskai.shared.logging import get_logger
 
 logger = get_logger()
@@ -32,6 +42,12 @@ _EXCEPTION_MAP: dict[type[Exception], tuple[int, str]] = {
     UnauthorizedAccessError: (403, "forbidden"),
     PlanLimitExceededError: (403, "plan_limit_exceeded"),
     TrialExpiredError: (403, "trial_expired"),
+    ConsultationNotFoundError: (404, "not_found"),
+    ConsultationOwnershipError: (403, "forbidden"),
+    InvalidStatusTransitionError: (409, "conflict"),
+    ConsultationAlreadyFinalizedError: (409, "conflict"),
+    PatientNotFoundError: (404, "not_found"),
+    PatientValidationError: (400, "validation_error"),
 }
 
 

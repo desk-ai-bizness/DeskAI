@@ -38,17 +38,16 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-Authentication and plan access control implemented — ready for consultation domain modeling
+Consultation domain model, persistence, and audit implemented — ready for BFF contracts and UI config
 
 ### Overall Progress
-47% complete
+53% complete
 
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
 - Task 002 completed: repository layout, backend hexagonal architecture, contract inventory, data flow and configuration architecture documented
 - Six new ADRs added (ADR-009 through ADR-014): repository layout, module organization, DI strategy, contract location, UI config/feature flag flow, patient endpoints
 - OI-006 resolved: patient endpoints added to API contract (ADR-014)
-- One open decision remains (OI-005: specialty list) — needed before Task 006
 - Task 003 completed: monorepo scaffold, backend/app/website/infra bootstrap, contracts baseline, lint/format conventions, and CI placeholders are in place
 - Task 004 completed: AWS CDK baseline provisioned for `dev` and `prod` with isolated stacks for security, storage, auth, APIs, compute, orchestration, monitoring, CDN, and budget alerting
 - Task 004 follow-up refinement completed: clarified that AWS `dev` is not localhost, updated deployed-origin config/CORS/callbacks, and aligned docs/tasks with this environment distinction
@@ -56,9 +55,12 @@ Authentication and plan access control implemented — ready for consultation do
 - Task 005 completed: email/password auth via Cognito, doctor profile resolution via DynamoDB, plan-aware entitlements, auth middleware, BFF user view, feature flag evaluator, HTTP handlers for login/logout/password-reset/me, unauthenticated CDK routes, 49 tests passing
 - Task 005 post-completion fix (OI-007): Lambda packaging, env var alignment (`SECRET_ARN` → `SECRET_NAME`, `CONSULTATION_TABLE` → `DYNAMODB_TABLE`), CDK test repair, stage prefix stripping in BFF handler
 - AWS `dev` environment deployed to `us-east-1` (account `183992492124`) — all 9 stacks live, health endpoint verified at `https://i0dueykjuc.execute-api.us-east-1.amazonaws.com/dev/health`
+- Task 006 completed: consultation domain model with 7-state machine, patient and audit entities, DynamoDB repos (consultation/patient/audit), S3 artifact key strategy, 5 use cases, HTTP handlers for consultations and patients, BFF views, BFF router upgrade with path parameter support, container wiring, 117 new tests (271 total), zero regressions
+- OI-010 resolved: BFF router upgraded with regex-based parameterized routing for `/v1/consultations/{id}` style endpoints
+- OI-005 addressed: Specialty enum implemented with `general_practice` as initial value, expandable via configuration
 
 ### Immediate Next Step
-Start `006-model-consultation-domain-persistence-and-audit.md`
+Start `007-build-bff-contracts-ui-config-and-feature-flags.md`
 
 ## 5. Priority Queue
 
@@ -66,10 +68,10 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | planned | Consultation domain model, state machine, and audit events are prerequisites for all feature work |
-| 2 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
-| 3 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | planned | Real-time session transport depends on foundation infrastructure, consultation model, and BFF contracts |
-| 4 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | planned | Provider integration depends on realtime transport and the AWS foundation provisioned in Task 004 |
+| 1 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | planned | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
+| 2 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | planned | Real-time session transport depends on foundation infrastructure, consultation model, and BFF contracts |
+| 3 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | planned | Provider integration depends on realtime transport and the AWS foundation provisioned in Task 004 |
+| 4 | `010-build-ai-processing-pipeline-and-artifacts.md` | Build AI processing pipeline and artifacts | planned | Orchestrates transcript-to-artifact generation with strict schemas and evidence linking |
 
 ## 6. Active Blockers
 
@@ -77,7 +79,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 006 |
+| None | No active blockers | N/A | N/A | Begin Task 007 |
 
 ## 7. Task Index
 
@@ -90,7 +92,7 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | 003 | `003-bootstrap-repository-and-engineering-foundation.md` | Bootstrap repository and engineering foundation | DevOps | High | done | `002-design-system-architecture-and-project-structure.md` | 100 | Monorepo scaffold, package bootstraps, lint/format tooling, shared contracts baseline, setup docs, and CI placeholders delivered |
 | 004 | `004-provision-aws-foundation-with-cdk.md` | Provision AWS foundation with CDK | Infrastructure | Critical | done | `001-refine-mvp-requirements-and-delivery-decisions.md`, `002-design-system-architecture-and-project-structure.md`, `003-bootstrap-repository-and-engineering-foundation.md` | 100 | CDK app and stacks implemented for isolated `dev`/`prod` foundations including Cognito, API Gateway HTTP/WS, Lambda baseline, Step Functions, EventBridge, SQS/DLQ, SNS, DynamoDB PITR, S3 versioning/encryption, KMS, Secrets Manager, CloudWatch dashboard/alarms, CloudFront, AWS Budget alerting, and shared-account hardening guardrails |
 | 005 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | Security | Critical | done | `004-provision-aws-foundation-with-cdk.md` | 100 | Email/password auth via Cognito, DynamoDB doctor profile resolution, plan-aware entitlements (free_trial/plus/pro), auth middleware, BFF user view, feature flag evaluator, HTTP handlers, unauthenticated CDK routes, 49 tests passing |
-| 006 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | Backend | Critical | planned | `001-refine-mvp-requirements-and-delivery-decisions.md`, `004-provision-aws-foundation-with-cdk.md`, `005-implement-authentication-and-plan-access-control.md` | 0 | Builds the consultation domain model, storage patterns, status rules, and attributable audit foundation |
+| 006 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | Backend | Critical | done | `001-refine-mvp-requirements-and-delivery-decisions.md`, `004-provision-aws-foundation-with-cdk.md`, `005-implement-authentication-and-plan-access-control.md` | 100 | Consultation domain (7-state machine, transitions, guards), patient and audit entities, DynamoDB repos (consultation/patient/audit), S3 artifact key strategy (8 types), 5 use cases (create/get/list consultation, create/list patient), HTTP handlers, BFF views, BFF router with path param support, container wiring, 117 new tests (271 total) |
 | 007 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | Full Stack | High | planned | `005-implement-authentication-and-plan-access-control.md`, `006-model-consultation-domain-persistence-and-audit.md` | 0 | Exposes frontend-ready APIs, backend-driven UI configuration, and centralized feature flag behavior |
 | 008 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | Backend | Critical | planned | `006-model-consultation-domain-persistence-and-audit.md`, `007-build-bff-contracts-ui-config-and-feature-flags.md` | 0 | Implements session lifecycle, WebSocket routes, audio ingestion, and processing handoff for live consultations |
 | 009 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | Backend | Critical | planned | `008-implement-realtime-consultation-session-transport.md` | 0 | Adds the first `pt-BR` transcription provider, transcript normalization, and artifact persistence |
@@ -128,7 +130,7 @@ Track cross-task decisions, missing information, or conflicts.
 | OI-007 | Token delivery strategy (body vs HttpOnly cookie) | XSS risk for browser-based clients if refresh_token stays in JSON body | open | Decide based on client architecture before Task 012 (React app). See Task 005 follow-ups. |
 | OI-008 | `DoctorProfile.created_at` is `str` instead of `datetime` | Every consumer must parse ISO strings; domain model is not self-descriptive | open | Refactor entity + adapter before Task 006 adds more entities following same pattern. See Task 005 follow-ups. |
 | OI-009 | BFF Lambda `sys.path` manipulation is fragile | Lambda packaging changes will silently break imports | resolved | Fixed: Makefile build step bundles `lambda_handlers/` + `backend/src/deskai/` + pip deps into `infra/.build/lambda/`. `sys.path` hack removed from `bff.py`. |
-| OI-010 | BFF router does not support path parameters | Cannot route `/v1/consultations/{id}` style endpoints | open | Must be upgraded in Task 006 when parameterized routes are introduced. See Task 006 backend notes. |
+| OI-010 | BFF router does not support path parameters | Cannot route `/v1/consultations/{id}` style endpoints | resolved | Fixed in Task 006: BFF router upgraded with regex-based parameterized routing. Path parameters extracted and injected into event['pathParameters']. |
 | OI-011 | Lambda packaging did not include backend code or runtime dependencies | BFF Lambda failed at runtime with `ModuleNotFoundError: No module named 'deskai'` | resolved | Fixed: Makefile build step bundles `lambda_handlers/` + `backend/src/deskai/` + pip deps into `infra/.build/lambda/`. Env var names aligned between `compute_stack.py` and `config.py` (`SECRET_ARN` → `SECRET_NAME`, `CONSULTATION_TABLE` → `DYNAMODB_TABLE`). CDK tests repaired (3 missing kwargs from Task 005). Stage prefix stripping added to BFF handler. |
 
 ## 10. Recently Updated Tasks
@@ -137,6 +139,8 @@ List the most recently changed tasks first.
 
 | Date | Task File | Change |
 | --- | --- | --- |
+| 2026-04-02 | `006-model-consultation-domain-persistence-and-audit.md` | Completed: consultation domain (7-state machine), patient/audit entities, DynamoDB repos, S3 artifact keys, 5 use cases, HTTP handlers, BFF views, router upgrade, container wiring, 117 new tests |
+| 2026-04-02 | `@task-manager.md` | Updated for Task 006 completion: status, progress, priority queue, OI-010 resolved, next step set to Task 007 |
 | 2026-04-02 | `005-implement-authentication-and-plan-access-control.md` | Post-completion fix: Lambda packaging (Makefile build step), env var alignment, CDK test repair, stage prefix stripping in BFF handler |
 | 2026-04-02 | `@task-manager.md` | Added OI-011 for Lambda packaging gap, marked OI-009 resolved, audit fixes applied |
 | 2026-03-30 | `005-implement-authentication-and-plan-access-control.md` | Added post-completion follow-ups from PR #12 code review: token delivery, created_at typing, sys.path, GSI naming |

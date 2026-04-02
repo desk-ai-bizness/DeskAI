@@ -2,8 +2,6 @@
 
 import unittest
 
-from deskai.domain.consultation.entities import Consultation, ConsultationStatus
-
 from tests.conftest import make_sample_consultation, make_sample_patient
 
 

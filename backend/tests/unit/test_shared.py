@@ -1,6 +1,5 @@
 """Unit tests for shared utility modules."""
 
-import logging
 import os
 import unittest
 from unittest.mock import patch
@@ -9,7 +8,6 @@ from deskai.shared.config import (
     DEFAULT_ARTIFACTS_BUCKET,
     DEFAULT_DYNAMODB_TABLE,
     DEFAULT_UI_CONFIG_KEY,
-    Settings,
     load_settings,
 )
 from deskai.shared.errors import ConfigurationError, DeskAIError

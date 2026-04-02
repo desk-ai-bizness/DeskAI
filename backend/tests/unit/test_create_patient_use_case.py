@@ -4,8 +4,9 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from deskai.domain.patient.exceptions import PatientValidationError
-
 from tests.conftest import make_sample_auth_context
+
+_MOD = "deskai.application.patient.create_patient"
 
 
 class CreatePatientUseCaseTest(unittest.TestCase):
@@ -21,8 +22,8 @@ class CreatePatientUseCaseTest(unittest.TestCase):
         )
         self.auth_context = make_sample_auth_context()
 
-    @patch("deskai.application.patient.create_patient.new_uuid", return_value="pat-uuid-1")
-    @patch("deskai.application.patient.create_patient.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
+    @patch(f"{_MOD}.new_uuid", return_value="pat-uuid-1")
+    @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
     def test_creates_patient_with_valid_inputs(self, _mock_time, _mock_uuid) -> None:
         result = self.use_case.execute(
             auth_context=self.auth_context,
@@ -59,8 +60,8 @@ class CreatePatientUseCaseTest(unittest.TestCase):
                 date_of_birth="",
             )
 
-    @patch("deskai.application.patient.create_patient.new_uuid", return_value="pat-uuid-2")
-    @patch("deskai.application.patient.create_patient.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
+    @patch(f"{_MOD}.new_uuid", return_value="pat-uuid-2")
+    @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
     def test_saves_to_repo(self, _mock_time, _mock_uuid) -> None:
         self.use_case.execute(
             auth_context=self.auth_context,

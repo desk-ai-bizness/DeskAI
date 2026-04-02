@@ -2,17 +2,13 @@
 
 import json
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from deskai.domain.consultation.entities import ConsultationStatus
 from deskai.domain.consultation.exceptions import (
     ConsultationNotFoundError,
-    ConsultationOwnershipError,
 )
-
 from tests.conftest import (
     make_apigw_event,
-    make_sample_auth_context,
     make_sample_consultation,
     make_sample_doctor_profile,
 )

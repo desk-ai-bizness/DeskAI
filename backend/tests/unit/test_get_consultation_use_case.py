@@ -4,7 +4,6 @@ import unittest
 from unittest.mock import MagicMock
 
 from deskai.domain.consultation.exceptions import ConsultationNotFoundError
-
 from tests.conftest import make_sample_consultation
 
 

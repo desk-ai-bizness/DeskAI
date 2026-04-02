@@ -24,7 +24,7 @@ if "infra" not in sys.modules:
     ]
     sys.modules["infra"] = _infra_pkg
 
-from infra.lambda_handlers.bff import handler
+from infra.lambda_handlers.bff import handler  # noqa: E402
 
 
 def _api_event(

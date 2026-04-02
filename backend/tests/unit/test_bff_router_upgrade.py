@@ -16,7 +16,7 @@ if "infra" not in sys.modules:
     _infra_pkg.__path__ = [str(Path(_REPO_ROOT) / "infra")]
     sys.modules["infra"] = _infra_pkg
 
-from infra.lambda_handlers.bff import handler
+from infra.lambda_handlers.bff import handler  # noqa: E402
 
 
 def _api_event(

@@ -6,8 +6,9 @@ from unittest.mock import MagicMock, patch
 from deskai.domain.audit.entities import AuditAction
 from deskai.domain.consultation.entities import ConsultationStatus
 from deskai.domain.patient.exceptions import PatientNotFoundError, PatientValidationError
-
 from tests.conftest import make_sample_auth_context, make_sample_patient
+
+_MOD = "deskai.application.consultation.create_consultation"
 
 
 class CreateConsultationUseCaseTest(unittest.TestCase):
@@ -27,8 +28,8 @@ class CreateConsultationUseCaseTest(unittest.TestCase):
         )
         self.auth_context = make_sample_auth_context()
 
-    @patch("deskai.application.consultation.create_consultation.new_uuid", return_value="cons-uuid-1")
-    @patch("deskai.application.consultation.create_consultation.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
+    @patch(f"{_MOD}.new_uuid", return_value="cons-uuid-1")
+    @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
     def test_creates_consultation_with_valid_inputs(self, _mock_time, _mock_uuid) -> None:
         self.patient_repo.find_by_id.return_value = make_sample_patient()
 
@@ -60,8 +61,8 @@ class CreateConsultationUseCaseTest(unittest.TestCase):
                 scheduled_date="2026-04-01",
             )
 
-    @patch("deskai.application.consultation.create_consultation.new_uuid", return_value="cons-uuid-2")
-    @patch("deskai.application.consultation.create_consultation.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
+    @patch(f"{_MOD}.new_uuid", return_value="cons-uuid-2")
+    @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
     def test_saves_consultation_to_repo(self, _mock_time, _mock_uuid) -> None:
         self.patient_repo.find_by_id.return_value = make_sample_patient()
 
@@ -76,8 +77,8 @@ class CreateConsultationUseCaseTest(unittest.TestCase):
         saved = self.consultation_repo.save.call_args[0][0]
         self.assertEqual(saved.consultation_id, "cons-uuid-2")
 
-    @patch("deskai.application.consultation.create_consultation.new_uuid", side_effect=["cons-uuid-3", "evt-uuid-1"])
-    @patch("deskai.application.consultation.create_consultation.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
+    @patch(f"{_MOD}.new_uuid", side_effect=["cons-uuid-3", "evt-uuid-1"])
+    @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
     def test_creates_audit_event(self, _mock_time, _mock_uuid) -> None:
         self.patient_repo.find_by_id.return_value = make_sample_patient()
 
@@ -95,8 +96,8 @@ class CreateConsultationUseCaseTest(unittest.TestCase):
         self.assertEqual(audit_event.event_type, AuditAction.CONSULTATION_CREATED)
         self.assertEqual(audit_event.actor_id, "doc-001")
 
-    @patch("deskai.application.consultation.create_consultation.new_uuid", return_value="cons-uuid-4")
-    @patch("deskai.application.consultation.create_consultation.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
+    @patch(f"{_MOD}.new_uuid", return_value="cons-uuid-4")
+    @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
     def test_returns_consultation_with_started_status(self, _mock_time, _mock_uuid) -> None:
         self.patient_repo.find_by_id.return_value = make_sample_patient()
 

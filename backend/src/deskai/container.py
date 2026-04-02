@@ -27,6 +27,9 @@ from deskai.application.auth.get_current_user import (
     GetCurrentUserUseCase,
 )
 from deskai.application.auth.sign_out import SignOutUseCase
+from deskai.application.config.get_ui_config import (
+    GetUiConfigUseCase,
+)
 from deskai.application.consultation.create_consultation import (
     CreateConsultationUseCase,
 )
@@ -71,6 +74,7 @@ class Container:
     list_consultations: ListConsultationsUseCase
     create_patient: CreatePatientUseCase
     list_patients: ListPatientsUseCase
+    get_ui_config: GetUiConfigUseCase
 
 
 def build_container() -> Container:
@@ -142,4 +146,5 @@ def build_container() -> Container:
         list_patients=ListPatientsUseCase(
             patient_repo=patient_repo,
         ),
+        get_ui_config=GetUiConfigUseCase(),
     )

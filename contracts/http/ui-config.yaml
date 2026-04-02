@@ -1,11 +1,200 @@
-openapi: 3.1.0
+openapi: "3.1.0"
 info:
   title: DeskAI UI Config API
   version: v1
+
 paths:
   /v1/ui-config:
     get:
+      operationId: getUiConfig
       summary: Fetch backend-driven UI configuration
+      security:
+        - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: UI config payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UIConfigView"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UIConfigView:
+      type: object
+      required:
+        - version
+        - locale
+        - labels
+        - review_screen
+        - insight_categories
+        - status_labels
+        - feature_flags
+      properties:
+        version:
+          type: string
+          example: "1.0"
+        locale:
+          type: string
+          const: pt-BR
+        labels:
+          $ref: "#/components/schemas/UILabels"
+        review_screen:
+          $ref: "#/components/schemas/ReviewScreenConfig"
+        insight_categories:
+          $ref: "#/components/schemas/InsightCategories"
+        status_labels:
+          $ref: "#/components/schemas/StatusLabels"
+        feature_flags:
+          $ref: "#/components/schemas/FeatureFlags"
+
+    UILabels:
+      type: object
+      required:
+        - consultation_list_title
+        - new_consultation_button
+        - start_recording_button
+        - stop_recording_button
+        - review_title
+        - finalize_button
+        - export_button
+        - ai_disclaimer
+        - completeness_warning
+        - live_session_header
+      properties:
+        consultation_list_title:
+          type: string
+        new_consultation_button:
+          type: string
+        start_recording_button:
+          type: string
+        stop_recording_button:
+          type: string
+        review_title:
+          type: string
+        finalize_button:
+          type: string
+        export_button:
+          type: string
+        ai_disclaimer:
+          type: string
+        completeness_warning:
+          type: string
+        live_session_header:
+          type: string
+      additionalProperties: false
+
+    ReviewScreenConfig:
+      type: object
+      required: [section_order, sections]
+      properties:
+        section_order:
+          type: array
+          items:
+            type: string
+            enum: [transcript, medical_history, summary, insights]
+          minItems: 1
+          uniqueItems: true
+        sections:
+          type: object
+          required: [transcript, medical_history, summary, insights]
+          properties:
+            transcript:
+              $ref: "#/components/schemas/SectionConfig"
+            medical_history:
+              $ref: "#/components/schemas/SectionConfig"
+            summary:
+              $ref: "#/components/schemas/SectionConfig"
+            insights:
+              $ref: "#/components/schemas/SectionConfig"
+          additionalProperties: false
+      additionalProperties: false
+
+    SectionConfig:
+      type: object
+      required: [title, editable, visible]
+      properties:
+        title:
+          type: string
+        editable:
+          type: boolean
+        visible:
+          type: boolean
+      additionalProperties: false
+
+    InsightCategories:
+      type: object
+      required: [documentation_gap, consistency_issue, clinical_attention]
+      properties:
+        documentation_gap:
+          $ref: "#/components/schemas/InsightCategoryConfig"
+        consistency_issue:
+          $ref: "#/components/schemas/InsightCategoryConfig"
+        clinical_attention:
+          $ref: "#/components/schemas/InsightCategoryConfig"
+      additionalProperties: false
+
+    InsightCategoryConfig:
+      type: object
+      required: [label, icon, severity]
+      properties:
+        label:
+          type: string
+        icon:
+          type: string
+          enum: [info, warning, alert]
+        severity:
+          type: string
+          enum: [low, medium, high]
+      additionalProperties: false
+
+    StatusLabels:
+      type: object
+      required:
+        - started
+        - recording
+        - in_processing
+        - processing_failed
+        - draft_generated
+        - under_physician_review
+        - finalized
+      properties:
+        started:
+          type: string
+        recording:
+          type: string
+        in_processing:
+          type: string
+        processing_failed:
+          type: string
+        draft_generated:
+          type: string
+        under_physician_review:
+          type: string
+        finalized:
+          type: string
+      additionalProperties: false
+
+    FeatureFlags:
+      type: object
+      required: [export_enabled, insights_enabled, audio_playback_enabled]
+      properties:
+        export_enabled:
+          type: boolean
+        insights_enabled:
+          type: boolean
+        audio_playback_enabled:
+          type: boolean
+      additionalProperties: false

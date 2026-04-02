@@ -1,16 +1,15 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$title: FeatureFlagsSchema
-$type: object
-required:
-  - flags
+title: FeatureFlagsSchema
+description: Feature flag definitions with plan-type overrides.
+
+type: object
+required: [flags]
 properties:
   flags:
     type: object
     additionalProperties:
       type: object
-      required:
-        - type
-        - default
+      required: [type, default]
       properties:
         type:
           type: string
@@ -20,3 +19,25 @@ properties:
             - type: boolean
             - type: integer
             - type: string
+        overrides:
+          type: object
+          description: Plan-specific override values. Keys must be valid plan types.
+          properties:
+            free_trial:
+              oneOf:
+                - type: boolean
+                - type: integer
+                - type: string
+            plus:
+              oneOf:
+                - type: boolean
+                - type: integer
+                - type: string
+            pro:
+              oneOf:
+                - type: boolean
+                - type: integer
+                - type: string
+          additionalProperties: false
+      additionalProperties: false
+additionalProperties: false

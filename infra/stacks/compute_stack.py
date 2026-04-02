@@ -41,10 +41,10 @@ class ComputeStack(Stack):
         self._shared_environment = {
             "DESKAI_ENV": self.config.environment,
             "DESKAI_RESOURCE_PREFIX": self.config.resource_prefix,
-            "DESKAI_CONSULTATION_TABLE": consultation_table.table_name,
+            "DESKAI_DYNAMODB_TABLE": consultation_table.table_name,
             "DESKAI_ARTIFACTS_BUCKET": artifacts_bucket.bucket_name,
-            "DESKAI_DEEPGRAM_SECRET_ARN": deepgram_secret.secret_arn,
-            "DESKAI_CLAUDE_SECRET_ARN": claude_secret.secret_arn,
+            "DESKAI_DEEPGRAM_SECRET_NAME": deepgram_secret.secret_name,
+            "DESKAI_CLAUDE_SECRET_NAME": claude_secret.secret_name,
             "DESKAI_COGNITO_USER_POOL_ID": user_pool_id,
             "DESKAI_COGNITO_CLIENT_ID": user_pool_client_id,
         }
@@ -102,7 +102,7 @@ class ComputeStack(Stack):
             )
         )
 
-        asset_path = Path(__file__).resolve().parent.parent / "lambda_handlers"
+        asset_path = Path(__file__).resolve().parent.parent / ".build" / "lambda"
 
         self.bff_handler = self._create_function(
             function_id="BffHandler",

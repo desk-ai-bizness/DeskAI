@@ -54,6 +54,8 @@ Authentication and plan access control implemented — ready for consultation do
 - Task 004 follow-up refinement completed: clarified that AWS `dev` is not localhost, updated deployed-origin config/CORS/callbacks, and aligned docs/tasks with this environment distinction
 - Task 004 same-account hardening completed: added shared-account guardrails (environment tags, scoped budgets, and prod termination protection) for safer `dev`/`prod` coexistence in one AWS account
 - Task 005 completed: email/password auth via Cognito, doctor profile resolution via DynamoDB, plan-aware entitlements, auth middleware, BFF user view, feature flag evaluator, HTTP handlers for login/logout/password-reset/me, unauthenticated CDK routes, 49 tests passing
+- Task 005 post-completion fix (OI-007): Lambda packaging, env var alignment (`SECRET_ARN` → `SECRET_NAME`, `CONSULTATION_TABLE` → `DYNAMODB_TABLE`), CDK test repair, stage prefix stripping in BFF handler
+- AWS `dev` environment deployed to `us-east-1` (account `183992492124`) — all 9 stacks live, health endpoint verified at `https://i0dueykjuc.execute-api.us-east-1.amazonaws.com/dev/health`
 
 ### Immediate Next Step
 Start `006-model-consultation-domain-persistence-and-audit.md`
@@ -106,7 +108,7 @@ Track major delivery checkpoints for the MVP.
 | Milestone | Target Outcome | Status | Notes |
 | --- | --- | --- | --- |
 | Project Setup | Task system ready for execution | done | Template and manager files created |
-| Infrastructure Ready | AWS baseline in place | done | Tasks 003 and 004 completed |
+| Infrastructure Ready | AWS baseline in place | done | Tasks 003 and 004 completed. Dev environment deployed 2026-04-02: 9 stacks live in us-east-1, health endpoint verified. Lambda packaging and env var issues from Task 005 fixed (OI-007). |
 | Backend Ready | Core API and business logic in place | planned | Covered by Tasks 005 through 011 |
 | Frontend Ready | Core MVP interface in place | planned | Covered by Tasks 012 and 013 |
 | MVP Ready | End-to-end usable first version | planned | Covered by Tasks 014 and 015 |
@@ -121,12 +123,13 @@ Track cross-task decisions, missing information, or conflicts.
 | OI-002 | Plan entitlement differences between `free_trial`, `plus`, and `pro` are not fully defined | Backend authorization and feature-flag behavior may need rework | resolved | All plans share core features; differentiation by usage limits. See `docs/requirements/03-plan-entitlements.md`. |
 | OI-003 | Clinic audio retention defaults and deletion timing are not explicitly defined | Storage lifecycle, retention automation, and compliance behavior remain ambiguous | resolved | Plan-based retention: 7/30/90 days. See `docs/requirements/05-decision-log.md` DEC-003. |
 | OI-004 | Export output scope beyond the finalized note is not fully specified | Export implementation could diverge from stakeholder expectations | resolved | PDF with metadata + finalized history + summary + accepted insights. No transcript. See DEC-004. |
-| OI-005 | Specialty list and validation approach not defined | Domain model cannot validate specialty field | open | Product input needed before Task 006. Recommended: backend-managed enum, initially `general_practice` only. See OPEN-004. |
+| OI-005 | Specialty list and validation approach not defined | Domain model cannot validate specialty field | open | Recommended approach: backend-managed enum, initially `general_practice` only. Not blocking Task 006. See OPEN-004. |
 | OI-006 | Patient CRUD endpoints not defined in API contract | Cannot create consultations without patient management | resolved | Minimal `POST /v1/patients` and `GET /v1/patients` added to API contract. See ADR-014 and `docs/architecture/03-contract-inventory.md`. |
 | OI-007 | Token delivery strategy (body vs HttpOnly cookie) | XSS risk for browser-based clients if refresh_token stays in JSON body | open | Decide based on client architecture before Task 012 (React app). See Task 005 follow-ups. |
 | OI-008 | `DoctorProfile.created_at` is `str` instead of `datetime` | Every consumer must parse ISO strings; domain model is not self-descriptive | open | Refactor entity + adapter before Task 006 adds more entities following same pattern. See Task 005 follow-ups. |
-| OI-009 | BFF Lambda `sys.path` manipulation is fragile | Lambda packaging changes will silently break imports | open | Resolve when Lambda packaging strategy is finalized. See Task 005 follow-ups. |
+| OI-009 | BFF Lambda `sys.path` manipulation is fragile | Lambda packaging changes will silently break imports | resolved | Fixed: Makefile build step bundles `lambda_handlers/` + `backend/src/deskai/` + pip deps into `infra/.build/lambda/`. `sys.path` hack removed from `bff.py`. |
 | OI-010 | BFF router does not support path parameters | Cannot route `/v1/consultations/{id}` style endpoints | open | Must be upgraded in Task 006 when parameterized routes are introduced. See Task 006 backend notes. |
+| OI-011 | Lambda packaging did not include backend code or runtime dependencies | BFF Lambda failed at runtime with `ModuleNotFoundError: No module named 'deskai'` | resolved | Fixed: Makefile build step bundles `lambda_handlers/` + `backend/src/deskai/` + pip deps into `infra/.build/lambda/`. Env var names aligned between `compute_stack.py` and `config.py` (`SECRET_ARN` → `SECRET_NAME`, `CONSULTATION_TABLE` → `DYNAMODB_TABLE`). CDK tests repaired (3 missing kwargs from Task 005). Stage prefix stripping added to BFF handler. |
 
 ## 10. Recently Updated Tasks
 
@@ -134,6 +137,8 @@ List the most recently changed tasks first.
 
 | Date | Task File | Change |
 | --- | --- | --- |
+| 2026-04-02 | `005-implement-authentication-and-plan-access-control.md` | Post-completion fix: Lambda packaging (Makefile build step), env var alignment, CDK test repair, stage prefix stripping in BFF handler |
+| 2026-04-02 | `@task-manager.md` | Added OI-011 for Lambda packaging gap, marked OI-009 resolved, audit fixes applied |
 | 2026-03-30 | `005-implement-authentication-and-plan-access-control.md` | Added post-completion follow-ups from PR #12 code review: token delivery, created_at typing, sys.path, GSI naming |
 | 2026-03-30 | `006-model-consultation-domain-persistence-and-audit.md` | Added backend notes: BFF router upgrade needed for path params, GSI naming verification |
 | 2026-03-30 | `@task-manager.md` | Added OI-007 through OI-010 for deferred PR #12 review items |

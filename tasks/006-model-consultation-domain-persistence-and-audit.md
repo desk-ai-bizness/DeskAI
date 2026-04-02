@@ -41,6 +41,8 @@ Before implementing this task, read these documents in addition to the standard 
 - `docs/requirements/01-requirements-traceability-matrix.md`
 - `docs/requirements/02-consultation-lifecycle.md`
 - `docs/requirements/04-failure-behavior-matrix.md`
+- `docs/requirements/05-decision-log.md` — DEC-005 for extended state machine, OPEN-004 for specialty approach
+- `docs/requirements/03-plan-entitlements.md` — plan limits affect domain model
 
 ## 3. Scope
 

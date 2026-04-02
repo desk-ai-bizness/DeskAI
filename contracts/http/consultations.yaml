@@ -1,28 +1,440 @@
-openapi: 3.1.0
+openapi: "3.1.0"
 info:
   title: DeskAI Consultation API
   version: v1
+
 paths:
   /v1/consultations:
     post:
-      summary: Create consultation
+      operationId: createConsultation
+      summary: Create a new consultation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConsultationRequest"
       responses:
-        '201':
+        "201":
           description: Consultation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsultationView"
+        "400":
+          description: Missing or invalid fields
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: >
+            Plan limit exceeded (plan_limit_exceeded) or
+            free trial expired (trial_expired)
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
     get:
-      summary: List consultations
+      operationId: listConsultations
+      summary: List consultations for the authenticated doctor
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum:
+              - started
+              - recording
+              - in_processing
+              - processing_failed
+              - draft_generated
+              - under_physician_review
+              - finalized
+        - in: query
+          name: from
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter consultations created on or after this date (YYYY-MM-DD)
+        - in: query
+          name: to
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter consultations created on or before this date (YYYY-MM-DD)
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: page_size
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
       responses:
-        '200':
+        "200":
           description: Consultation list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsultationListView"
+        "400":
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+
   /v1/consultations/{consultation_id}:
     get:
+      operationId: getConsultation
       summary: Get consultation details
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: consultation_id
           required: true
           schema:
             type: string
+            format: uuid
       responses:
-        '200':
+        "200":
           description: Consultation detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsultationDetailView"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Not authorized to view this consultation
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "404":
+          description: Consultation not found
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+
+  /v1/consultations/{consultation_id}/session/start:
+    post:
+      operationId: startConsultationSession
+      summary: Start a recording session for a consultation
+      description: >
+        Transitions the consultation to recording state and returns a WebSocket URL
+        for audio streaming. The consultation must be in "started" status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: consultation_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Session started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionStartView"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Not authorized to start a session for this consultation
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "404":
+          description: Consultation not found
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "409":
+          description: >
+            State conflict — consultation is not in "started" status.
+            A session can only be started when the consultation status is "started".
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+
+  /v1/consultations/{consultation_id}/session/end:
+    post:
+      operationId: endConsultationSession
+      summary: End the active recording session for a consultation
+      description: >
+        Ends the recording session and transitions the consultation to "in_processing".
+        The consultation must be in "recording" status.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: consultation_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Session ended
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionEndView"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Not authorized to end this session
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "404":
+          description: Consultation not found
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "409":
+          description: >
+            State conflict — consultation is not in "recording" status.
+            A session can only be ended when the consultation status is "recording".
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreateConsultationRequest:
+      type: object
+      required: [patient_id]
+      properties:
+        patient_id:
+          type: string
+          format: uuid
+        specialty:
+          type: string
+          default: general_practice
+        scheduled_date:
+          type: string
+          format: date
+        notes:
+          type: string
+
+    PatientSummary:
+      type: object
+      required: [patient_id, name]
+      properties:
+        patient_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    ConsultationView:
+      type: object
+      required:
+        - consultation_id
+        - patient
+        - doctor_id
+        - clinic_id
+        - specialty
+        - status
+        - created_at
+        - updated_at
+      properties:
+        consultation_id:
+          type: string
+          format: uuid
+        patient:
+          $ref: "#/components/schemas/PatientSummary"
+        doctor_id:
+          type: string
+          format: uuid
+        clinic_id:
+          type: string
+          format: uuid
+        specialty:
+          type: string
+        status:
+          type: string
+          enum:
+            - started
+            - recording
+            - in_processing
+            - processing_failed
+            - draft_generated
+            - under_physician_review
+            - finalized
+        scheduled_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ConsultationListView:
+      type: object
+      required: [consultations, total_count, page, page_size]
+      properties:
+        consultations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConsultationView"
+        total_count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+
+    ConsultationDetailView:
+      allOf:
+        - $ref: "#/components/schemas/ConsultationView"
+        - type: object
+          required: [session, processing, has_draft]
+          properties:
+            session:
+              type: object
+              required: [session_id, started_at, ended_at, duration_seconds]
+              properties:
+                session_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                started_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                ended_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                duration_seconds:
+                  type: integer
+                  nullable: true
+            processing:
+              type: object
+              required: [started_at, completed_at, error_details]
+              properties:
+                started_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                completed_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                error_details:
+                  type: object
+                  additionalProperties: true
+                  nullable: true
+            has_draft:
+              type: boolean
+            finalized_at:
+              type: string
+              format: date-time
+              nullable: true
+            finalized_by:
+              type: string
+              format: uuid
+              nullable: true
+
+    SessionStartView:
+      type: object
+      required:
+        - session_id
+        - websocket_url
+        - connection_token
+        - max_duration_minutes
+        - started_at
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        websocket_url:
+          type: string
+          format: uri
+        connection_token:
+          type: string
+        max_duration_minutes:
+          type: integer
+        started_at:
+          type: string
+          format: date-time
+
+    SessionEndView:
+      type: object
+      required:
+        - session_id
+        - ended_at
+        - duration_seconds
+        - status
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        ended_at:
+          type: string
+          format: date-time
+        duration_seconds:
+          type: integer
+        status:
+          type: string
+          enum: [in_processing]

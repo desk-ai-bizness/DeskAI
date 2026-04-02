@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 from typing import NamedTuple
 
 import aws_cdk as cdk
@@ -35,6 +36,13 @@ class Foundation(NamedTuple):
 
 class StackSynthesisTest(unittest.TestCase):
     """Validate baseline resource characteristics for Task 004."""
+
+    def setUp(self) -> None:
+        build_dir = Path(__file__).resolve().parent.parent / ".build" / "lambda"
+        build_dir.mkdir(parents=True, exist_ok=True)
+        stub = build_dir / "bff.py"
+        if not stub.exists():
+            stub.write_text("def handler(event, context): pass\n")
 
     def _create_foundation(
         self,

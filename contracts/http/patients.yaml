@@ -1,0 +1,120 @@
+openapi: "3.1.0"
+info:
+  title: DeskAI Patients API
+  version: v1
+
+paths:
+  /v1/patients:
+    post:
+      operationId: createPatient
+      summary: Register a new patient in the clinic
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePatientRequest"
+      responses:
+        "201":
+          description: Patient created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientView"
+        "400":
+          description: Missing or invalid fields
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Not authorized to create patients
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+    get:
+      operationId: listPatients
+      summary: List patients with optional search filter
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Free-text search filter on patient name
+      responses:
+        "200":
+          description: Patient list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientListView"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Not authorized to list patients
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreatePatientRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+
+    PatientView:
+      type: object
+      required: [patient_id, name, clinic_id, created_at]
+      properties:
+        patient_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        clinic_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+
+    PatientListView:
+      type: object
+      required: [patients]
+      properties:
+        patients:
+          type: array
+          items:
+            $ref: "#/components/schemas/PatientView"

@@ -1,4 +1,4 @@
-.PHONY: lint format format-check backend-test infra-synth
+.PHONY: lint format format-check backend-test build-lambda infra-synth
 
 lint:
 	npm run lint
@@ -11,6 +11,9 @@ format-check:
 
 backend-test:
 	cd backend && make test
+
+build-lambda:
+	cd infra && make build-lambda
 
 infra-synth:
 	cd infra && make synth

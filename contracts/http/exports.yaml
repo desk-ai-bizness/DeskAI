@@ -1,11 +1,84 @@
-openapi: 3.1.0
+openapi: "3.1.0"
 info:
   title: DeskAI Export API
   version: v1
+
 paths:
   /v1/consultations/{consultation_id}/export:
     post:
+      operationId: exportConsultation
       summary: Generate consultation export
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ConsultationId"
       responses:
-        '200':
-          description: Export URL generated
+        "202":
+          description: Export generation accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExportView"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Export not available on current plan
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "404":
+          description: Consultation not found
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "409":
+          description: Consultation is not finalized
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ConsultationId:
+      name: consultation_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    ExportView:
+      type: object
+      required:
+        - consultation_id
+        - export_url
+        - expires_at
+        - format
+      properties:
+        consultation_id:
+          type: string
+          format: uuid
+        export_url:
+          type: string
+          format: uri
+          description: Presigned S3 URL for download
+        expires_at:
+          type: string
+          format: date-time
+        format:
+          type: string
+          enum: [pdf]

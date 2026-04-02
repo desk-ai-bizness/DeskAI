@@ -1,13 +1,85 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$title: SessionClientMessage
-$type: object
-required:
-  - action
-  - data
+title: SessionClientMessage
+description: Client-to-server WebSocket messages for audio session management.
+
+type: object
+required: [action, data]
 properties:
   action:
     type: string
     enum: [session.init, audio.chunk, session.stop, client.ping]
   data:
     type: object
-    additionalProperties: true
+
+allOf:
+  - if:
+      properties:
+        action:
+          const: session.init
+    then:
+      properties:
+        data:
+          type: object
+          required: [consultation_id, session_id]
+          properties:
+            consultation_id:
+              type: string
+              format: uuid
+            session_id:
+              type: string
+              format: uuid
+          additionalProperties: false
+
+  - if:
+      properties:
+        action:
+          const: audio.chunk
+    then:
+      properties:
+        data:
+          type: object
+          required: [chunk_index, audio, timestamp]
+          properties:
+            chunk_index:
+              type: integer
+              minimum: 0
+            audio:
+              type: string
+              contentEncoding: base64
+              description: Base64-encoded audio bytes
+            timestamp:
+              type: string
+              format: date-time
+          additionalProperties: false
+
+  - if:
+      properties:
+        action:
+          const: session.stop
+    then:
+      properties:
+        data:
+          type: object
+          required: [consultation_id]
+          properties:
+            consultation_id:
+              type: string
+              format: uuid
+          additionalProperties: false
+
+  - if:
+      properties:
+        action:
+          const: client.ping
+    then:
+      properties:
+        data:
+          type: object
+          required: [timestamp]
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+          additionalProperties: false
+
+additionalProperties: false

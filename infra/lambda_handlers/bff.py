@@ -3,18 +3,10 @@
 from __future__ import annotations
 
 import json
-import sys
-from pathlib import Path
+import os
 from typing import Any
 
-# Add the backend source to the Python path so Lambda can import deskai.
-_BACKEND_SRC = str(
-    Path(__file__).resolve().parent.parent.parent
-    / "backend"
-    / "src"
-)
-if _BACKEND_SRC not in sys.path:
-    sys.path.insert(0, _BACKEND_SRC)
+_STAGE_PREFIX = f"/{os.environ.get('DESKAI_ENV', 'dev')}"
 
 _container = None
 
@@ -33,7 +25,8 @@ def handler(
     event: dict[str, Any], context: Any
 ) -> dict[str, Any]:
     """Route incoming HTTP API Gateway v2 events to the handler."""
-    path = event.get("rawPath", "/")
+    raw_path = event.get("rawPath", "/")
+    path = raw_path.removeprefix(_STAGE_PREFIX) or "/"
     method = (
         event.get("requestContext", {})
         .get("http", {})

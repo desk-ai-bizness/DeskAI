@@ -38,10 +38,10 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-BFF contracts, UI config, and feature flags implemented — ready for real-time consultation session transport
+Real-time consultation session transport implemented — ready for transcription provider integration
 
 ### Overall Progress
-60% complete
+67% complete
 
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
@@ -59,9 +59,10 @@ BFF contracts, UI config, and feature flags implemented — ready for real-time 
 - OI-010 resolved: BFF router upgraded with regex-based parameterized routing for `/v1/consultations/{id}` style endpoints
 - OI-005 addressed: Specialty enum implemented with `general_practice` as initial value, expandable via configuration
 - Task 007 completed: BFF contracts with UI config endpoint (GET /v1/ui-config), pt-BR labels (10 UI labels, 7 status labels, 3 insight categories), review screen config (4 sections with order/editable/visible), consultation list config, action availability per consultation status (7 actions), enhanced consultation detail views with actions and warnings, user profile view with feature flags, container and BFF router wiring, 62 new tests (333 total), zero regressions, lint clean
+- Task 008 completed: real-time session transport with session domain layer (Session entity, 6-state SessionState, AudioChunk/ConnectionInfo VOs, SessionService with 6 validation methods, 7 exception types), port interfaces (SessionRepository, ConnectionRepository), HTTP session handlers (POST .../session/start, POST .../session/end), BFF session views (SessionStartView, SessionEndView), 6 WebSocket handlers ($connect, $disconnect, session.init, audio.chunk, session.stop, client.ping), WebSocket Lambda router, DynamoDB session/connection adapters, CDK WebSocket API Gateway with ManageConnections IAM, ApiGatewayManagement helper, stub transcript delivery, container and BFF router wiring, settings expanded (websocket_url, max_session_duration_minutes), 128 new tests (461 total), zero regressions, lint clean
 
 ### Immediate Next Step
-Start `008-implement-realtime-consultation-session-transport.md`
+Start `009-integrate-transcription-provider-and-normalization.md`
 
 ## 5. Priority Queue
 
@@ -69,8 +70,8 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | planned | Real-time session transport depends on foundation infrastructure, consultation model, and BFF contracts |
-| 2 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | planned | Provider integration depends on realtime transport and the AWS foundation provisioned in Task 004 |
+| 1 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | planned | Provider integration depends on realtime transport (Task 008, now complete) and the AWS foundation provisioned in Task 004 |
+| 2 | `010-build-ai-processing-pipeline-and-artifacts.md` | Build AI processing pipeline and artifacts | planned | Orchestrates transcript-to-artifact generation with strict schemas and evidence linking |
 | 3 | `010-build-ai-processing-pipeline-and-artifacts.md` | Build AI processing pipeline and artifacts | planned | Orchestrates transcript-to-artifact generation with strict schemas and evidence linking |
 | 4 | `011-implement-review-finalization-and-export-workflows.md` | Implement review, finalization, and export workflows | planned | Adds physician edits, explicit final approval, audit attribution, and export generation |
 
@@ -80,7 +81,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 007 |
+| None | No active blockers | N/A | N/A | Begin Task 009 |
 
 ## 7. Task Index
 
@@ -95,7 +96,7 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | 005 | `005-implement-authentication-and-plan-access-control.md` | Implement authentication and plan access control | Security | Critical | done | `004-provision-aws-foundation-with-cdk.md` | 100 | Email/password auth via Cognito, DynamoDB doctor profile resolution, plan-aware entitlements (free_trial/plus/pro), auth middleware, BFF user view, feature flag evaluator, HTTP handlers, unauthenticated CDK routes, 49 tests passing |
 | 006 | `006-model-consultation-domain-persistence-and-audit.md` | Model consultation domain, persistence, and audit | Backend | Critical | done | `001-refine-mvp-requirements-and-delivery-decisions.md`, `004-provision-aws-foundation-with-cdk.md`, `005-implement-authentication-and-plan-access-control.md` | 100 | Consultation domain (7-state machine, transitions, guards), patient and audit entities, DynamoDB repos (consultation/patient/audit), S3 artifact key strategy (8 types), 5 use cases (create/get/list consultation, create/list patient), HTTP handlers, BFF views, BFF router with path param support, container wiring, 117 new tests (271 total) |
 | 007 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Build BFF contracts, UI config, and feature flags | Full Stack | High | done | `005-implement-authentication-and-plan-access-control.md`, `006-model-consultation-domain-persistence-and-audit.md` | 100 | BFF UI config endpoint (GET /v1/ui-config), pt-BR labels, review screen config, consultation list config, action availability per status (7 actions), consultation detail views with actions/warnings, user profile with feature flags, container/router wiring, 62 new tests (333 total) |
-| 008 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | Backend | Critical | planned | `006-model-consultation-domain-persistence-and-audit.md`, `007-build-bff-contracts-ui-config-and-feature-flags.md` | 0 | Implements session lifecycle, WebSocket routes, audio ingestion, and processing handoff for live consultations |
+| 008 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | Backend | Critical | done | `006-model-consultation-domain-persistence-and-audit.md`, `007-build-bff-contracts-ui-config-and-feature-flags.md` | 100 | Session domain (6-state Session, SessionService, 7 exceptions), ports (SessionRepository, ConnectionRepository), use cases (StartSession, EndSession with idempotency), HTTP handlers (session/start, session/end), 6 WebSocket handlers ($connect, $disconnect, session.init, audio.chunk, session.stop, client.ping), DynamoDB session/connection adapters, CDK WebSocket API + ManageConnections IAM, BFF session views, stub transcript delivery, 128 new tests (461 total) |
 | 009 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | Backend | Critical | planned | `008-implement-realtime-consultation-session-transport.md` | 0 | Adds the first `pt-BR` transcription provider, transcript normalization, and artifact persistence |
 | 010 | `010-build-ai-processing-pipeline-and-artifacts.md` | Build AI processing pipeline and artifacts | Backend | Critical | planned | `006-model-consultation-domain-persistence-and-audit.md`, `009-integrate-transcription-provider-and-normalization.md` | 0 | Orchestrates transcript-to-artifact generation with strict schemas, evidence linking, and failure handling |
 | 011 | `011-implement-review-finalization-and-export-workflows.md` | Implement review, finalization, and export workflows | Backend | Critical | planned | `007-build-bff-contracts-ui-config-and-feature-flags.md`, `010-build-ai-processing-pipeline-and-artifacts.md` | 0 | Adds physician edits, explicit final approval, audit attribution, and export generation from finalized content |
@@ -122,7 +123,7 @@ Track cross-task decisions, missing information, or conflicts.
 
 | ID | Issue | Impact | Status | Next Action |
 | --- | --- | --- | --- | --- |
-| OI-001 | The first production transcription provider has not been selected from the approved candidates yet | Provider integration, cost analysis, and credential setup cannot be finalized | resolved | Deepgram (Nova-2 Medical) selected. See `docs/requirements/05-decision-log.md` DEC-001 and ADR-006. |
+| OI-001 | The first production transcription provider has not been selected from the approved candidates yet | Provider integration, cost analysis, and credential setup cannot be finalized | resolved | ElevenLabs Scribe v2 Realtime selected (supersedes Deepgram Nova-2 Medical). See `docs/requirements/05-decision-log.md` DEC-001 and ADR-006. |
 | OI-002 | Plan entitlement differences between `free_trial`, `plus`, and `pro` are not fully defined | Backend authorization and feature-flag behavior may need rework | resolved | All plans share core features; differentiation by usage limits. See `docs/requirements/03-plan-entitlements.md`. |
 | OI-003 | Clinic audio retention defaults and deletion timing are not explicitly defined | Storage lifecycle, retention automation, and compliance behavior remain ambiguous | resolved | Plan-based retention: 7/30/90 days. See `docs/requirements/05-decision-log.md` DEC-003. |
 | OI-004 | Export output scope beyond the finalized note is not fully specified | Export implementation could diverge from stakeholder expectations | resolved | PDF with metadata + finalized history + summary + accepted insights. No transcript. See DEC-004. |
@@ -140,6 +141,8 @@ List the most recently changed tasks first.
 
 | Date | Task File | Change |
 | --- | --- | --- |
+| 2026-04-02 | `008-implement-realtime-consultation-session-transport.md` | Completed: session domain (Session entity, 6-state SessionState, SessionService, 7 exceptions), ports (SessionRepository, ConnectionRepository), use cases (StartSession, EndSession with idempotency), HTTP handlers (session/start, session/end), 6 WebSocket handlers, DynamoDB session/connection adapters, CDK WebSocket API + ManageConnections IAM, BFF session views, stub transcript, 128 new tests (461 total) |
+| 2026-04-02 | `@task-manager.md` | Updated for Task 008 completion: status, progress 67%, priority queue, next step set to Task 009 |
 | 2026-04-02 | `007-build-bff-contracts-ui-config-and-feature-flags.md` | Completed: BFF UI config endpoint, pt-BR labels (10 UI + 7 status + 3 insight categories), review screen config, consultation list config, action availability module (7 actions per status), enhanced consultation detail views with actions/warnings, user profile with feature flags, container/router wiring, 62 new tests (333 total) |
 | 2026-04-02 | `@task-manager.md` | Updated for Task 007 completion: status, progress 60%, priority queue, next step set to Task 008 |
 | 2026-04-02 | `006-model-consultation-domain-persistence-and-audit.md` | Completed: consultation domain (7-state machine), patient/audit entities, DynamoDB repos, S3 artifact keys, 5 use cases, HTTP handlers, BFF views, router upgrade, container wiring, 117 new tests |
@@ -238,7 +241,25 @@ Use the structure below when adding a new task summary.
 | 001 | `001-example-task.md` | Example task title | Backend | High | planned | None | 0 | Short implementation-ready summary |
 ```
 
-## 14. Notes
+## 14. Lessons Learned
+
+### Lint Validation Must Match CI Exactly (Task 008)
+
+When agents generate code in parallel, always run the **exact same lint command CI uses** (`make lint` and `make test`) before committing — not a hand-picked file list. During Task 008, agent-generated test files had unsorted imports, unused imports, and `assert False` patterns that passed a narrow manual lint check but failed CI. The fix is simple: run `make lint` and `make test` as the final gate, every time.
+
+### Agents Must Follow Existing Project Conventions (Task 008)
+
+Three classes of errors from parallel agents, all caused by not reading existing patterns closely enough:
+
+1. **Wrong file location.** An agent created the WebSocket Lambda router at `backend/src/deskai/infra/lambda_handlers/websocket.py` — a package path that doesn't exist. The existing pattern (`infra/lambda_handlers/bff.py`) was right there. **Rule:** Agent prompts must explicitly name the existing file to use as a pattern reference, and agents must read it before creating new files in the same area.
+
+2. **Wrong test framework.** An agent wrote tests using `pytest.raises()` and bare pytest-style classes, but CI runs `unittest discover` with no pytest installed. Existing test files all use `unittest.TestCase` with `self.assertRaises()`. **Rule:** Agent prompts must specify the test framework and base class. Include an existing test file as a mandatory read before writing tests.
+
+3. **Lint-dirty code.** Multiple agents produced files with unsorted imports, unused imports, and banned patterns (`assert False`). **Rule:** Each agent must run `make lint` on its own files before reporting completion.
+
+**Root cause:** Agents optimize for speed and correctness of logic but skip convention alignment unless explicitly told. Future agent prompts must include: (a) an existing file to copy the pattern from, (b) the exact CI commands to run before marking done, (c) the test framework and base class to use.
+
+## 15. Notes
 
 - This file summarizes progress. Detailed requirements belong in individual task files.
 - The task manager should stay concise even as the number of tasks grows.

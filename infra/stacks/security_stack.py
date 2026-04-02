@@ -126,12 +126,12 @@ class SecurityStack(Stack):
             ],
         )
 
-        self.deepgram_secret = secretsmanager.Secret(
+        self.elevenlabs_secret = secretsmanager.Secret(
             self,
-            "DeepgramSecret",
-            secret_name=config.deepgram_secret_name,
+            "ElevenLabsSecret",
+            secret_name=config.elevenlabs_secret_name,
             encryption_key=self.secrets_key,
-            description="Deepgram API credentials placeholder for MVP bootstrap.",
+            description="ElevenLabs Scribe v2 API credentials placeholder for MVP bootstrap.",
             secret_object_value={
                 "api_key": SecretValue.unsafe_plain_text("replace-in-aws-secrets-manager"),
             },

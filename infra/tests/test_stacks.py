@@ -83,7 +83,7 @@ class StackSynthesisTest(unittest.TestCase):
             consultation_table=storage.consultation_table,
             artifacts_bucket=storage.artifacts_bucket,
             data_key=security.data_key,
-            deepgram_secret=security.deepgram_secret,
+            elevenlabs_secret=security.elevenlabs_secret,
             claude_secret=security.claude_secret,
             user_pool_id=auth.user_pool.user_pool_id,
             user_pool_client_id=auth.user_pool_client.user_pool_client_id,
@@ -284,6 +284,48 @@ class StackSynthesisTest(unittest.TestCase):
             {
                 "Name": DEV_CONFIG.websocket_api_name,
                 "ProtocolType": "WEBSOCKET",
+            },
+        )
+
+    def test_api_stack_websocket_has_custom_action_routes(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.api)
+        for route_key in ["session.init", "audio.chunk", "session.stop", "client.ping"]:
+            template.has_resource_properties(
+                "AWS::ApiGatewayV2::Route",
+                {"RouteKey": route_key},
+            )
+
+    def test_api_stack_websocket_stage_has_auto_deploy(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.api)
+        template.has_resource_properties(
+            "AWS::ApiGatewayV2::Stage",
+            {
+                "StageName": DEV_CONFIG.environment,
+                "AutoDeploy": True,
+                "ApiId": Match.any_value(),
+            },
+        )
+
+    def test_compute_stack_grants_manage_connections_permission(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+        template.has_resource_properties(
+            "AWS::IAM::Policy",
+            {
+                "PolicyDocument": {
+                    "Statement": Match.array_with(
+                        [
+                            Match.object_like(
+                                {
+                                    "Action": "execute-api:ManageConnections",
+                                    "Effect": "Allow",
+                                }
+                            )
+                        ]
+                    )
+                }
             },
         )
 

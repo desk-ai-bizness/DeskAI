@@ -125,7 +125,7 @@ The MVP is limited to documentation assistance and review support.
 
 - The MVP must use a transcription provider that supports Brazilian Portuguese (`pt-BR`).
 - English-only medical transcription services must not be used in the MVP for production consultation transcription in Brazil.
-- Candidate transcription providers for the MVP include Google Cloud Speech-to-Text, Azure AI Speech, and Deepgram, provided they meet product, privacy, and performance requirements.
+- The selected transcription provider for the MVP is ElevenLabs Scribe v2 Realtime (see ADR-006). Alternative providers include Google Cloud Speech-to-Text, Azure AI Speech, and Deepgram.
 
 ## 14. Evidence and Traceability Rules
 

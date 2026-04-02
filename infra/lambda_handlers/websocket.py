@@ -1,4 +1,4 @@
-"""Placeholder WebSocket Lambda handler for consultation session routes."""
+"""WebSocket Lambda entry point — delegates to backend router."""
 
 from __future__ import annotations
 
@@ -6,11 +6,7 @@ from typing import Any
 
 
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
-    """Acknowledge WebSocket control and audio routes for baseline provisioning."""
+    """Delegate to the backend WebSocket router."""
+    from deskai.handlers.websocket.router import handler as ws_handler
 
-    _ = context  # Reserved for future structured logging correlation.
-    route_key = event.get("requestContext", {}).get("routeKey", "$default")
-    return {
-        "statusCode": 200,
-        "body": f"route acknowledged: {route_key}",
-    }
+    return ws_handler(event, context)

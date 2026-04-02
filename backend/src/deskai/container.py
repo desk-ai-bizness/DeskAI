@@ -6,6 +6,9 @@ from deskai.adapters.auth.cognito_provider import CognitoAuthProvider
 from deskai.adapters.persistence.dynamodb_audit_repository import (
     DynamoDBAuditRepository,
 )
+from deskai.adapters.persistence.dynamodb_connection_repository import (
+    DynamoDBConnectionRepository,
+)
 from deskai.adapters.persistence.dynamodb_consultation_repository import (
     DynamoDBConsultationRepository,
 )
@@ -14,6 +17,9 @@ from deskai.adapters.persistence.dynamodb_doctor_repository import (
 )
 from deskai.adapters.persistence.dynamodb_patient_repository import (
     DynamoDBPatientRepository,
+)
+from deskai.adapters.persistence.dynamodb_session_repository import (
+    DynamoDBSessionRepository,
 )
 from deskai.application.auth.authenticate import AuthenticateUseCase
 from deskai.application.auth.check_entitlements import (
@@ -45,11 +51,15 @@ from deskai.application.patient.create_patient import (
 from deskai.application.patient.list_patients import (
     ListPatientsUseCase,
 )
+from deskai.application.session.end_session import EndSessionUseCase
+from deskai.application.session.start_session import StartSessionUseCase
 from deskai.ports.audit_repository import AuditRepository
 from deskai.ports.auth_provider import AuthProvider
+from deskai.ports.connection_repository import ConnectionRepository
 from deskai.ports.consultation_repository import ConsultationRepository
 from deskai.ports.doctor_repository import DoctorRepository
 from deskai.ports.patient_repository import PatientRepository
+from deskai.ports.session_repository import SessionRepository
 from deskai.shared.config import Settings, load_settings
 
 
@@ -62,6 +72,8 @@ class Container:
     doctor_repo: DoctorRepository
     consultation_repo: ConsultationRepository
     patient_repo: PatientRepository
+    session_repo: SessionRepository
+    connection_repo: ConnectionRepository
     audit_repo: AuditRepository
     authenticate: AuthenticateUseCase
     sign_out: SignOutUseCase
@@ -74,6 +86,8 @@ class Container:
     list_consultations: ListConsultationsUseCase
     create_patient: CreatePatientUseCase
     list_patients: ListPatientsUseCase
+    start_session: StartSessionUseCase
+    end_session: EndSessionUseCase
     get_ui_config: GetUiConfigUseCase
 
 
@@ -100,6 +114,12 @@ def build_container() -> Container:
     patient_repo = DynamoDBPatientRepository(
         table_name=settings.dynamodb_table,
     )
+    session_repo = DynamoDBSessionRepository(
+        table_name=settings.dynamodb_table,
+    )
+    connection_repo = DynamoDBConnectionRepository(
+        table_name=settings.dynamodb_table,
+    )
     audit_repo = DynamoDBAuditRepository(
         table_name=settings.dynamodb_table,
     )
@@ -110,6 +130,8 @@ def build_container() -> Container:
         doctor_repo=doctor_repo,
         consultation_repo=consultation_repo,
         patient_repo=patient_repo,
+        session_repo=session_repo,
+        connection_repo=connection_repo,
         audit_repo=audit_repo,
         authenticate=AuthenticateUseCase(
             auth_provider=auth_provider,
@@ -145,6 +167,16 @@ def build_container() -> Container:
         ),
         list_patients=ListPatientsUseCase(
             patient_repo=patient_repo,
+        ),
+        start_session=StartSessionUseCase(
+            consultation_repo=consultation_repo,
+            session_repo=session_repo,
+            audit_repo=audit_repo,
+        ),
+        end_session=EndSessionUseCase(
+            consultation_repo=consultation_repo,
+            session_repo=session_repo,
+            audit_repo=audit_repo,
         ),
         get_ui_config=GetUiConfigUseCase(),
     )

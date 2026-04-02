@@ -77,7 +77,7 @@ def main() -> None:
         consultation_table=storage.consultation_table,
         artifacts_bucket=storage.artifacts_bucket,
         data_key=security.data_key,
-        deepgram_secret=security.deepgram_secret,
+        elevenlabs_secret=security.elevenlabs_secret,
         claude_secret=security.claude_secret,
         user_pool_id=auth.user_pool.user_pool_id,
         user_pool_client_id=auth.user_pool_client.user_pool_client_id,

@@ -1,16 +1,23 @@
-"""WebSocket audio.chunk handler — accept audio data for active recording sessions."""
+"""WebSocket audio.chunk handler — forward audio data to transcription provider."""
 
+import base64
 import json
 
 from deskai.domain.session.services import SessionService
 from deskai.shared.time import utc_now_iso
 
 
-def handle_audio_chunk(event: dict, connection_repo, session_repo, apigw) -> dict:
-    """Accept an audio chunk and send a stub transcript.partial back."""
+def handle_audio_chunk(
+    event: dict,
+    connection_repo,
+    session_repo,
+    apigw,
+    transcription_provider=None,
+) -> dict:
+    """Accept an audio chunk and forward it to the transcription provider."""
     connection_id = event["requestContext"]["connectionId"]
-    # body parsed but audio data not forwarded yet (stub — real provider in Task 009)
-    _body = json.loads(event.get("body", "{}"))  # noqa: F841
+    body = json.loads(event.get("body", "{}"))
+    data = body.get("data", {})
 
     connection = connection_repo.find_by_connection_id(connection_id)
     if connection is None:
@@ -28,6 +35,11 @@ def handle_audio_chunk(event: dict, connection_repo, session_repo, apigw) -> dic
         )
     except Exception:
         return {"statusCode": 400, "body": "Audio chunk rejected"}
+
+    audio_b64 = data.get("audio", "")
+    if audio_b64 and transcription_provider is not None:
+        audio_bytes = base64.b64decode(audio_b64)
+        transcription_provider.send_audio_chunk(session.session_id, audio_bytes)
 
     session.audio_chunks_received += 1
     session.last_activity_at = utc_now_iso()

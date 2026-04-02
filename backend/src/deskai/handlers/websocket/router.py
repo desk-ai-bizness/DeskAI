@@ -39,7 +39,11 @@ def handler(event: dict, context) -> dict:
             )
 
             return handle_audio_chunk(
-                event, _get_connection_repo(), _get_session_repo(), _get_apigw()
+                event,
+                _get_connection_repo(),
+                _get_session_repo(),
+                _get_apigw(),
+                _get_transcription_provider(),
             )
 
         if action == "session.stop":
@@ -52,6 +56,7 @@ def handler(event: dict, context) -> dict:
                 _get_connection_repo(),
                 _get_end_session_use_case(),
                 _get_apigw(),
+                _get_finalize_transcript_use_case(),
             )
 
         if action == "client.ping":
@@ -85,4 +90,12 @@ def _get_apigw():
 
 
 def _get_end_session_use_case():
+    raise NotImplementedError("Wire WebSocket container")
+
+
+def _get_transcription_provider():
+    raise NotImplementedError("Wire WebSocket container")
+
+
+def _get_finalize_transcript_use_case():
     raise NotImplementedError("Wire WebSocket container")

@@ -1,10 +1,19 @@
-"""WebSocket session.stop handler — end session via WebSocket."""
+"""WebSocket session.stop handler — end session and trigger finalization."""
 
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-def handle_session_stop(event: dict, connection_repo, end_session_use_case, apigw) -> dict:
-    """End a session via WebSocket, same effect as POST .../session/end."""
+def handle_session_stop(
+    event: dict,
+    connection_repo,
+    end_session_use_case,
+    apigw,
+    finalize_transcript_use_case=None,
+) -> dict:
+    """End a session via WebSocket and optionally trigger finalization."""
     connection_id = event["requestContext"]["connectionId"]
     body = json.loads(event.get("body", "{}"))
     data = body.get("data", {})
@@ -14,7 +23,7 @@ def handle_session_stop(event: dict, connection_repo, end_session_use_case, apig
     if connection is None:
         return {"statusCode": 400, "body": "Unknown connection"}
 
-    end_session_use_case.execute(
+    session = end_session_use_case.execute(
         consultation_id=consultation_id,
         doctor_id=connection.doctor_id,
         clinic_id=connection.clinic_id,
@@ -30,5 +39,17 @@ def handle_session_stop(event: dict, connection_repo, end_session_use_case, apig
             },
         },
     )
+
+    if finalize_transcript_use_case is not None:
+        try:
+            finalize_transcript_use_case.execute(
+                session_id=session.session_id,
+                consultation_id=consultation_id,
+                clinic_id=connection.clinic_id,
+            )
+        except Exception:
+            logger.exception(
+                "Finalization failed for session %s", session.session_id
+            )
 
     return {"statusCode": 200}

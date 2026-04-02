@@ -101,6 +101,14 @@ class ComputeStack(Stack):
                 resources=[user_pool_arn],
             )
         )
+        self.lambda_execution_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["execute-api:ManageConnections"],
+                resources=[
+                    f"arn:aws:execute-api:{self.region}:{self.account}:*/*/@connections/*"
+                ],
+            )
+        )
 
         asset_path = Path(__file__).resolve().parent.parent / ".build" / "lambda"
 

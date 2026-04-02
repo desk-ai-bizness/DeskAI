@@ -18,6 +18,8 @@ class Settings:
     cognito_secret_name: str
     cognito_user_pool_id: str
     cognito_client_id: str
+    websocket_url: str
+    max_session_duration_minutes: int
 
 
 DEFAULT_DYNAMODB_TABLE = "deskai-dev-consultation-records"
@@ -42,4 +44,8 @@ def load_settings() -> Settings:
         ),
         cognito_user_pool_id=getenv("DESKAI_COGNITO_USER_POOL_ID", ""),
         cognito_client_id=getenv("DESKAI_COGNITO_CLIENT_ID", ""),
+        websocket_url=getenv("DESKAI_WEBSOCKET_URL", "wss://localhost:3001"),
+        max_session_duration_minutes=int(
+            getenv("DESKAI_MAX_SESSION_DURATION_MINUTES", "60")
+        ),
     )

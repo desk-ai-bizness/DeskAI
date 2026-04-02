@@ -287,6 +287,48 @@ class StackSynthesisTest(unittest.TestCase):
             },
         )
 
+    def test_api_stack_websocket_has_custom_action_routes(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.api)
+        for route_key in ["session.init", "audio.chunk", "session.stop", "client.ping"]:
+            template.has_resource_properties(
+                "AWS::ApiGatewayV2::Route",
+                {"RouteKey": route_key},
+            )
+
+    def test_api_stack_websocket_stage_has_auto_deploy(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.api)
+        template.has_resource_properties(
+            "AWS::ApiGatewayV2::Stage",
+            {
+                "StageName": DEV_CONFIG.environment,
+                "AutoDeploy": True,
+                "ApiId": Match.any_value(),
+            },
+        )
+
+    def test_compute_stack_grants_manage_connections_permission(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+        template.has_resource_properties(
+            "AWS::IAM::Policy",
+            {
+                "PolicyDocument": {
+                    "Statement": Match.array_with(
+                        [
+                            Match.object_like(
+                                {
+                                    "Action": "execute-api:ManageConnections",
+                                    "Effect": "Allow",
+                                }
+                            )
+                        ]
+                    )
+                }
+            },
+        )
+
     # --- Orchestration ---
 
     def test_orchestration_stack_provisions_workflow_and_queues(self) -> None:

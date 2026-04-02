@@ -45,6 +45,7 @@ def handler(
         consultation_handler,
         me_handler,
         patient_handler,
+        session_handler,
         ui_config_handler,
     )
 
@@ -103,6 +104,16 @@ def handler(
             re.compile(r"^/v1/consultations/(?P<id>[^/]+)$"),
             "GET",
             consultation_handler.handle_get_consultation,
+        ),
+        (
+            re.compile(r"^/v1/consultations/(?P<id>[^/]+)/session/start$"),
+            "POST",
+            session_handler.handle_start_session,
+        ),
+        (
+            re.compile(r"^/v1/consultations/(?P<id>[^/]+)/session/end$"),
+            "POST",
+            session_handler.handle_end_session,
         ),
     ]
 

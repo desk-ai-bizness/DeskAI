@@ -30,6 +30,11 @@ from deskai.domain.patient.exceptions import (
     PatientNotFoundError,
     PatientValidationError,
 )
+from deskai.domain.session.exceptions import (
+    InvalidSessionStateError,
+    SessionNotActiveError,
+    SessionOwnershipError,
+)
 from deskai.shared.logging import get_logger
 
 logger = get_logger()
@@ -48,6 +53,9 @@ _EXCEPTION_MAP: dict[type[Exception], tuple[int, str]] = {
     ConsultationAlreadyFinalizedError: (409, "conflict"),
     PatientNotFoundError: (404, "not_found"),
     PatientValidationError: (400, "validation_error"),
+    InvalidSessionStateError: (409, "conflict"),
+    SessionNotActiveError: (404, "not_found"),
+    SessionOwnershipError: (403, "forbidden"),
 }
 
 

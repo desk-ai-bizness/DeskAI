@@ -1,22 +1,282 @@
-openapi: 3.1.0
+openapi: "3.1.0"
 info:
   title: DeskAI Review API
   version: v1
+
 paths:
   /v1/consultations/{consultation_id}/review:
     get:
+      operationId: getReview
       summary: Open consultation review
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ConsultationId"
       responses:
-        '200':
+        "200":
           description: Review payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewView"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "404":
+          description: Consultation not found
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
     put:
+      operationId: updateReview
       summary: Update consultation review
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ConsultationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateReviewRequest"
       responses:
-        '200':
+        "200":
           description: Updated review payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewView"
+        "400":
+          description: Missing or invalid fields
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "404":
+          description: Consultation not found
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+
   /v1/consultations/{consultation_id}/finalize:
     post:
+      operationId: finalizeConsultation
       summary: Finalize consultation
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ConsultationId"
       responses:
-        '200':
+        "200":
           description: Consultation finalized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinalizeView"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "404":
+          description: Consultation not found
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "409":
+          description: Consultation is not in under_physician_review state
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ConsultationId:
+      name: consultation_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    ReviewView:
+      type: object
+      required:
+        - consultation_id
+        - status
+        - transcript
+        - medical_history
+        - summary
+        - insights
+        - ui_config
+      properties:
+        consultation_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [under_physician_review]
+        transcript:
+          type: object
+          required: [segments]
+          properties:
+            segments:
+              type: array
+              items:
+                $ref: "#/components/schemas/TranscriptSegment"
+        medical_history:
+          type: object
+          required: [content, edited_by_physician, completeness_warning]
+          properties:
+            content:
+              type: object
+              additionalProperties: true
+            edited_by_physician:
+              type: boolean
+            completeness_warning:
+              type: boolean
+        summary:
+          type: object
+          required: [content, edited_by_physician, completeness_warning]
+          properties:
+            content:
+              type: string
+            edited_by_physician:
+              type: boolean
+            completeness_warning:
+              type: boolean
+        insights:
+          type: array
+          items:
+            $ref: "#/components/schemas/Insight"
+        ui_config:
+          type: object
+          properties:
+            labels:
+              type: object
+              additionalProperties: true
+            section_order:
+              type: array
+              items:
+                type: string
+            warnings:
+              type: array
+              items:
+                type: string
+
+    TranscriptSegment:
+      type: object
+      required: [speaker, text, start_time, end_time]
+      properties:
+        speaker:
+          type: string
+          enum: [doctor, patient]
+        text:
+          type: string
+        start_time:
+          type: number
+          format: float
+        end_time:
+          type: number
+          format: float
+
+    Insight:
+      type: object
+      required: [insight_id, category, description, evidence, status]
+      properties:
+        insight_id:
+          type: string
+          format: uuid
+        category:
+          type: string
+          enum: [documentation_gap, consistency_issue, clinical_attention]
+        description:
+          type: string
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvidenceExcerpt"
+        status:
+          type: string
+          enum: [pending, accepted, dismissed, edited]
+        physician_note:
+          type: string
+          nullable: true
+
+    EvidenceExcerpt:
+      type: object
+      required: [text, start_time, end_time]
+      properties:
+        text:
+          type: string
+        start_time:
+          type: number
+          format: float
+        end_time:
+          type: number
+          format: float
+
+    UpdateReviewRequest:
+      type: object
+      properties:
+        medical_history:
+          type: object
+          additionalProperties: true
+        summary:
+          type: string
+        insights:
+          type: array
+          items:
+            $ref: "#/components/schemas/InsightAction"
+
+    InsightAction:
+      type: object
+      required: [insight_id, action]
+      properties:
+        insight_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [accept, dismiss, edit]
+        physician_note:
+          type: string
+
+    FinalizeView:
+      type: object
+      required: [consultation_id, status, finalized_at, finalized_by]
+      properties:
+        consultation_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [finalized]
+        finalized_at:
+          type: string
+          format: date-time
+        finalized_by:
+          type: string
+          format: uuid

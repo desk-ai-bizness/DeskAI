@@ -29,6 +29,7 @@ dist/
 npm-debug.log*
 yarn-error.log*
 infra/cdk.out/
+infra/.build/
 
 # Environment
 .env

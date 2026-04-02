@@ -1,10 +1,43 @@
 $schema: https://json-schema.org/draft/2020-12/schema
-$title: UiLabelsSchema
-$type: object
-required:
-  - labels
+title: UiLabelsSchema
+description: Required UI label keys for backend-driven localization.
+
+type: object
+required: [labels]
 properties:
   labels:
     type: object
-    additionalProperties:
-      type: string
+    required:
+      - consultation_list_title
+      - new_consultation_button
+      - start_recording_button
+      - stop_recording_button
+      - live_session_header
+      - review_title
+      - finalize_button
+      - export_button
+      - ai_disclaimer
+      - completeness_warning
+    properties:
+      consultation_list_title:
+        type: string
+      new_consultation_button:
+        type: string
+      start_recording_button:
+        type: string
+      stop_recording_button:
+        type: string
+      live_session_header:
+        type: string
+      review_title:
+        type: string
+      finalize_button:
+        type: string
+      export_button:
+        type: string
+      ai_disclaimer:
+        type: string
+      completeness_warning:
+        type: string
+    additionalProperties: false
+additionalProperties: false

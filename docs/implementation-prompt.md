@@ -4,11 +4,11 @@ The repository root, together with `./docs` and `./tasks`, is the current planni
 
 Before doing anything else, read these files in this order:
 
-1. `./docs/ai-context-rules.md`
-2. `./docs/mvp-business-rules.md`
-3. `./docs/mvp-technical-specs.md`
+1. `docs/mvp-business-rules.md`
+2. `docs/mvp-technical-specs.md`
+3. `docs/ai-context-rules.md`
 4. The specific task file I assign
-5. `./tasks/@task-manager.md`
+5. `tasks/@task-manager.md`
 
 Your job is to fully implement the assigned task in the codebase, following all business rules, technical specs, architecture constraints, and clean code expectations defined in those files.
 

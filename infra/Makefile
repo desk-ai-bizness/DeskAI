@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: install lint format typecheck test synth
+.PHONY: install lint format typecheck test build-lambda clean-lambda synth
 
 install:
 	$(PYTHON) -m pip install --upgrade pip
@@ -19,5 +19,11 @@ typecheck:
 test:
 	$(PYTHON) -m unittest discover -s tests
 
-synth:
+build-lambda:
+	bash scripts/build_lambda.sh
+
+clean-lambda:
+	rm -rf .build/
+
+synth: build-lambda
 	JSII_RUNTIME_PACKAGE_CACHE=.jsii-cache npm run synth

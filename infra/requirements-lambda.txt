@@ -1,0 +1,7 @@
+# Runtime dependencies for Lambda handlers.
+# Keep in sync with backend/pyproject.toml [project.dependencies].
+# boto3 is provided by the Lambda runtime and intentionally excluded.
+aws-lambda-powertools>=2.40.0
+httpx>=0.27.0
+pydantic>=2.9.0
+tenacity>=9.0.0

@@ -5,6 +5,31 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+_container = None
+
+
+def _get_container():
+    """Lazy-initialize the container on first invocation (cold start)."""
+    global _container
+    if _container is None:
+        from deskai.container import build_container
+
+        _container = build_container()
+    return _container
+
+
+def _build_apigw(event: dict):
+    """Build ApiGatewayManagement from the WebSocket event context."""
+    from deskai.handlers.websocket.api_gateway_management import (
+        ApiGatewayManagement,
+    )
+
+    rc = event.get("requestContext", {})
+    domain = rc.get("domainName", "")
+    stage = rc.get("stage", "")
+    endpoint_url = f"https://{domain}/{stage}"
+    return ApiGatewayManagement(endpoint_url=endpoint_url)
+
 
 def handler(event: dict, context) -> dict:
     """Route WebSocket events to the appropriate handler."""
@@ -13,12 +38,14 @@ def handler(event: dict, context) -> dict:
     if route_key == "$connect":
         from deskai.handlers.websocket.connect_handler import handle_connect
 
-        return handle_connect(event, _get_connection_repo(), _get_auth_provider())
+        c = _get_container()
+        return handle_connect(event, c.connection_repo, c.auth_provider)
 
     if route_key == "$disconnect":
         from deskai.handlers.websocket.disconnect_handler import handle_disconnect
 
-        return handle_disconnect(event, _get_connection_repo(), _get_session_repo())
+        c = _get_container()
+        return handle_disconnect(event, c.connection_repo, c.session_repo)
 
     if route_key == "$default":
         body = json.loads(event.get("body", "{}"))
@@ -29,8 +56,9 @@ def handler(event: dict, context) -> dict:
                 handle_session_init,
             )
 
+            c = _get_container()
             return handle_session_init(
-                event, _get_connection_repo(), _get_session_repo(), _get_apigw()
+                event, c.connection_repo, c.session_repo, _build_apigw(event)
             )
 
         if action == "audio.chunk":
@@ -38,12 +66,13 @@ def handler(event: dict, context) -> dict:
                 handle_audio_chunk,
             )
 
+            c = _get_container()
             return handle_audio_chunk(
                 event,
-                _get_connection_repo(),
-                _get_session_repo(),
-                _get_apigw(),
-                _get_transcription_provider(),
+                c.connection_repo,
+                c.session_repo,
+                _build_apigw(event),
+                c.transcription_provider,
             )
 
         if action == "session.stop":
@@ -51,12 +80,13 @@ def handler(event: dict, context) -> dict:
                 handle_session_stop,
             )
 
+            c = _get_container()
             return handle_session_stop(
                 event,
-                _get_connection_repo(),
-                _get_end_session_use_case(),
-                _get_apigw(),
-                _get_finalize_transcript_use_case(),
+                c.connection_repo,
+                c.end_session,
+                _build_apigw(event),
+                c.finalize_transcript,
             )
 
         if action == "client.ping":
@@ -66,36 +96,3 @@ def handler(event: dict, context) -> dict:
 
     logger.warning("Unrecognized route: %s", route_key)
     return {"statusCode": 400, "body": "Unrecognized route"}
-
-
-# ---------------------------------------------------------------------------
-# Dependency stubs — will be fully wired when container supports WebSocket
-# ---------------------------------------------------------------------------
-
-
-def _get_connection_repo():
-    raise NotImplementedError("Wire WebSocket container")
-
-
-def _get_session_repo():
-    raise NotImplementedError("Wire WebSocket container")
-
-
-def _get_auth_provider():
-    raise NotImplementedError("Wire WebSocket container")
-
-
-def _get_apigw():
-    raise NotImplementedError("Wire WebSocket container")
-
-
-def _get_end_session_use_case():
-    raise NotImplementedError("Wire WebSocket container")
-
-
-def _get_transcription_provider():
-    raise NotImplementedError("Wire WebSocket container")
-
-
-def _get_finalize_transcript_use_case():
-    raise NotImplementedError("Wire WebSocket container")

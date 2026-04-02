@@ -83,6 +83,7 @@ class WebSocketRouterTest(unittest.TestCase):
         self.assertEqual(result["statusCode"], 200)
         mock_handler.assert_called_once()
 
+    @patch(f"{_ROUTER}._get_transcription_provider", new=_noop)
     @patch(f"{_ROUTER}._get_apigw", new=_noop)
     @patch(f"{_ROUTER}._get_session_repo", new=_noop)
     @patch(f"{_ROUTER}._get_connection_repo", new=_noop)
@@ -98,6 +99,7 @@ class WebSocketRouterTest(unittest.TestCase):
         self.assertEqual(result["statusCode"], 200)
         mock_handler.assert_called_once()
 
+    @patch(f"{_ROUTER}._get_finalize_transcript_use_case", new=_noop)
     @patch(f"{_ROUTER}._get_apigw", new=_noop)
     @patch(f"{_ROUTER}._get_end_session_use_case", new=_noop)
     @patch(f"{_ROUTER}._get_connection_repo", new=_noop)

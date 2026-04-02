@@ -1,7 +1,7 @@
 """Unit tests for session domain: entities, value objects, services, exceptions."""
 
 from dataclasses import FrozenInstanceError
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 import pytest
 
@@ -19,7 +19,6 @@ from deskai.domain.session.exceptions import (
 from deskai.domain.session.services import SessionService
 from deskai.domain.session.value_objects import AudioChunk, ConnectionInfo
 from deskai.shared.errors import DeskAIError
-
 
 # ---------------------------------------------------------------------------
 # SessionState enum

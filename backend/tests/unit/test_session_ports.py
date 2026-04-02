@@ -3,9 +3,10 @@
 import inspect
 from abc import ABC
 
-from deskai.ports.session_repository import SessionRepository
-from deskai.ports.connection_repository import ConnectionRepository
+import pytest
 
+from deskai.ports.connection_repository import ConnectionRepository
+from deskai.ports.session_repository import SessionRepository
 
 # ---------------------------------------------------------------------------
 # SessionRepository port
@@ -39,11 +40,8 @@ class TestSessionRepository:
         assert "session_id" in params
 
     def test_cannot_instantiate_directly(self):
-        try:
+        with pytest.raises(TypeError):
             SessionRepository()
-            assert False, "Should not be instantiable"
-        except TypeError:
-            pass
 
 
 # ---------------------------------------------------------------------------
@@ -69,8 +67,5 @@ class TestConnectionRepository:
         assert "connection_id" in params
 
     def test_cannot_instantiate_directly(self):
-        try:
+        with pytest.raises(TypeError):
             ConnectionRepository()
-            assert False, "Should not be instantiable"
-        except TypeError:
-            pass

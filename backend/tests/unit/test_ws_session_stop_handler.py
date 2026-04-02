@@ -2,7 +2,7 @@
 
 import json
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from deskai.domain.session.entities import Session, SessionState
 from deskai.domain.session.value_objects import ConnectionInfo

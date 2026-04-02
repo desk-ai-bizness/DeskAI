@@ -245,7 +245,19 @@ Use the structure below when adding a new task summary.
 
 ### Lint Validation Must Match CI Exactly (Task 008)
 
-When agents generate code in parallel, always run the **exact same lint command CI uses** (`make lint` or `python -m ruff check src tests`) before committing — not a hand-picked file list. During Task 008, agent-generated test files had unsorted imports, unused imports, and `assert False` patterns that passed a narrow manual lint check but failed CI. The fix is simple: run `make lint` as the final gate, every time.
+When agents generate code in parallel, always run the **exact same lint command CI uses** (`make lint` and `make test`) before committing — not a hand-picked file list. During Task 008, agent-generated test files had unsorted imports, unused imports, and `assert False` patterns that passed a narrow manual lint check but failed CI. The fix is simple: run `make lint` and `make test` as the final gate, every time.
+
+### Agents Must Follow Existing Project Conventions (Task 008)
+
+Three classes of errors from parallel agents, all caused by not reading existing patterns closely enough:
+
+1. **Wrong file location.** An agent created the WebSocket Lambda router at `backend/src/deskai/infra/lambda_handlers/websocket.py` — a package path that doesn't exist. The existing pattern (`infra/lambda_handlers/bff.py`) was right there. **Rule:** Agent prompts must explicitly name the existing file to use as a pattern reference, and agents must read it before creating new files in the same area.
+
+2. **Wrong test framework.** An agent wrote tests using `pytest.raises()` and bare pytest-style classes, but CI runs `unittest discover` with no pytest installed. Existing test files all use `unittest.TestCase` with `self.assertRaises()`. **Rule:** Agent prompts must specify the test framework and base class. Include an existing test file as a mandatory read before writing tests.
+
+3. **Lint-dirty code.** Multiple agents produced files with unsorted imports, unused imports, and banned patterns (`assert False`). **Rule:** Each agent must run `make lint` on its own files before reporting completion.
+
+**Root cause:** Agents optimize for speed and correctness of logic but skip convention alignment unless explicitly told. Future agent prompts must include: (a) an existing file to copy the pattern from, (b) the exact CI commands to run before marking done, (c) the test framework and base class to use.
 
 ## 15. Notes
 

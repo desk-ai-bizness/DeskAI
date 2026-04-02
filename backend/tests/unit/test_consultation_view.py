@@ -1,0 +1,85 @@
+"""Unit tests for the consultation BFF view builders."""
+
+import unittest
+
+from tests.conftest import make_sample_consultation, make_sample_patient
+
+
+class BuildConsultationViewTest(unittest.TestCase):
+    def test_build_consultation_view(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_view,
+        )
+
+        consultation = make_sample_consultation()
+        view = build_consultation_view(consultation)
+
+        self.assertEqual(view["consultation_id"], "cons-001")
+        self.assertEqual(view["patient_id"], "pat-001")
+        self.assertEqual(view["doctor_id"], "doc-001")
+        self.assertEqual(view["clinic_id"], "clinic-001")
+        self.assertEqual(view["specialty"], "general_practice")
+        self.assertEqual(view["status"], "started")
+        self.assertEqual(view["scheduled_date"], "2026-04-01")
+
+    def test_build_consultation_list_view(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_list_view,
+        )
+
+        consultations = [
+            make_sample_consultation(consultation_id="c1"),
+            make_sample_consultation(consultation_id="c2"),
+        ]
+        view = build_consultation_list_view(consultations)
+
+        self.assertEqual(view["total_count"], 2)
+        self.assertEqual(len(view["consultations"]), 2)
+        self.assertEqual(view["consultations"][0]["consultation_id"], "c1")
+
+    def test_build_consultation_detail_view(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_detail_view,
+        )
+
+        consultation = make_sample_consultation(
+            session_started_at="2026-04-01T10:30:00+00:00",
+            session_ended_at="2026-04-01T11:00:00+00:00",
+            processing_started_at="2026-04-01T11:01:00+00:00",
+            processing_completed_at="2026-04-01T11:05:00+00:00",
+            finalized_at="2026-04-01T12:00:00+00:00",
+            finalized_by="doc-001",
+        )
+        view = build_consultation_detail_view(consultation)
+
+        self.assertEqual(view["consultation_id"], "cons-001")
+        self.assertIn("session", view)
+        self.assertEqual(
+            view["session"]["started_at"], "2026-04-01T10:30:00+00:00"
+        )
+        self.assertEqual(
+            view["session"]["ended_at"], "2026-04-01T11:00:00+00:00"
+        )
+        self.assertIn("processing", view)
+        self.assertEqual(
+            view["processing"]["started_at"], "2026-04-01T11:01:00+00:00"
+        )
+        self.assertEqual(view["finalized_at"], "2026-04-01T12:00:00+00:00")
+        self.assertEqual(view["finalized_by"], "doc-001")
+
+    def test_build_patient_view(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_patient_view,
+        )
+
+        patient = make_sample_patient()
+        view = build_patient_view(patient)
+
+        self.assertEqual(view["patient_id"], "pat-001")
+        self.assertEqual(view["name"], "Joao Silva")
+        self.assertEqual(view["date_of_birth"], "1990-05-15")
+        self.assertEqual(view["clinic_id"], "clinic-001")
+
+
+if __name__ == "__main__":
+    unittest.main()

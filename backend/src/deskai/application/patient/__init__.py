@@ -1,0 +1,1 @@
+"""Patient application use cases."""

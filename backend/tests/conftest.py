@@ -4,12 +4,15 @@ import json
 from typing import Any
 from unittest.mock import MagicMock
 
+from deskai.domain.audit.entities import AuditAction, AuditEvent
 from deskai.domain.auth.entities import DoctorProfile
 from deskai.domain.auth.value_objects import (
     AuthContext,
     PlanType,
     Tokens,
 )
+from deskai.domain.consultation.entities import Consultation, ConsultationStatus
+from deskai.domain.patient.entities import Patient
 
 # ---------------------------------------------------------------------------
 # AWS client mocks
@@ -163,3 +166,53 @@ def make_apigw_event(
         event["queryStringParameters"] = query_string_parameters
 
     return event
+
+
+# ---------------------------------------------------------------------------
+# Consultation / Patient / Audit fixtures
+# ---------------------------------------------------------------------------
+
+
+def make_sample_consultation(**overrides: Any) -> Consultation:
+    """Build a Consultation entity with sensible defaults."""
+    defaults: dict[str, Any] = dict(
+        consultation_id="cons-001",
+        clinic_id="clinic-001",
+        doctor_id="doc-001",
+        patient_id="pat-001",
+        specialty="general_practice",
+        status=ConsultationStatus.STARTED,
+        scheduled_date="2026-04-01",
+        notes="",
+        created_at="2026-04-01T10:00:00+00:00",
+        updated_at="2026-04-01T10:00:00+00:00",
+    )
+    defaults.update(overrides)
+    return Consultation(**defaults)
+
+
+def make_sample_patient(**overrides: Any) -> Patient:
+    """Build a Patient entity with sensible defaults."""
+    defaults: dict[str, Any] = dict(
+        patient_id="pat-001",
+        name="Joao Silva",
+        date_of_birth="1990-05-15",
+        clinic_id="clinic-001",
+        created_at="2026-04-01T10:00:00+00:00",
+    )
+    defaults.update(overrides)
+    return Patient(**defaults)
+
+
+def make_sample_audit_event(**overrides: Any) -> AuditEvent:
+    """Build an AuditEvent with sensible defaults."""
+    defaults: dict[str, Any] = dict(
+        event_id="evt-001",
+        consultation_id="cons-001",
+        event_type=AuditAction.CONSULTATION_CREATED,
+        actor_id="doc-001",
+        timestamp="2026-04-01T10:00:00+00:00",
+        payload=None,
+    )
+    defaults.update(overrides)
+    return AuditEvent(**defaults)

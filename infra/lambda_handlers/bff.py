@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Any
 
 _STAGE_PREFIX = f"/{os.environ.get('DESKAI_ENV', 'dev')}"
@@ -39,9 +40,15 @@ def handler(
 
     container = _get_container()
 
-    from deskai.handlers.http import auth_handler, me_handler
+    from deskai.handlers.http import (
+        auth_handler,
+        consultation_handler,
+        me_handler,
+        patient_handler,
+    )
 
-    routes: dict[tuple[str, str], Any] = {
+    # Exact-match routes
+    _exact_routes: dict[tuple[str, str], Any] = {
         ("/v1/auth/session", "POST"): lambda: (
             auth_handler.handle_login(event, container)
         ),
@@ -62,11 +69,50 @@ def handler(
         ("/v1/me", "GET"): lambda: (
             me_handler.handle_get_me(event, container)
         ),
+        ("/v1/consultations", "POST"): lambda: (
+            consultation_handler.handle_create_consultation(
+                event, container
+            )
+        ),
+        ("/v1/consultations", "GET"): lambda: (
+            consultation_handler.handle_list_consultations(
+                event, container
+            )
+        ),
+        ("/v1/patients", "POST"): lambda: (
+            patient_handler.handle_create_patient(
+                event, container
+            )
+        ),
+        ("/v1/patients", "GET"): lambda: (
+            patient_handler.handle_list_patients(
+                event, container
+            )
+        ),
     }
 
-    route_handler = routes.get((path, method))
+    # Parameterized routes: (compiled pattern, method, handler_fn)
+    _param_routes = [
+        (
+            re.compile(r"^/v1/consultations/(?P<id>[^/]+)$"),
+            "GET",
+            consultation_handler.handle_get_consultation,
+        ),
+    ]
+
+    # Try exact match first
+    route_handler = _exact_routes.get((path, method))
     if route_handler is not None:
         return route_handler()
+
+    # Try parameterized routes
+    for pattern, route_method, handler_fn in _param_routes:
+        if route_method == method:
+            match = pattern.match(path)
+            if match:
+                event.setdefault("pathParameters", {})
+                event["pathParameters"].update(match.groupdict())
+                return handler_fn(event, container)
 
     return {
         "statusCode": 404,

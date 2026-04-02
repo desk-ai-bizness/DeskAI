@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from deskai.domain.consultation.entities import Consultation
+from deskai.domain.consultation.entities import Consultation, ConsultationStatus
 
 
 class ConsultationRepository(ABC):
@@ -13,5 +13,17 @@ class ConsultationRepository(ABC):
         """Persist a consultation aggregate."""
 
     @abstractmethod
-    def find_by_id(self, consultation_id: str) -> Consultation | None:
-        """Load a consultation by identifier."""
+    def find_by_id(self, consultation_id: str, clinic_id: str) -> Consultation | None:
+        """Load a consultation by identifier within a clinic context."""
+
+    @abstractmethod
+    def find_by_doctor_and_date_range(
+        self, doctor_id: str, start_date: str, end_date: str
+    ) -> list[Consultation]:
+        """Find consultations for a doctor within a date range."""
+
+    @abstractmethod
+    def update_status(
+        self, consultation_id: str, new_status: ConsultationStatus, **kwargs: object
+    ) -> None:
+        """Update the status of a consultation."""

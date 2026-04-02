@@ -11,6 +11,6 @@ PROD_CONFIG = EnvironmentConfig(
         "https://deskai.com.br",
         "https://www.deskai.com.br",
     ),
-    deepgram_secret_name="deskai/prod/deepgram",
+    elevenlabs_secret_name="deskai/prod/elevenlabs",
     claude_secret_name="deskai/prod/claude",
 )

@@ -10,17 +10,18 @@ Each decision includes the context, the chosen option, the reasoning, and the re
 
 ## Resolved Decisions
 
-### DEC-001: Transcription Provider Selection
+### DEC-001: Transcription Provider Selection (Revised)
 
 | Field | Value |
 |-------|-------|
-| **Context** | The MVP needs a pt-BR transcription provider for real-time medical consultation audio. Candidates listed in business rules: Google Cloud Speech-to-Text, Azure AI Speech, Deepgram. |
-| **Decision** | **Deepgram** (Nova-2 Medical model) is the recommended first provider. |
-| **Reasoning** | (1) Nova-2 Medical is purpose-built for medical vocabulary. (2) Deepgram offers a real-time streaming WebSocket API that maps directly to the MVP architecture. (3) pt-BR is a supported language. (4) Deepgram's pricing is competitive for low-volume MVP usage. (5) The provider adapter pattern means switching is low-cost if Deepgram underperforms. |
-| **Alternatives Considered** | Google Cloud Speech-to-Text (strong pt-BR, but no medical-specific model, higher complexity for streaming). Azure AI Speech (good accuracy, but heavier SDK, less direct WebSocket integration). |
+| **Context** | The MVP needs a pt-BR transcription provider for real-time medical consultation audio. |
+| **Decision** | **ElevenLabs Scribe v2 Realtime** is the selected provider. Supersedes the original Deepgram Nova-2 Medical decision. |
+| **Reasoning** | (1) Lowest WER for pt-BR: 3.1% on FLEURS vs ~6.8% for Deepgram Nova-3. (2) 150ms latency — faster than Deepgram (~300ms). (3) Native WebSocket streaming API maps directly to the MVP architecture. (4) Keyterm prompting supports up to 1,000 medical terms without a specialized model. (5) 90+ languages with automatic language detection. (6) HIPAA, SOC 2, GDPR compliant. (7) Pricing is comparable ($0.28–0.48/hr vs ~$0.46/hr Deepgram). (8) The provider adapter pattern means switching back is low-cost if needed. |
+| **Previous Decision** | Deepgram Nova-2 Medical — superseded due to higher WER for pt-BR and lower benchmark accuracy across multilingual tests. |
+| **Alternatives Considered** | Deepgram Nova-2 Medical (medical-specific model but higher WER for pt-BR). Google Cloud Speech-to-Text (strong pt-BR, but no medical-specific model, higher complexity for streaming). Azure AI Speech (good accuracy, but heavier SDK, less direct WebSocket integration). |
 | **Reversibility** | High. The internal provider interface (`start_realtime_session`, `send_audio_chunk`, etc.) abstracts the provider. Switching requires only a new adapter implementation. |
 | **Resolves** | Open Issue OI-001 |
-| **Impact on Tasks** | Task 009 can proceed with Deepgram adapter as the first implementation. |
+| **Impact on Tasks** | Task 009 will implement the ElevenLabs Scribe v2 adapter instead of Deepgram. |
 
 ### DEC-002: MVP Plan Entitlement Defaults
 

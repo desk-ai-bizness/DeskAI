@@ -13,7 +13,7 @@ class Settings:
     dynamodb_table: str
     artifacts_bucket: str
     ui_config_key: str
-    deepgram_secret_name: str
+    elevenlabs_secret_name: str
     claude_secret_name: str
     cognito_secret_name: str
     cognito_user_pool_id: str
@@ -36,7 +36,7 @@ def load_settings() -> Settings:
         dynamodb_table=getenv("DESKAI_DYNAMODB_TABLE", DEFAULT_DYNAMODB_TABLE),
         artifacts_bucket=getenv("DESKAI_ARTIFACTS_BUCKET", DEFAULT_ARTIFACTS_BUCKET),
         ui_config_key=getenv("DESKAI_UI_CONFIG_KEY", DEFAULT_UI_CONFIG_KEY),
-        deepgram_secret_name=getenv("DESKAI_DEEPGRAM_SECRET_NAME", "deskai/dev/deepgram"),
+        elevenlabs_secret_name=getenv("DESKAI_ELEVENLABS_SECRET_NAME", "deskai/dev/elevenlabs"),
         claude_secret_name=getenv("DESKAI_CLAUDE_SECRET_NAME", "deskai/dev/claude"),
         cognito_secret_name=getenv(
             "DESKAI_COGNITO_CLIENT_SECRET_NAME",

@@ -518,7 +518,11 @@ Possible later addition:
 
 The transcription provider must be abstracted behind an internal interface.
 
-### Candidate Providers
+### Selected Provider
+
+- ElevenLabs Scribe v2 Realtime (see ADR-006)
+
+### Alternative Providers (if switching is needed)
 
 - Google Cloud Speech-to-Text
 - Azure AI Speech
@@ -998,8 +1002,9 @@ Do not include in the MVP:
 
 ### ADR-006: Transcription Provider
 
-- decision: use Deepgram (Nova-2 Medical) as the first transcription provider
-- reason: medical-specific model, native WebSocket streaming API, pt-BR support, competitive MVP pricing
+- decision: use ElevenLabs Scribe v2 Realtime as the first transcription provider
+- previous decision: Deepgram Nova-2 Medical (superseded — higher WER for pt-BR, lower benchmark accuracy)
+- reason: lowest WER for pt-BR (3.1% FLEURS), 150ms latency, native WebSocket streaming, keyterm prompting for medical vocabulary (up to 1,000 terms), 90+ languages, HIPAA/SOC 2/GDPR compliant
 - reversibility: high — provider is behind an adapter interface
 - reference: `docs/requirements/05-decision-log.md` DEC-001
 

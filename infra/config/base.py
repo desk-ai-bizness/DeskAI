@@ -12,7 +12,7 @@ class EnvironmentConfig:
     aws_region: str
     deployed_app_origins: tuple[str, ...]
     deployed_website_origins: tuple[str, ...]
-    deepgram_secret_name: str
+    elevenlabs_secret_name: str
     claude_secret_name: str
     monthly_budget_limit_usd: int = 5
 

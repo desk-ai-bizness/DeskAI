@@ -41,7 +41,7 @@ The backend follows Hexagonal Architecture (ports and adapters). The core princi
 │                           ▼                                      │
 │   ┌─────────────────────────────────────────────────────────┐    │
 │   │                 Outbound Adapters                         │    │
-│   │   DynamoDB · S3 · Deepgram · Claude · Cognito · Events   │    │
+│   │   DynamoDB · S3 · ElevenLabs · Claude · Cognito · Events │    │
 │   └─────────────────────────────────────────────────────────┘    │
 └───────────────────────────────────────────────────────────────────┘
 ```
@@ -349,7 +349,7 @@ src/deskai/adapters/
 │   └── s3_client.py               # Shared S3 client wrapper
 ├── transcription/
 │   ├── __init__.py
-│   └── deepgram_provider.py       # Deepgram Nova-2 Medical adapter
+│   └── elevenlabs_provider.py     # ElevenLabs Scribe v2 Realtime adapter
 ├── llm/
 │   ├── __init__.py
 │   └── claude_provider.py         # Claude API (Anthropic) adapter
@@ -382,7 +382,7 @@ The adapter pattern ensures providers are replaceable:
 
 | Port | Current Adapter | Future Options |
 |------|----------------|----------------|
-| `TranscriptionProvider` | `DeepgramProvider` | Google Cloud STT, Azure AI Speech |
+| `TranscriptionProvider` | `ElevenLabsProvider` | Deepgram, Google Cloud STT, Azure AI Speech |
 | `LLMProvider` | `ClaudeProvider` | OpenAI, local models |
 | `ConsultationRepository` | `DynamoDBConsultationRepository` | PostgreSQL (if storage model changes) |
 | `StorageProvider` | `S3StorageProvider` | GCS (if cloud changes) |

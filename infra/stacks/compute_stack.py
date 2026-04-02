@@ -28,7 +28,7 @@ class ComputeStack(Stack):
         consultation_table: dynamodb.ITable,
         artifacts_bucket: s3.IBucket,
         data_key: kms.IKey,
-        deepgram_secret: secretsmanager.ISecret,
+        elevenlabs_secret: secretsmanager.ISecret,
         claude_secret: secretsmanager.ISecret,
         user_pool_id: str,
         user_pool_client_id: str,
@@ -43,7 +43,7 @@ class ComputeStack(Stack):
             "DESKAI_RESOURCE_PREFIX": self.config.resource_prefix,
             "DESKAI_DYNAMODB_TABLE": consultation_table.table_name,
             "DESKAI_ARTIFACTS_BUCKET": artifacts_bucket.bucket_name,
-            "DESKAI_DEEPGRAM_SECRET_NAME": deepgram_secret.secret_name,
+            "DESKAI_ELEVENLABS_SECRET_NAME": elevenlabs_secret.secret_name,
             "DESKAI_CLAUDE_SECRET_NAME": claude_secret.secret_name,
             "DESKAI_COGNITO_USER_POOL_ID": user_pool_id,
             "DESKAI_COGNITO_CLIENT_ID": user_pool_client_id,
@@ -87,7 +87,7 @@ class ComputeStack(Stack):
         self.lambda_execution_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
-                resources=[deepgram_secret.secret_arn, claude_secret.secret_arn],
+                resources=[elevenlabs_secret.secret_arn, claude_secret.secret_arn],
             )
         )
         self.lambda_execution_role.add_to_policy(

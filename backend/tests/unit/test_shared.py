@@ -156,7 +156,7 @@ class LoadSettingsFromEnvTest(unittest.TestCase):
             "DESKAI_DYNAMODB_TABLE": "prod-table",
             "DESKAI_ARTIFACTS_BUCKET": "prod-bucket",
             "DESKAI_UI_CONFIG_KEY": "CONFIG#prod",
-            "DESKAI_DEEPGRAM_SECRET_NAME": "prod/deepgram",
+            "DESKAI_ELEVENLABS_SECRET_NAME": "prod/elevenlabs",
             "DESKAI_CLAUDE_SECRET_NAME": "prod/claude",
             "DESKAI_COGNITO_CLIENT_SECRET_NAME": "prod/cognito",
             "DESKAI_COGNITO_USER_POOL_ID": "us-east-1_abc",
@@ -171,7 +171,7 @@ class LoadSettingsFromEnvTest(unittest.TestCase):
         self.assertEqual(settings.artifacts_bucket, "prod-bucket")
         self.assertEqual(settings.ui_config_key, "CONFIG#prod")
         self.assertEqual(
-            settings.deepgram_secret_name, "prod/deepgram"
+            settings.elevenlabs_secret_name, "prod/elevenlabs"
         )
         self.assertEqual(
             settings.claude_secret_name, "prod/claude"

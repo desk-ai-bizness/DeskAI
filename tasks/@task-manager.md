@@ -123,7 +123,7 @@ Track cross-task decisions, missing information, or conflicts.
 
 | ID | Issue | Impact | Status | Next Action |
 | --- | --- | --- | --- | --- |
-| OI-001 | The first production transcription provider has not been selected from the approved candidates yet | Provider integration, cost analysis, and credential setup cannot be finalized | resolved | Deepgram (Nova-2 Medical) selected. See `docs/requirements/05-decision-log.md` DEC-001 and ADR-006. |
+| OI-001 | The first production transcription provider has not been selected from the approved candidates yet | Provider integration, cost analysis, and credential setup cannot be finalized | resolved | ElevenLabs Scribe v2 Realtime selected (supersedes Deepgram Nova-2 Medical). See `docs/requirements/05-decision-log.md` DEC-001 and ADR-006. |
 | OI-002 | Plan entitlement differences between `free_trial`, `plus`, and `pro` are not fully defined | Backend authorization and feature-flag behavior may need rework | resolved | All plans share core features; differentiation by usage limits. See `docs/requirements/03-plan-entitlements.md`. |
 | OI-003 | Clinic audio retention defaults and deletion timing are not explicitly defined | Storage lifecycle, retention automation, and compliance behavior remain ambiguous | resolved | Plan-based retention: 7/30/90 days. See `docs/requirements/05-decision-log.md` DEC-003. |
 | OI-004 | Export output scope beyond the finalized note is not fully specified | Export implementation could diverge from stakeholder expectations | resolved | PDF with metadata + finalized history + summary + accepted insights. No transcript. See DEC-004. |

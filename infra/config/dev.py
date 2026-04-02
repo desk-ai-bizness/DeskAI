@@ -8,6 +8,6 @@ DEV_CONFIG = EnvironmentConfig(
     aws_region="us-east-1",
     deployed_app_origins=("https://app.dev.deskai.com.br",),
     deployed_website_origins=("https://dev.deskai.com.br",),
-    deepgram_secret_name="deskai/dev/deepgram",
+    elevenlabs_secret_name="deskai/dev/elevenlabs",
     claude_secret_name="deskai/dev/claude",
 )

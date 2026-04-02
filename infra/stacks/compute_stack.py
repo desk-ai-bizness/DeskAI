@@ -87,10 +87,12 @@ class ComputeStack(Stack):
         self.lambda_execution_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
-                # Use wildcard for all deskai secrets in this environment to avoid
-                # cross-stack export dependencies when provider secrets change.
+                # Derive ARNs from config (single source of truth for secret names).
+                # The -?????? suffix matches the 6-char random ID Secrets Manager
+                # appends. No cross-stack exports — avoids CDK rename issues.
                 resources=[
-                    f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:deskai/{config.environment}/*",
+                    f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{config.elevenlabs_secret_name}-??????",
+                    f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{config.claude_secret_name}-??????",
                 ],
             )
         )

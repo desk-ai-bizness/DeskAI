@@ -126,13 +126,15 @@ class SecurityStack(Stack):
             ],
         )
 
-        # Import the manually-created ElevenLabs secret by name. The original CDK-managed
-        # DeepgramSecret was orphaned during the provider switch (ADR-006). The real API
-        # key lives in the manually-created secret at deskai/{env}/elevenlabs.
-        self.elevenlabs_secret = secretsmanager.Secret.from_secret_name_v2(
+        self.elevenlabs_secret = secretsmanager.Secret(
             self,
             "ElevenLabsSecret",
-            config.elevenlabs_secret_name,
+            secret_name=config.elevenlabs_secret_name,
+            encryption_key=self.secrets_key,
+            description="ElevenLabs Scribe v2 API credentials for transcription.",
+            secret_object_value={
+                "api_key": SecretValue.unsafe_plain_text("replace-in-aws-secrets-manager"),
+            },
         )
 
         self.claude_secret = secretsmanager.Secret(

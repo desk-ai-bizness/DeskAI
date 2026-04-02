@@ -43,7 +43,7 @@ class ComputeStack(Stack):
             "DESKAI_RESOURCE_PREFIX": self.config.resource_prefix,
             "DESKAI_DYNAMODB_TABLE": consultation_table.table_name,
             "DESKAI_ARTIFACTS_BUCKET": artifacts_bucket.bucket_name,
-            "DESKAI_ELEVENLABS_SECRET_NAME": elevenlabs_secret.secret_name,
+            "DESKAI_ELEVENLABS_SECRET_NAME": config.elevenlabs_secret_name,
             "DESKAI_CLAUDE_SECRET_NAME": claude_secret.secret_name,
             "DESKAI_COGNITO_USER_POOL_ID": user_pool_id,
             "DESKAI_COGNITO_CLIENT_ID": user_pool_client_id,
@@ -87,7 +87,11 @@ class ComputeStack(Stack):
         self.lambda_execution_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
-                resources=[elevenlabs_secret.secret_arn, claude_secret.secret_arn],
+                # Use wildcard for all deskai secrets in this environment to avoid
+                # cross-stack export dependencies when provider secrets change.
+                resources=[
+                    f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:deskai/{config.environment}/*",
+                ],
             )
         )
         self.lambda_execution_role.add_to_policy(

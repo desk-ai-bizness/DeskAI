@@ -9,7 +9,7 @@ from deskai.adapters.persistence.dynamodb_connection_repository import (
 from deskai.domain.session.value_objects import ConnectionInfo
 
 
-@patch("deskai.adapters.persistence.dynamodb_connection_repository.boto3")
+@patch("deskai.adapters.persistence.base_repository.boto3")
 class DynamoDBConnectionRepositoryTest(unittest.TestCase):
     def _make_repo(self, mock_boto3: MagicMock) -> DynamoDBConnectionRepository:
         self.mock_table = MagicMock()

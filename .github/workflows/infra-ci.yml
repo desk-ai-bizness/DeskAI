@@ -2,6 +2,9 @@ name: Infra CI
 
 on:
   pull_request:
+    paths:
+      - 'infra/**'
+      - '.github/workflows/infra-ci.yml'
   push:
     branches: [main]
     paths:
@@ -13,8 +16,8 @@ jobs:
     outputs:
       infra: ${{ steps.filter.outputs.infra }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -27,13 +30,13 @@ jobs:
     if: needs.detect-changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: infra/package-lock.json
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Install infra

@@ -4,9 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from deskai.application.config.get_ui_config import (
-    GetUiConfigUseCase,
-)
 from deskai.domain.auth.exceptions import AuthenticationError
 from deskai.domain.auth.value_objects import AuthContext
 from deskai.handlers.http.middleware import (
@@ -29,14 +26,14 @@ def handle_get_ui_config(
         .get("jwt", {})
         .get("claims", {})
     )
-    cognito_sub = claims.get("sub", "")
+    identity_provider_id = claims.get("sub", "")
 
-    if not cognito_sub:
+    if not identity_provider_id:
         raise AuthenticationError(
             "Missing user identity in request."
         )
 
-    profile = container.get_current_user.execute(cognito_sub)
+    profile = container.get_current_user.execute(identity_provider_id)
     auth_context = AuthContext(
         doctor_id=profile.doctor_id,
         email=claims.get("email", profile.email),
@@ -44,6 +41,5 @@ def handle_get_ui_config(
         plan_type=profile.plan_type,
     )
 
-    use_case = GetUiConfigUseCase()
-    config = use_case.execute(auth_context)
+    config = container.get_ui_config.execute(auth_context)
     return json_response(200, config)

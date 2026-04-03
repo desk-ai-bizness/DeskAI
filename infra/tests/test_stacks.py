@@ -169,6 +169,23 @@ class StackSynthesisTest(unittest.TestCase):
                 f"KMS key {logical_id} must have key rotation enabled",
             )
 
+    def test_security_stack_secrets_use_no_unsafe_plain_text(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.security)
+        secrets = template.find_resources("AWS::SecretsManager::Secret")
+        for logical_id, resource in secrets.items():
+            props = resource["Properties"]
+            self.assertNotIn(
+                "SecretString",
+                props,
+                f"Secret {logical_id} must not use unsafe_plain_text (SecretString)",
+            )
+            self.assertIn(
+                "GenerateSecretString",
+                props,
+                f"Secret {logical_id} must use generate_secret_string",
+            )
+
     # --- Storage ---
 
     def test_storage_stack_has_recovery_and_encryption_baselines(self) -> None:
@@ -190,7 +207,7 @@ class StackSynthesisTest(unittest.TestCase):
             },
         )
 
-    def test_storage_stack_has_three_gsis(self) -> None:
+    def test_storage_stack_has_four_gsis(self) -> None:
         f = self._create_foundation()
         template = Template.from_stack(f.storage)
         template.has_resource_properties(
@@ -201,6 +218,7 @@ class StackSynthesisTest(unittest.TestCase):
                         Match.object_like({"IndexName": "gsi_doctor_date"}),
                         Match.object_like({"IndexName": "gsi_status"}),
                         Match.object_like({"IndexName": "gsi_patient"}),
+                        Match.object_like({"IndexName": "consultation-session-index"}),
                     ]
                 ),
             },
@@ -220,6 +238,40 @@ class StackSynthesisTest(unittest.TestCase):
                 },
             },
         )
+
+    def test_storage_stack_dynamodb_has_deletion_protection(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.storage)
+        template.has_resource_properties(
+            "AWS::DynamoDB::Table",
+            {"DeletionProtectionEnabled": True},
+        )
+
+    def test_storage_stack_dynamodb_has_retain_removal_policy(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.storage)
+        tables = template.find_resources("AWS::DynamoDB::Table")
+        for logical_id, resource in tables.items():
+            self.assertEqual(
+                resource.get("DeletionPolicy"),
+                "Retain",
+                f"DynamoDB table {logical_id} must have DeletionPolicy=Retain",
+            )
+
+    def test_storage_stack_s3_bucket_policy_denies_unencrypted_uploads(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.storage)
+        policies = template.find_resources("AWS::S3::BucketPolicy")
+        found_deny = False
+        for _logical_id, resource in policies.items():
+            doc = resource["Properties"].get("PolicyDocument", {})
+            for stmt in doc.get("Statement", []):
+                if stmt.get("Effect") == "Deny" and "s3:PutObject" in stmt.get("Action", []):
+                    condition = stmt.get("Condition", {})
+                    sne = condition.get("StringNotEquals", {})
+                    if "s3:x-amz-server-side-encryption" in sne:
+                        found_deny = True
+        self.assertTrue(found_deny, "Bucket policy must deny unencrypted uploads")
 
     # --- Auth ---
 
@@ -253,6 +305,25 @@ class StackSynthesisTest(unittest.TestCase):
             },
         )
 
+    def test_auth_stack_mfa_is_optional_with_totp(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.auth)
+        template.has_resource_properties(
+            "AWS::Cognito::UserPool",
+            {
+                "MfaConfiguration": "OPTIONAL",
+                "EnabledMfas": Match.array_with(["SOFTWARE_TOKEN_MFA"]),
+            },
+        )
+
+    def test_auth_stack_has_deletion_protection(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.auth)
+        template.has_resource_properties(
+            "AWS::Cognito::UserPool",
+            {"DeletionProtection": "ACTIVE"},
+        )
+
     # --- Compute ---
 
     def test_compute_stack_provisions_four_lambda_functions(self) -> None:
@@ -264,6 +335,46 @@ class StackSynthesisTest(unittest.TestCase):
             {"Runtime": "python3.12"},
         )
 
+    def test_compute_stack_has_four_separate_iam_roles(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+        roles = template.find_resources("AWS::IAM::Role")
+        lambda_roles = {}
+        for lid, r in roles.items():
+            stmts = (
+                r.get("Properties", {})
+                .get("AssumeRolePolicyDocument", {})
+                .get("Statement", [])
+            )
+            for stmt in stmts:
+                principal = stmt.get("Principal", {})
+                service = principal.get("Service", "")
+                if service == "lambda.amazonaws.com":
+                    lambda_roles[lid] = r
+                    break
+        self.assertEqual(
+            len(lambda_roles),
+            4,
+            f"Expected 4 Lambda execution roles, found {len(lambda_roles)}: "
+            f"{list(lambda_roles.keys())}",
+        )
+
+    def test_compute_stack_lambdas_have_reserved_concurrency(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+        functions = template.find_resources("AWS::Lambda::Function")
+        for logical_id, resource in functions.items():
+            props = resource.get("Properties", {})
+            self.assertIn(
+                "ReservedConcurrentExecutions",
+                props,
+                f"Lambda {logical_id} must have ReservedConcurrentExecutions set",
+            )
+            self.assertGreater(
+                props["ReservedConcurrentExecutions"],
+                0,
+                f"Lambda {logical_id} must have positive reserved concurrency",
+            )
 
     def test_compute_stack_grants_secrets_key_decrypt_to_lambda(self) -> None:
         f = self._create_foundation()
@@ -328,6 +439,17 @@ class StackSynthesisTest(unittest.TestCase):
                 "StageName": DEV_CONFIG.environment,
                 "AutoDeploy": True,
                 "ApiId": Match.any_value(),
+            },
+        )
+
+    def test_api_stack_websocket_connect_route_has_authorizer(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.api)
+        template.has_resource_properties(
+            "AWS::ApiGatewayV2::Route",
+            {
+                "RouteKey": "$connect",
+                "AuthorizationType": "CUSTOM",
             },
         )
 
@@ -425,6 +547,107 @@ class StackSynthesisTest(unittest.TestCase):
         template.resource_count_is("AWS::CloudFront::Distribution", 2)
         template.resource_count_is("AWS::S3::Bucket", 2)
 
+
+    # --- GSI Key Schema ---
+
+    def test_storage_stack_consultation_session_index_has_correct_keys(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.storage)
+        template.has_resource_properties(
+            "AWS::DynamoDB::Table",
+            {
+                "GlobalSecondaryIndexes": Match.array_with(
+                    [
+                        Match.object_like(
+                            {
+                                "IndexName": "consultation-session-index",
+                                "KeySchema": Match.array_with(
+                                    [
+                                        {"AttributeName": "consultation_id", "KeyType": "HASH"},
+                                        {"AttributeName": "created_at", "KeyType": "RANGE"},
+                                    ]
+                                ),
+                                "Projection": {"ProjectionType": "ALL"},
+                            }
+                        )
+                    ]
+                ),
+            },
+        )
+
+    # --- WebSocket URL (SSM) ---
+
+    def test_api_stack_creates_websocket_url_ssm_parameter(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.api)
+        template.has_resource_properties(
+            "AWS::SSM::Parameter",
+            {
+                "Name": Match.string_like_regexp(".*websocket-url"),
+                "Type": "String",
+                "Value": Match.any_value(),
+            },
+        )
+
+    def test_compute_stack_has_websocket_url_param_env_var(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "Environment": {
+                    "Variables": Match.object_like(
+                        {"DESKAI_WEBSOCKET_URL_PARAM": Match.string_like_regexp(".*websocket-url")}
+                    )
+                }
+            },
+        )
+
+    def test_compute_stack_grants_ssm_get_parameter(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+        template.has_resource_properties(
+            "AWS::IAM::Policy",
+            {
+                "PolicyDocument": {
+                    "Statement": Match.array_with(
+                        [
+                            Match.object_like(
+                                {
+                                    "Action": "ssm:GetParameter",
+                                    "Effect": "Allow",
+                                }
+                            )
+                        ]
+                    )
+                }
+            },
+        )
+
+    # --- SNS Email Subscription ---
+
+    def test_orchestration_stack_adds_email_subscription_when_configured(self) -> None:
+        from dataclasses import replace
+        config_with_email = replace(DEV_CONFIG, alert_email="ops@deskai.com.br")
+        f = self._create_foundation(config=config_with_email)
+        template = Template.from_stack(f.orchestration)
+        template.has_resource_properties(
+            "AWS::SNS::Subscription",
+            {
+                "Protocol": "email",
+                "Endpoint": "ops@deskai.com.br",
+            },
+        )
+
+    def test_orchestration_stack_no_email_subscription_when_empty(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.orchestration)
+        resources = template.find_resources("AWS::SNS::Subscription")
+        self.assertEqual(
+            len(resources),
+            0,
+            "No SNS subscription should be created when alert_email is empty",
+        )
 
 if __name__ == "__main__":
     unittest.main()

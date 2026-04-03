@@ -2,16 +2,29 @@ name: Backend CI
 
 on:
   pull_request:
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
   push:
     branches: [main]
     paths:
       - 'backend/**'
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/backend-ci.yml'
+
   backend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,3 +42,16 @@ jobs:
       - name: Test
         working-directory: backend
         run: make test
+
+  backend-gate:
+    if: always()
+    needs: [backend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check backend result
+        run: |
+          if [[ "${{ needs.backend.result }}" == "failure" ]]; then
+            echo "Backend CI failed"
+            exit 1
+          fi
+          echo "Backend CI passed or was skipped"

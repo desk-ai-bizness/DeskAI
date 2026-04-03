@@ -63,6 +63,13 @@ Priority:
 - Tests must be deterministic, fast, and isolated.
 - See `docs/mvp-technical-specs.md` section 23 for the full testing strategy, tools, and scope definitions.
 
+TDD does not apply to:
+
+- Static assets (images, fonts, icons, CSS resets).
+- Pure configuration files (`.env.example`, `tsconfig.json`, `cdk.json`, YAML configs, `pyproject.toml`).
+- Generated or lock files (`package-lock.json`, `*.egg-info`, `poetry.lock`).
+- Exploratory prototypes — but tests must exist before merging to main.
+
 ## 7. Security Expectations
 
 - always treat consultation and user data as sensitive

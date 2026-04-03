@@ -14,7 +14,7 @@ class UserViewTest(unittest.TestCase):
     def test_view_shape(self) -> None:
         profile = DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="doc@test.com",
             name="Dr. Test",
             clinic_id="c1",
@@ -55,7 +55,7 @@ class UserViewTest(unittest.TestCase):
     def test_plan_type_serialized_as_string(self) -> None:
         profile = DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="doc@test.com",
             name="Dr. Test",
             clinic_id="c1",
@@ -86,7 +86,7 @@ class UserViewTest(unittest.TestCase):
     def test_view_includes_feature_flags(self) -> None:
         profile = DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="doc@test.com",
             name="Dr. Test",
             clinic_id="c1",
@@ -112,7 +112,7 @@ class UserViewTest(unittest.TestCase):
     def test_feature_flags_contains_required_keys(self) -> None:
         profile = DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="doc@test.com",
             name="Dr. Test",
             clinic_id="c1",

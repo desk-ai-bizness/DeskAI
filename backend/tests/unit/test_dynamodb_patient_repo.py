@@ -9,7 +9,7 @@ from deskai.adapters.persistence.dynamodb_patient_repository import (
 from deskai.domain.patient.entities import Patient
 
 
-@patch("deskai.adapters.persistence.dynamodb_patient_repository.boto3")
+@patch("deskai.adapters.persistence.base_repository.boto3")
 class DynamoDBPatientRepositoryTest(unittest.TestCase):
     def _make_repo(
         self, mock_boto3: MagicMock

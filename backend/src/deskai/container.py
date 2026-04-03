@@ -3,6 +3,9 @@
 from dataclasses import dataclass
 
 from deskai.adapters.auth.cognito_provider import CognitoAuthProvider
+from deskai.adapters.events.stub_publisher import StubEventPublisher
+from deskai.adapters.export.stub_generator import StubExportGenerator
+from deskai.adapters.llm.stub_provider import StubLLMProvider
 from deskai.adapters.persistence.dynamodb_audit_repository import (
     DynamoDBAuditRepository,
 )
@@ -59,15 +62,23 @@ from deskai.application.transcription.finalize_transcript import (
 from deskai.application.transcription.process_audio_chunk import (
     ProcessAudioChunkUseCase,
 )
+from deskai.bff.ui_config.bff_assembler_adapter import (
+    BffUiConfigAssembler,
+)
+from deskai.ports.artifact_repository import ArtifactRepository
 from deskai.ports.audit_repository import AuditRepository
 from deskai.ports.auth_provider import AuthProvider
 from deskai.ports.connection_repository import ConnectionRepository
 from deskai.ports.consultation_repository import ConsultationRepository
 from deskai.ports.doctor_repository import DoctorRepository
+from deskai.ports.event_publisher import EventPublisher
+from deskai.ports.export_generator import ExportGenerator
+from deskai.ports.llm_provider import LLMProvider
 from deskai.ports.patient_repository import PatientRepository
 from deskai.ports.session_repository import SessionRepository
 from deskai.ports.transcript_repository import TranscriptRepository
 from deskai.ports.transcription_provider import TranscriptionProvider
+from deskai.ports.ui_config_assembler import UiConfigAssembler
 from deskai.shared.config import Settings, load_settings
 
 
@@ -85,6 +96,11 @@ class Container:
     audit_repo: AuditRepository
     transcription_provider: TranscriptionProvider
     transcript_repo: TranscriptRepository
+    artifact_repo: ArtifactRepository
+    event_publisher: EventPublisher
+    export_generator: ExportGenerator
+    llm_provider: LLMProvider
+    ui_config_assembler: UiConfigAssembler
     authenticate: AuthenticateUseCase
     sign_out: SignOutUseCase
     forgot_password: ForgotPasswordUseCase
@@ -105,6 +121,9 @@ class Container:
 
 def build_container() -> Container:
     """Create the dependency container with all wiring."""
+    from deskai.adapters.storage.s3_artifact_repository import (
+        S3ArtifactRepository,
+    )
     from deskai.adapters.storage.s3_client import S3Client
     from deskai.adapters.storage.s3_transcript_repository import (
         S3TranscriptRepository,
@@ -152,6 +171,12 @@ def build_container() -> Container:
 
     s3_client = S3Client(bucket_name=settings.artifacts_bucket)
     transcript_repo = S3TranscriptRepository(s3_client=s3_client)
+    artifact_repo = S3ArtifactRepository(s3_client=s3_client)
+
+    event_publisher = StubEventPublisher()
+    export_generator = StubExportGenerator()
+    llm_provider = StubLLMProvider()
+    ui_config_assembler = BffUiConfigAssembler()
 
     return Container(
         settings=settings,
@@ -164,6 +189,11 @@ def build_container() -> Container:
         audit_repo=audit_repo,
         transcription_provider=transcription_provider,
         transcript_repo=transcript_repo,
+        artifact_repo=artifact_repo,
+        event_publisher=event_publisher,
+        export_generator=export_generator,
+        llm_provider=llm_provider,
+        ui_config_assembler=ui_config_assembler,
         authenticate=AuthenticateUseCase(
             auth_provider=auth_provider,
         ),
@@ -186,6 +216,7 @@ def build_container() -> Container:
             consultation_repo=consultation_repo,
             patient_repo=patient_repo,
             audit_repo=audit_repo,
+            doctor_repo=doctor_repo,
         ),
         get_consultation=GetConsultationUseCase(
             consultation_repo=consultation_repo,
@@ -219,5 +250,7 @@ def build_container() -> Container:
             consultation_repo=consultation_repo,
             audit_repo=audit_repo,
         ),
-        get_ui_config=GetUiConfigUseCase(),
+        get_ui_config=GetUiConfigUseCase(
+            ui_config_assembler=ui_config_assembler,
+        ),
     )

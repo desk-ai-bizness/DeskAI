@@ -2,8 +2,7 @@
 
 import json
 
-import boto3
-
+from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
 from deskai.domain.audit.entities import AuditAction, AuditEvent
 from deskai.ports.audit_repository import AuditRepository
 from deskai.shared.logging import get_logger
@@ -11,18 +10,13 @@ from deskai.shared.logging import get_logger
 logger = get_logger()
 
 
-class DynamoDBAuditRepository(AuditRepository):
+class DynamoDBAuditRepository(DynamoDBBaseRepository, AuditRepository):
     """Append-only audit trail in DynamoDB.
 
     Key schema:
         PK = CONSULTATION#{consultation_id}
         SK = AUDIT#{timestamp}#{event_id}
     """
-
-    def __init__(self, table_name: str) -> None:
-        self._table_name = table_name
-        dynamodb = boto3.resource("dynamodb")
-        self._table = dynamodb.Table(table_name)
 
     def append(self, event: AuditEvent) -> None:
         item: dict[str, object] = {
@@ -37,12 +31,12 @@ class DynamoDBAuditRepository(AuditRepository):
         if event.payload is not None:
             item["payload"] = json.dumps(event.payload)
 
-        self._table.put_item(Item=item)
+        self._safe_put_item(Item=item)
 
     def find_by_consultation(
         self, consultation_id: str
     ) -> list[AuditEvent]:
-        response = self._table.query(
+        items = self._paginated_query(
             KeyConditionExpression=(
                 "PK = :pk AND begins_with(SK, :sk_prefix)"
             ),
@@ -51,9 +45,7 @@ class DynamoDBAuditRepository(AuditRepository):
                 ":sk_prefix": "AUDIT#",
             },
         )
-        return [
-            self._to_entity(item) for item in response.get("Items", [])
-        ]
+        return [self._to_entity(item) for item in items]
 
     @staticmethod
     def _to_entity(item: dict) -> AuditEvent:

@@ -29,7 +29,7 @@ class HandleGetUiConfigTest(unittest.TestCase):
         self.container = MagicMock()
         self.profile = DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="a@b.com",
             name="Dr. Test",
             clinic_id="c1",
@@ -40,6 +40,19 @@ class HandleGetUiConfigTest(unittest.TestCase):
         self.container.get_current_user.execute.return_value = (
             self.profile
         )
+        self.container.get_ui_config.execute.return_value = {
+            "version": "1.0",
+            "locale": "pt-BR",
+            "labels": {},
+            "review_screen": {},
+            "insight_categories": [],
+            "status_labels": {},
+            "feature_flags": {
+                "export_enabled": True,
+                "insights_enabled": True,
+                "audio_playback_enabled": False,
+            },
+        }
 
     def test_returns_200_with_ui_config(self) -> None:
         resp = handle_get_ui_config(

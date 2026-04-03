@@ -28,7 +28,7 @@ def _build_with_mocked_boto():
     with (
         patch("deskai.adapters.auth.cognito_provider.boto3") as mock_cognito_boto,
         patch(
-            "deskai.adapters.persistence.dynamodb_doctor_repository.boto3"
+            "deskai.adapters.persistence.base_repository.boto3"
         ) as mock_dynamo,
         patch(
             "deskai.adapters.transcription.elevenlabs_config.boto3"

@@ -1,6 +1,7 @@
 """Port interface for artifact persistence."""
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from deskai.domain.consultation.value_objects import ArtifactType
 
@@ -14,7 +15,7 @@ class ArtifactRepository(ABC):
         clinic_id: str,
         consultation_id: str,
         artifact_type: ArtifactType,
-        data: dict,
+        data: dict[str, Any],
     ) -> None:
         """Persist a JSON-serializable artifact."""
 
@@ -24,5 +25,5 @@ class ArtifactRepository(ABC):
         clinic_id: str,
         consultation_id: str,
         artifact_type: ArtifactType,
-    ) -> dict | None:
+    ) -> dict[str, Any] | None:
         """Load a previously stored artifact, or None if not found."""

@@ -7,3 +7,7 @@ class DeskAIError(Exception):
 
 class ConfigurationError(DeskAIError):
     """Raised when required runtime configuration is missing."""
+
+
+class DomainValidationError(DeskAIError):
+    """Raised when domain invariants are violated."""

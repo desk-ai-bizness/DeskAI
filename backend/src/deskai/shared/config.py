@@ -62,7 +62,11 @@ def _require_env_vars(environment: str) -> None:
 
 
 def load_settings() -> Settings:
-    """Load backend settings from process environment."""
+    """Load backend settings from process environment.
+
+    In prod/staging, all critical env vars must be explicitly set.
+    In dev/test, sensible defaults are used for local development.
+    """
     environment = getenv("DESKAI_ENV", "dev")
     _require_env_vars(environment)
 

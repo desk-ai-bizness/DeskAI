@@ -1,9 +1,11 @@
 """Unit tests for plan-dependent feature flags."""
 
 import unittest
+
 from deskai.bff.feature_flags.evaluator import evaluate_flags
 from deskai.bff.feature_flags.flags import PLAN_FEATURE_FLAGS
 from deskai.domain.auth.value_objects import PlanType
+
 
 class PlanFeatureFlagsTest(unittest.TestCase):
     def test_free_trial_export_disabled(self):

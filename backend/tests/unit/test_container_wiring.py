@@ -4,7 +4,7 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
-from deskai.container import Container, build_container
+from deskai.container import build_container
 from deskai.ports.artifact_repository import ArtifactRepository
 from deskai.ports.event_publisher import EventPublisher
 from deskai.ports.export_generator import ExportGenerator

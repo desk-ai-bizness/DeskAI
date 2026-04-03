@@ -22,3 +22,5 @@ components:
             details:
               type: object
               additionalProperties: true
+          additionalProperties: false
+      additionalProperties: false

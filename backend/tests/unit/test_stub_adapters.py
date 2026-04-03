@@ -1,9 +1,11 @@
 """Unit tests for stub adapters."""
 
 import unittest
+
 from deskai.adapters.events.stub_publisher import StubEventPublisher
 from deskai.adapters.export.stub_generator import StubExportGenerator
 from deskai.adapters.llm.stub_provider import StubLLMProvider
+
 
 class StubAdaptersTest(unittest.TestCase):
     def test_event_publisher_raises(self):

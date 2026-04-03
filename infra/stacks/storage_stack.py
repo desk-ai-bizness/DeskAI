@@ -9,6 +9,9 @@ from aws_cdk import (
     aws_dynamodb as dynamodb,
 )
 from aws_cdk import (
+    aws_iam as iam,
+)
+from aws_cdk import (
     aws_kms as kms,
 )
 from aws_cdk import (
@@ -33,7 +36,6 @@ class StorageStack(Stack):
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
         self.config = config
-        retain_data = config.is_production
 
         self.consultation_table = dynamodb.Table(
             self,
@@ -45,7 +47,8 @@ class StorageStack(Stack):
             point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
                 point_in_time_recovery_enabled=True
             ),
-            removal_policy=RemovalPolicy.RETAIN if retain_data else RemovalPolicy.DESTROY,
+            removal_policy=RemovalPolicy.RETAIN,
+            deletion_protection=True,
             encryption=dynamodb.TableEncryption.CUSTOMER_MANAGED,
             encryption_key=data_key,
         )
@@ -68,6 +71,14 @@ class StorageStack(Stack):
             sort_key=dynamodb.Attribute(name="GSI3SK", type=dynamodb.AttributeType.STRING),
             projection_type=dynamodb.ProjectionType.ALL,
         )
+        self.consultation_table.add_global_secondary_index(
+            index_name="consultation-session-index",
+            partition_key=dynamodb.Attribute(
+                name="consultation_id", type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(name="created_at", type=dynamodb.AttributeType.STRING),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
 
         self.artifacts_bucket = s3.Bucket(
             self,
@@ -76,10 +87,11 @@ class StorageStack(Stack):
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             encryption=s3.BucketEncryption.KMS,
             encryption_key=data_key,
+            bucket_key_enabled=True,
             enforce_ssl=True,
             versioned=True,
-            removal_policy=RemovalPolicy.RETAIN if retain_data else RemovalPolicy.DESTROY,
-            auto_delete_objects=not retain_data,
+            removal_policy=RemovalPolicy.RETAIN,
+            auto_delete_objects=False,
             object_ownership=s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
             lifecycle_rules=[
                 s3.LifecycleRule(
@@ -104,4 +116,19 @@ class StorageStack(Stack):
                     expiration=Duration.days(90),
                 ),
             ],
+        )
+
+        self.artifacts_bucket.add_to_resource_policy(
+            iam.PolicyStatement(
+                sid="DenyUnencryptedUploads",
+                effect=iam.Effect.DENY,
+                principals=[iam.AnyPrincipal()],
+                actions=["s3:PutObject"],
+                resources=[f"{self.artifacts_bucket.bucket_arn}/*"],
+                conditions={
+                    "StringNotEquals": {
+                        "s3:x-amz-server-side-encryption": "aws:kms",
+                    },
+                },
+            )
         )

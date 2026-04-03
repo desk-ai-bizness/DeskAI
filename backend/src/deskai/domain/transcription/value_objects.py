@@ -39,3 +39,27 @@ class PartialTranscript:
     is_final: bool
     timestamp: str
     confidence: float
+
+
+@dataclass(frozen=True)
+class TranscriptionSessionInfo:
+    """Immutable snapshot of a transcription session's state."""
+
+    session_id: str
+    state: str
+    provider_name: str
+    metadata: dict | None = None
+
+
+@dataclass(frozen=True)
+class FinalTranscript:
+    """Immutable final transcription result from a provider."""
+
+    session_id: str
+    text: str
+    speaker_segments: list[SpeakerSegment]
+    language: str
+    provider_name: str
+    duration_seconds: float = 0.0
+    confidence: float = 0.0
+    metadata: dict | None = None

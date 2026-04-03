@@ -9,7 +9,7 @@ from deskai.adapters.persistence.dynamodb_session_repository import (
 from deskai.domain.session.entities import Session, SessionState
 
 
-@patch("deskai.adapters.persistence.dynamodb_session_repository.boto3")
+@patch("deskai.adapters.persistence.base_repository.boto3")
 class DynamoDBSessionRepositoryTest(unittest.TestCase):
     def _make_repo(self, mock_boto3: MagicMock) -> DynamoDBSessionRepository:
         self.mock_table = MagicMock()

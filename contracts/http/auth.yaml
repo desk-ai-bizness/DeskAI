@@ -33,6 +33,18 @@ paths:
             application/json:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
     delete:
       operationId: deleteAuthSession
       summary: Sign out the current user
@@ -43,6 +55,18 @@ paths:
           description: Signed out successfully
         "401":
           description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
           content:
             application/json:
               schema:
@@ -65,6 +89,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GenericMessageResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
 
   /v1/auth/confirm-forgot-password:
     post:
@@ -85,6 +121,18 @@ paths:
                 $ref: "#/components/schemas/GenericMessageResponse"
         "401":
           description: Invalid or expired confirmation code
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
           content:
             application/json:
               schema:
@@ -115,6 +163,18 @@ paths:
             application/json:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
 
 components:
   securitySchemes:
@@ -134,6 +194,7 @@ components:
         password:
           type: string
           format: password
+      additionalProperties: false
 
     TokenResponse:
       type: object
@@ -145,6 +206,7 @@ components:
           type: string
         expires_in:
           type: integer
+      additionalProperties: false
 
     ForgotPasswordRequest:
       type: object
@@ -153,6 +215,7 @@ components:
         email:
           type: string
           format: email
+      additionalProperties: false
 
     ConfirmForgotPasswordRequest:
       type: object
@@ -166,6 +229,7 @@ components:
         new_password:
           type: string
           format: password
+      additionalProperties: false
 
     GenericMessageResponse:
       type: object
@@ -173,6 +237,7 @@ components:
       properties:
         message:
           type: string
+      additionalProperties: false
 
     UserProfileView:
       type: object
@@ -204,6 +269,7 @@ components:
               format: uuid
             clinic_name:
               type: string
+          additionalProperties: false
         entitlements:
           type: object
           required:
@@ -230,3 +296,5 @@ components:
             trial_days_remaining:
               type: integer
               nullable: true
+          additionalProperties: false
+      additionalProperties: false

@@ -13,10 +13,10 @@ class GetCurrentUserUseCase:
 
     doctor_repo: DoctorRepository
 
-    def execute(self, cognito_sub: str) -> DoctorProfile:
-        profile = self.doctor_repo.find_by_cognito_sub(cognito_sub)
+    def execute(self, identity_provider_id: str) -> DoctorProfile:
+        profile = self.doctor_repo.find_by_identity_provider_id(identity_provider_id)
         if profile is None:
             raise DoctorProfileNotFoundError(
-                f"No doctor profile found for user '{cognito_sub}'."
+                f"No doctor profile found for user '{identity_provider_id}'."
             )
         return profile

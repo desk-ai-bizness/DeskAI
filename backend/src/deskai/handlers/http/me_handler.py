@@ -26,12 +26,12 @@ def handle_get_me(
         .get("jwt", {})
         .get("claims", {})
     )
-    cognito_sub = claims.get("sub", "")
+    identity_provider_id = claims.get("sub", "")
 
-    if not cognito_sub:
+    if not identity_provider_id:
         raise AuthenticationError("Missing user identity in request.")
 
-    profile = container.get_current_user.execute(cognito_sub)
+    profile = container.get_current_user.execute(identity_provider_id)
     entitlements = container.check_entitlements.execute(profile)
 
     view = build_user_profile_view(profile, entitlements)

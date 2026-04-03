@@ -26,14 +26,14 @@ def handle_get_ui_config(
         .get("jwt", {})
         .get("claims", {})
     )
-    cognito_sub = claims.get("sub", "")
+    identity_provider_id = claims.get("sub", "")
 
-    if not cognito_sub:
+    if not identity_provider_id:
         raise AuthenticationError(
             "Missing user identity in request."
         )
 
-    profile = container.get_current_user.execute(cognito_sub)
+    profile = container.get_current_user.execute(identity_provider_id)
     auth_context = AuthContext(
         doctor_id=profile.doctor_id,
         email=claims.get("email", profile.email),

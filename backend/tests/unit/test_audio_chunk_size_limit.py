@@ -4,8 +4,6 @@ import base64
 import json
 from unittest.mock import MagicMock
 
-import pytest
-
 from deskai.handlers.websocket.audio_chunk_handler import (
     MAX_AUDIO_CHUNK_BYTES,
     handle_audio_chunk,

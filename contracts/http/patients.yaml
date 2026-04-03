@@ -41,6 +41,18 @@ paths:
             application/json:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
     get:
       operationId: listPatients
       summary: List patients with optional search filter
@@ -72,6 +84,18 @@ paths:
             application/json:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
 
 components:
   securitySchemes:
@@ -90,6 +114,7 @@ components:
         date_of_birth:
           type: string
           format: date
+      additionalProperties: false
 
     PatientView:
       type: object
@@ -109,6 +134,7 @@ components:
         created_at:
           type: string
           format: date-time
+      additionalProperties: false
 
     PatientListView:
       type: object
@@ -118,3 +144,4 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PatientView"
+      additionalProperties: false

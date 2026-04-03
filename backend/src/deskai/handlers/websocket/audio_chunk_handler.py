@@ -1,10 +1,13 @@
-"""WebSocket audio.chunk handler — forward audio data to transcription provider."""
+"""WebSocket audio.chunk handler -- forward audio data to transcription provider."""
 
 import base64
 import json
+from dataclasses import replace
 
 from deskai.domain.session.services import SessionService
 from deskai.shared.time import utc_now_iso
+
+MAX_AUDIO_CHUNK_BYTES = 1_048_576  # 1 MB
 
 
 def handle_audio_chunk(
@@ -18,6 +21,14 @@ def handle_audio_chunk(
     connection_id = event["requestContext"]["connectionId"]
     body = json.loads(event.get("body", "{}"))
     data = body.get("data", {})
+
+    audio_b64 = data.get("audio", "")
+    if audio_b64:
+        audio_bytes = base64.b64decode(audio_b64)
+        if len(audio_bytes) > MAX_AUDIO_CHUNK_BYTES:
+            return {"statusCode": 413, "body": "Audio chunk too large"}
+    else:
+        audio_bytes = b""
 
     connection = connection_repo.find_by_connection_id(connection_id)
     if connection is None:
@@ -36,13 +47,14 @@ def handle_audio_chunk(
     except Exception:
         return {"statusCode": 400, "body": "Audio chunk rejected"}
 
-    audio_b64 = data.get("audio", "")
-    if audio_b64 and transcription_provider is not None:
-        audio_bytes = base64.b64decode(audio_b64)
+    if audio_bytes and transcription_provider is not None:
         transcription_provider.send_audio_chunk(session.session_id, audio_bytes)
 
-    session.audio_chunks_received += 1
-    session.last_activity_at = utc_now_iso()
+    session = replace(
+        session,
+        audio_chunks_received=session.audio_chunks_received + 1,
+        last_activity_at=utc_now_iso(),
+    )
     session_repo.update(session)
 
     apigw.send_to_connection(

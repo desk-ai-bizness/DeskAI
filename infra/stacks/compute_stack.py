@@ -28,6 +28,7 @@ class ComputeStack(Stack):
         consultation_table: dynamodb.ITable,
         artifacts_bucket: s3.IBucket,
         data_key: kms.IKey,
+        secrets_key: kms.IKey,
         elevenlabs_secret: secretsmanager.ISecret,
         claude_secret: secretsmanager.ISecret,
         user_pool_id: str,
@@ -84,6 +85,7 @@ class ComputeStack(Stack):
                 resources=[data_key.key_arn],
             )
         )
+        secrets_key.grant_decrypt(self.lambda_execution_role)
         self.lambda_execution_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],

@@ -35,7 +35,8 @@ pip install \
     --target "$BUILD_DIR" \
     --requirement "$REQUIREMENTS" \
     --quiet \
-    --disable-pip-version-check
+    --disable-pip-version-check \
+    --index-url https://pypi.org/simple/
 
 echo "==> Build complete. Output: $BUILD_DIR"
 echo "    Handlers: $(ls "$BUILD_DIR"/*.py 2>/dev/null | wc -l | tr -d ' ') files"

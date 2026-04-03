@@ -1,6 +1,6 @@
 """Finalize transcription — fetch, normalize, persist, and audit."""
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass, replace
 
 from deskai.domain.audit.entities import AuditAction, AuditEvent
 from deskai.domain.consultation.entities import ConsultationStatus
@@ -42,7 +42,7 @@ class FinalizeTranscriptUseCase:
                 session_id
             )
         except TranscriptionError as exc:
-            self._mark_failed(consultation, str(exc))
+            consultation = self._mark_failed(consultation, str(exc))
             self.consultation_repo.save(consultation)
             raise
 
@@ -59,15 +59,14 @@ class FinalizeTranscriptUseCase:
                 provider_session_id=session_id,
             )
         except NormalizationError as exc:
-            self._mark_failed(consultation, str(exc))
+            consultation = self._mark_failed(consultation, str(exc))
             self.consultation_repo.save(consultation)
             raise
 
-        normalized_dict = asdict(normalized)
         self.transcript_repo.save_normalized_transcript(
             clinic_id=clinic_id,
             consultation_id=consultation_id,
-            normalized=normalized_dict,
+            normalized=normalized,
         )
 
         now = utc_now_iso()
@@ -89,8 +88,12 @@ class FinalizeTranscriptUseCase:
         return normalized
 
     @staticmethod
-    def _mark_failed(consultation, message: str) -> None:
-        """Set consultation to PROCESSING_FAILED with error details."""
+    def _mark_failed(consultation, message: str):
+        """Return a new consultation marked PROCESSING_FAILED."""
         if consultation is not None:
-            consultation.status = ConsultationStatus.PROCESSING_FAILED
-            consultation.error_details = {"message": message}
+            return replace(
+                consultation,
+                status=ConsultationStatus.PROCESSING_FAILED,
+                error_details={"message": message},
+            )
+        return consultation

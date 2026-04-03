@@ -40,7 +40,6 @@ class CreateConsultationUseCase:
         if errors:
             raise PatientValidationError(errors[0])
 
-        # --- Plan entitlement check (before any expensive lookups) ---
         used = self.doctor_repo.count_consultations_this_month(auth_context.doctor_id)
         created_at = self.doctor_repo.find_created_at(auth_context.doctor_id)
         entitlements = compute_entitlements(
@@ -48,10 +47,8 @@ class CreateConsultationUseCase:
             created_at=created_at or "",
             consultations_used_this_month=used,
         )
-
         if entitlements.trial_expired:
             raise TrialExpiredError("Free trial period has expired")
-
         if not entitlements.can_create_consultation:
             raise PlanLimitExceededError(
                 f"Monthly consultation limit reached ({used}/{used})"

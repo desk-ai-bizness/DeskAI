@@ -87,7 +87,9 @@ class NormalizedTranscriptCreationTest(unittest.TestCase):
         self.assertEqual(t.created_at, "")
         self.assertEqual(t.updated_at, "")
 
-    def test_entity_is_mutable(self) -> None:
+    def test_entity_is_frozen(self) -> None:
+        from dataclasses import FrozenInstanceError
+
         t = NormalizedTranscript(
             consultation_id="cons-003",
             provider_name="elevenlabs",
@@ -96,12 +98,8 @@ class NormalizedTranscriptCreationTest(unittest.TestCase):
             transcript_text="Original text",
             speaker_segments=[],
         )
-        t.completeness_status = CompletenessStatus.COMPLETE
-        self.assertEqual(
-            t.completeness_status, CompletenessStatus.COMPLETE
-        )
-        t.transcript_text = "Updated text"
-        self.assertEqual(t.transcript_text, "Updated text")
+        with self.assertRaises(FrozenInstanceError):
+            t.completeness_status = CompletenessStatus.COMPLETE
 
     def test_speaker_segments_type(self) -> None:
         seg = SpeakerSegment(

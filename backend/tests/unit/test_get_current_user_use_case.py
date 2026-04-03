@@ -23,7 +23,7 @@ class GetCurrentUserUseCaseTest(unittest.TestCase):
     def test_returns_profile_when_found(self) -> None:
         profile = DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="doc@test.com",
             name="Dr. Test",
             clinic_id="c1",
@@ -31,14 +31,14 @@ class GetCurrentUserUseCaseTest(unittest.TestCase):
             plan_type=PlanType.PLUS,
             created_at="2026-01-01T00:00:00+00:00",
         )
-        self.mock_repo.find_by_cognito_sub.return_value = (
+        self.mock_repo.find_by_identity_provider_id.return_value = (
             profile
         )
         result = self.use_case.execute("sub-1")
         self.assertEqual(result, profile)
 
     def test_raises_when_not_found(self) -> None:
-        self.mock_repo.find_by_cognito_sub.return_value = None
+        self.mock_repo.find_by_identity_provider_id.return_value = None
         with self.assertRaises(DoctorProfileNotFoundError):
             self.use_case.execute("sub-missing")
 

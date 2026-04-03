@@ -2,20 +2,33 @@ name: Contracts CI
 
 on:
   pull_request:
-    paths:
-      - 'contracts/**'
-      - '.github/workflows/contracts-ci.yml'
   push:
     branches: [main]
     paths:
       - 'contracts/**'
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      contracts: ${{ steps.filter.outputs.contracts }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            contracts:
+              - 'contracts/**'
+              - '.github/workflows/contracts-ci.yml'
+
   validate:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.contracts == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
       - name: Install linter
@@ -26,3 +39,16 @@ jobs:
         run: |
           npm install -g yaml-lint
           yamllint 'contracts/**/*.yaml'
+
+  contracts-gate:
+    if: always()
+    needs: [validate]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check contracts result
+        run: |
+          if [[ "${{ needs.validate.result }}" == "failure" ]]; then
+            echo "Contracts CI failed"
+            exit 1
+          fi
+          echo "Contracts CI passed or was skipped"

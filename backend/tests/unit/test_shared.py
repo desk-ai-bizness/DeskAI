@@ -161,6 +161,7 @@ class LoadSettingsFromEnvTest(unittest.TestCase):
             "DESKAI_COGNITO_CLIENT_SECRET_NAME": "prod/cognito",
             "DESKAI_COGNITO_USER_POOL_ID": "us-east-1_abc",
             "DESKAI_COGNITO_CLIENT_ID": "client-id-123",
+            "DESKAI_WEBSOCKET_URL": "wss://ws.deskai.com.br/prod",
         }
         with patch.dict(os.environ, custom_env, clear=True):
             settings = load_settings()
@@ -192,11 +193,11 @@ class LoadSettingsFromEnvTest(unittest.TestCase):
             for k, v in os.environ.items()
             if not k.startswith("DESKAI_")
         }
-        env["DESKAI_ENV"] = "staging"
+        env["DESKAI_ENV"] = "dev"
         with patch.dict(os.environ, env, clear=True):
             settings = load_settings()
 
-        self.assertEqual(settings.environment, "staging")
+        self.assertEqual(settings.environment, "dev")
         self.assertEqual(settings.contract_version, "v1")
         self.assertEqual(
             settings.dynamodb_table, DEFAULT_DYNAMODB_TABLE

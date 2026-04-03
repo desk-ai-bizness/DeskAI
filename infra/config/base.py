@@ -15,6 +15,10 @@ class EnvironmentConfig:
     elevenlabs_secret_name: str
     claude_secret_name: str
     monthly_budget_limit_usd: int = 5
+    alert_email: str = ""
+    acm_certificate_arn: str = ""
+    website_domain_names: tuple[str, ...] = ()
+    app_domain_names: tuple[str, ...] = ()
 
     @property
     def resource_prefix(self) -> str:
@@ -65,3 +69,8 @@ class EnvironmentConfig:
     @property
     def websocket_api_name(self) -> str:
         return f"{self.resource_prefix}-ws-api"
+
+    @property
+    def cognito_secret_name(self) -> str:
+        """Derive the Cognito client secret name from the environment."""
+        return f"deskai/{self.environment}/cognito"

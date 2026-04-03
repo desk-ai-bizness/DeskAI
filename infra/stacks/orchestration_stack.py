@@ -7,6 +7,7 @@ from aws_cdk import aws_iam as iam
 from aws_cdk import aws_kms as kms
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_sns as sns
+from aws_cdk import aws_sns_subscriptions as sns_subs
 from aws_cdk import aws_sqs as sqs
 from aws_cdk import aws_stepfunctions as sfn
 from aws_cdk import aws_stepfunctions_tasks as sfn_tasks
@@ -60,6 +61,11 @@ class OrchestrationStack(Stack):
             topic_name=f"{config.resource_prefix}-alerts",
             master_key=data_key,
         )
+
+        if config.alert_email:
+            self.alerts_topic.add_subscription(
+                sns_subs.EmailSubscription(config.alert_email)
+            )
 
         self.event_bus = events.EventBus(
             self,

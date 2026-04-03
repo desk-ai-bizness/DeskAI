@@ -53,11 +53,11 @@ Environment distinction:
 
 Use the files below as the canonical MVP definition:
 
-1. [`docs/ai-context-rules.md`](/Users/gabrielsantiago/Documents/DeskAI/docs/ai-context-rules.md)
-2. [`docs/mvp-business-rules.md`](/Users/gabrielsantiago/Documents/DeskAI/docs/mvp-business-rules.md)
-3. [`docs/mvp-technical-specs.md`](/Users/gabrielsantiago/Documents/DeskAI/docs/mvp-technical-specs.md)
-4. [`tasks/@task-manager.md`](/Users/gabrielsantiago/Documents/DeskAI/tasks/@task-manager.md)
-5. [`docs/implementation-prompt.md`](/Users/gabrielsantiago/Documents/DeskAI/docs/implementation-prompt.md)
+1. [`docs/ai-context-rules.md`](./docs/ai-context-rules.md)
+2. [`docs/mvp-business-rules.md`](./docs/mvp-business-rules.md)
+3. [`docs/mvp-technical-specs.md`](./docs/mvp-technical-specs.md)
+4. [`tasks/@task-manager.md`](./tasks/@task-manager.md)
+5. [`docs/implementation-prompt.md`](./docs/implementation-prompt.md)
 
 ## Repository Layout
 
@@ -75,7 +75,7 @@ DeskAI/
 
 ## Quick Start
 
-1. Read [`docs/local-development.md`](/Users/gabrielsantiago/Documents/DeskAI/docs/local-development.md).
+1. Read [`docs/local-development.md`](./docs/local-development.md).
 2. Copy root and package `.env.example` files as needed.
 3. Install and run package-level commands:
    - `backend/`: `make install`, `make lint`, `make test`
@@ -89,4 +89,4 @@ DeskAI/
 - Task `002` completed: architecture and project structure decisions.
 - Task `003` establishes repository scaffolding, tooling conventions, local setup docs, and CI placeholders.
 
-For execution progress, use [`tasks/@task-manager.md`](/Users/gabrielsantiago/Documents/DeskAI/tasks/@task-manager.md).
+For execution progress, use [`tasks/@task-manager.md`](./tasks/@task-manager.md).

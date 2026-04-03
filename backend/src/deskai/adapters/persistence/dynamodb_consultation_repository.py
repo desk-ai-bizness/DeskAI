@@ -2,8 +2,7 @@
 
 from datetime import UTC, datetime
 
-import boto3
-
+from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
 from deskai.domain.consultation.entities import Consultation, ConsultationStatus
 from deskai.ports.consultation_repository import ConsultationRepository
 from deskai.shared.logging import get_logger
@@ -11,7 +10,7 @@ from deskai.shared.logging import get_logger
 logger = get_logger()
 
 
-class DynamoDBConsultationRepository(ConsultationRepository):
+class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationRepository):
     """Persist and query consultations in DynamoDB.
 
     Key schema:
@@ -22,11 +21,6 @@ class DynamoDBConsultationRepository(ConsultationRepository):
         GSI1PK = DOCTOR#{doctor_id}
         GSI1SK = CONSULTATION#{scheduled_date}#{consultation_id}
     """
-
-    def __init__(self, table_name: str) -> None:
-        self._table_name = table_name
-        dynamodb = boto3.resource("dynamodb")
-        self._table = dynamodb.Table(table_name)
 
     def save(self, consultation: Consultation) -> None:
         item = {
@@ -64,12 +58,12 @@ class DynamoDBConsultationRepository(ConsultationRepository):
             if value is not None:
                 item[field] = value
 
-        self._table.put_item(Item=item)
+        self._safe_put_item(Item=item)
 
     def find_by_id(
         self, consultation_id: str, clinic_id: str
     ) -> Consultation | None:
-        response = self._table.get_item(
+        response = self._safe_get_item(
             Key={
                 "PK": f"CLINIC#{clinic_id}",
                 "SK": f"CONSULTATION#{consultation_id}",
@@ -83,7 +77,7 @@ class DynamoDBConsultationRepository(ConsultationRepository):
     def find_by_doctor_and_date_range(
         self, doctor_id: str, start_date: str, end_date: str
     ) -> list[Consultation]:
-        response = self._table.query(
+        response = self._safe_query(
             IndexName="gsi_doctor_date",
             KeyConditionExpression=(
                 "GSI1PK = :pk"
@@ -118,7 +112,7 @@ class DynamoDBConsultationRepository(ConsultationRepository):
             update_parts.append(f"{key} = {placeholder}")
             attr_values[placeholder] = value
 
-        self._table.update_item(
+        self._safe_update_item(
             Key={
                 "PK": f"CLINIC#{clinic_id}",
                 "SK": f"CONSULTATION#{consultation_id}",

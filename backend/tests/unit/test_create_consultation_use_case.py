@@ -16,6 +16,9 @@ class CreateConsultationUseCaseTest(unittest.TestCase):
         self.consultation_repo = MagicMock()
         self.patient_repo = MagicMock()
         self.audit_repo = MagicMock()
+        self.doctor_repo = MagicMock()
+        self.doctor_repo.count_consultations_this_month.return_value = 0
+        self.doctor_repo.find_created_at.return_value = "2026-01-15T10:00:00+00:00"
 
         from deskai.application.consultation.create_consultation import (
             CreateConsultationUseCase,
@@ -25,6 +28,7 @@ class CreateConsultationUseCaseTest(unittest.TestCase):
             consultation_repo=self.consultation_repo,
             patient_repo=self.patient_repo,
             audit_repo=self.audit_repo,
+            doctor_repo=self.doctor_repo,
         )
         self.auth_context = make_sample_auth_context()
 

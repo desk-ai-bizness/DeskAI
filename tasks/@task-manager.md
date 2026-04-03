@@ -134,6 +134,11 @@ Track cross-task decisions, missing information, or conflicts.
 | OI-009 | BFF Lambda `sys.path` manipulation is fragile | Lambda packaging changes will silently break imports | resolved | Fixed: Makefile build step bundles `lambda_handlers/` + `backend/src/deskai/` + pip deps into `infra/.build/lambda/`. `sys.path` hack removed from `bff.py`. |
 | OI-010 | BFF router does not support path parameters | Cannot route `/v1/consultations/{id}` style endpoints | resolved | Fixed in Task 006: BFF router upgraded with regex-based parameterized routing. Path parameters extracted and injected into event['pathParameters']. |
 | OI-011 | Lambda packaging did not include backend code or runtime dependencies | BFF Lambda failed at runtime with `ModuleNotFoundError: No module named 'deskai'` | resolved | Fixed: Makefile build step bundles `lambda_handlers/` + `backend/src/deskai/` + pip deps into `infra/.build/lambda/`. Env var names aligned between `compute_stack.py` and `config.py` (`SECRET_ARN` → `SECRET_NAME`, `CONSULTATION_TABLE` → `DYNAMODB_TABLE`). CDK tests repaired (3 missing kwargs from Task 005). Stage prefix stripping added to BFF handler. |
+| OI-012 | Orphaned `deskai/dev/deepgram` secret in CloudFormation state | CloudFormation skipped resource via `continue-update-rollback --resources-to-skip`. The resource is no longer tracked or deletable by CloudFormation. Harmless (secret doesn't exist in AWS), but state is dirty. | open | Clean up by running `cdk deploy` for a fresh stack or accept the orphan. Low priority — no operational impact. |
+| OI-013 | `unsafe_plain_text` placeholder committed to git history | `SecretValue.unsafe_plain_text("see-elevenlabs-secret")` was committed in e0681d9 (now superseded by f35425c). Not a real key, but the pattern is a code smell in version control. | open | Avoid `unsafe_plain_text` in future CDK code. Consider using `SecretValue.secrets_manager()` or generating initial values outside CDK. Git history cannot be rewritten. Low priority. |
+| OI-014 | WebSocket container wiring uses dependency stubs, not full container resolution | `router.py` has `_get_transcription_provider()` and `_get_finalize_transcript_use_case()` stubs that raise `NotImplementedError`. WebSocket handlers don't go through the full `build_container()` path yet. | open | Wire WebSocket handlers through the same container as HTTP handlers before end-to-end testing. Blocking for live transcription test. |
+| OI-015 | Finalization runs synchronously inside `session.stop` handler | `FinalizeTranscriptUseCase` is called inline after session ends. Long transcriptions could exceed Lambda 30s timeout. Handler catches and logs exceptions to avoid breaking the stop response. | open | Decouple via EventBridge or SQS before prod. Session.stop should fire an event, and a separate Lambda invocation should handle finalization. Acceptable for dev/testing. |
+| OI-016 | Stub `transcript.partial` still sent in `audio.chunk` handler | Real-time partial transcripts from ElevenLabs require persistent WebSocket or callback. Current handler still sends `[stub transcript]` placeholder. The actual transcription happens in batch when `fetch_final_transcript` is called. | open | Implement real-time partial streaming when moving beyond HTTP batch mode. Not blocking for MVP testing (final transcript works). |
 
 ## 10. Recently Updated Tasks
 
@@ -260,6 +265,33 @@ Three classes of errors from parallel agents, all caused by not reading existing
 3. **Lint-dirty code.** Multiple agents produced files with unsorted imports, unused imports, and banned patterns (`assert False`). **Rule:** Each agent must run `make lint` on its own files before reporting completion.
 
 **Root cause:** Agents optimize for speed and correctness of logic but skip convention alignment unless explicitly told. Future agent prompts must include: (a) an existing file to copy the pattern from, (b) the exact CI commands to run before marking done, (c) the test framework and base class to use.
+
+### Always `cdk diff` Before `cdk deploy` (Task 009)
+
+During the ElevenLabs provider migration, a blind `cdk deploy` triggered a cross-stack export failure that cascaded into `UPDATE_ROLLBACK_FAILED` state, required `continue-update-rollback --resources-to-skip` (nuclear last-resort), and resulted in an orphaned resource plus a wildcard IAM regression. A `cdk diff` would have shown the replacement and export deletion in 10 seconds — before any damage.
+
+**Rule:** Treat `cdk diff` like `git diff` — never deploy without it. Never push infra changes directly to main; always use a PR.
+
+### CDK Cross-Stack Reference Renames Require Two-Phase Deploy (Task 009)
+
+Renaming a CDK construct ID (`DeepgramSecret` → `ElevenLabsSecret`) that has cross-stack exports causes CloudFormation to fail: it can't delete the old export while another stack imports it. The fix is two phases:
+
+1. **Phase 1:** Deploy the consumer stack (compute) to stop importing the old export. Use string-literal ARN patterns derived from config instead of cross-stack references.
+2. **Phase 2:** Deploy the provider stack (security) to remove the old export and create the new resource.
+
+**Rule:** When renaming CDK constructs with cross-stack references, always plan a two-phase deploy. Avoid cross-stack exports for values that can be derived from config (like secret ARNs).
+
+### IAM Policies Must Use Config-Derived Values, Not Hardcoded Names (Task 009)
+
+An initial fix hardcoded secret names in IAM ARN patterns (`"elevenlabs-*"`). If someone later changes the secret name in config, the IAM policy would grant access to the old name and deny the new one.
+
+**Rule:** Derive IAM resource ARNs from the same config that defines the resource names. Use `config.elevenlabs_secret_name` not `"elevenlabs"`. Single source of truth. Use `-??????` suffix (6 random chars) instead of `-*` for tighter matching.
+
+### Preserve Secret Values During CDK Migration (Task 009)
+
+Deleting a secret to let CDK recreate it causes downtime: between delete and manual `put-secret-value`, every Lambda call to that secret fails.
+
+**Rule:** Before deleting a secret for CDK adoption: (1) save the real value with `get-secret-value`, (2) delete, (3) CDK deploy, (4) immediately restore with `put-secret-value`. Or better: use `cdk import` to adopt the existing resource without any deletion. Zero downtime.
 
 ## 15. Notes
 

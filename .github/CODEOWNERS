@@ -1,2 +1,9 @@
-# Update owners as team structure is finalized.
+# Default owners
 * @gabrielmendes98 @Portoni @danielportoni @pedrohft
+
+# Path-specific owners
+/backend/ @desk-ai-bizness/backend
+/infra/ @desk-ai-bizness/infra
+/app/ @desk-ai-bizness/frontend
+/contracts/ @desk-ai-bizness/backend
+/docs/ @desk-ai-bizness/all

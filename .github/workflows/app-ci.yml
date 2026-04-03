@@ -27,6 +27,9 @@ jobs:
       - name: Typecheck
         working-directory: app
         run: npm run typecheck
+      - name: Test
+        working-directory: app
+        run: npx vitest run --passWithNoTests
       - name: Build
         working-directory: app
         run: npm run build

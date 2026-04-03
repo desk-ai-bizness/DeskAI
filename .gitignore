@@ -14,10 +14,15 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyc
 *.so
+*.egg
+*.egg-info/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+htmlcov/
 .venv/
 **/.venv/
 
@@ -28,10 +33,17 @@ dist/
 **/dist/
 npm-debug.log*
 yarn-error.log*
+*.tsbuildinfo
+
+# Infrastructure
 infra/cdk.out/
 infra/.build/
+cdk.out/
 
 # Environment
 .env
 .env.local
 .env.*.local
+
+# Misc
+.poc-frontend/

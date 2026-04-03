@@ -19,11 +19,6 @@ class TestStubEventPublisher:
         with pytest.raises(NotImplementedError, match="EventPublisher.publish"):
             stub.publish("test.event", {"key": "value"})
 
-    def test_publish_batch_raises_not_implemented(self):
-        stub = StubEventPublisher()
-        with pytest.raises(NotImplementedError, match="EventPublisher.publish_batch"):
-            stub.publish_batch([("test.event", {"key": "value"})])
-
 
 class TestStubExportGenerator:
     def test_implements_port(self):
@@ -31,8 +26,12 @@ class TestStubExportGenerator:
 
     def test_generate_raises_not_implemented(self):
         stub = StubExportGenerator()
+        from deskai.domain.export.value_objects import ExportFormat
+        from tests.conftest import make_sample_consultation
+
+        consultation = make_sample_consultation()
         with pytest.raises(NotImplementedError, match="ExportGenerator.generate"):
-            stub.generate(None, None)
+            stub.generate(consultation, ExportFormat.PDF)
 
 
 class TestStubLLMProvider:

@@ -29,3 +29,12 @@ class GracePeriodExpiredError(DeskAIError):
 
 class SessionOwnershipError(DeskAIError):
     """Raised when a doctor tries to operate on a session they do not own."""
+
+
+class InvalidSessionTransitionError(DeskAIError):
+    """Raised when a session state transition is not allowed."""
+
+    def __init__(self, from_state: str, to_state: str) -> None:
+        super().__init__(f"Invalid session transition from '{from_state}' to '{to_state}'")
+        self.from_state = from_state
+        self.to_state = to_state

@@ -1,6 +1,6 @@
 """Start a real-time consultation session."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from deskai.domain.audit.entities import AuditAction, AuditEvent
 from deskai.domain.consultation.entities import ConsultationStatus
@@ -66,9 +66,12 @@ class StartSessionUseCase:
 
         self.session_repo.save(session)
 
-        consultation.status = ConsultationStatus.RECORDING
-        consultation.session_started_at = now
-        consultation.updated_at = now
+        consultation = replace(
+            consultation,
+            status=ConsultationStatus.RECORDING,
+            session_started_at=now,
+            updated_at=now,
+        )
         self.consultation_repo.save(consultation)
 
         self.audit_repo.append(

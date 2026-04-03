@@ -1,7 +1,7 @@
 """Tests for LazyTranscriptionProvider — deferred initialization wrapper."""
 
 import unittest
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 from deskai.adapters.transcription.lazy_provider import (
     LazyTranscriptionProvider,

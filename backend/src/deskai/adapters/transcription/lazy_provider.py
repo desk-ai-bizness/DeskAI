@@ -6,7 +6,7 @@ failures from blocking unrelated endpoints (auth, patients, etc.)
 when the provider secret is temporarily inaccessible.
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 from deskai.domain.transcription.value_objects import (
     FinalTranscript,
@@ -37,17 +37,13 @@ class LazyTranscriptionProvider(TranscriptionProvider):
             logger.info("lazy_transcription_provider_ready")
         return self._delegate
 
-    def start_realtime_session(
-        self, session_id: str, language: str
-    ) -> TranscriptionSessionInfo:
+    def start_realtime_session(self, session_id: str, language: str) -> TranscriptionSessionInfo:
         return self._get_delegate().start_realtime_session(session_id, language)
 
     def send_audio_chunk(self, session_id: str, audio_data: bytes) -> None:
         self._get_delegate().send_audio_chunk(session_id, audio_data)
 
-    def finish_realtime_session(
-        self, session_id: str
-    ) -> TranscriptionSessionInfo:
+    def finish_realtime_session(self, session_id: str) -> TranscriptionSessionInfo:
         return self._get_delegate().finish_realtime_session(session_id)
 
     def fetch_final_transcript(self, session_id: str) -> FinalTranscript:

@@ -1,6 +1,7 @@
 """Unit tests for the check entitlements use case."""
 
 import unittest
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 from deskai.application.auth.check_entitlements import (
@@ -8,6 +9,11 @@ from deskai.application.auth.check_entitlements import (
 )
 from deskai.domain.auth.entities import DoctorProfile
 from deskai.domain.auth.value_objects import PlanType
+
+
+def _recent_iso() -> str:
+    """Return an ISO timestamp from 1 day ago — always within trial window."""
+    return (datetime.now(tz=UTC) - timedelta(days=1)).isoformat()
 
 
 class CheckEntitlementsUseCaseTest(unittest.TestCase):
@@ -22,13 +28,13 @@ class CheckEntitlementsUseCaseTest(unittest.TestCase):
     ) -> DoctorProfile:
         return DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="doc@test.com",
             name="Dr. Test",
             clinic_id="c1",
             clinic_name="Clinic",
             plan_type=plan,
-            created_at="2026-03-20T00:00:00+00:00",
+            created_at=_recent_iso(),
         )
 
     def test_free_trial_with_remaining(self) -> None:

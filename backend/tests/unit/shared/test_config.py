@@ -1,6 +1,7 @@
 """Unit tests for environment-aware configuration safety."""
 
 import os
+import unittest
 from unittest.mock import patch
 
 import pytest
@@ -12,6 +13,10 @@ from deskai.shared.config import (
     load_settings,
 )
 from deskai.shared.errors import ConfigurationError
+
+# ---------------------------------------------------------------------------
+# Unit tests for helper functions (branch — pytest style)
+# ---------------------------------------------------------------------------
 
 
 class TestIsStrictEnvironment:
@@ -54,7 +59,7 @@ class TestProdRequiredVars:
 
 
 class TestRequireEnvVars:
-    """Validate enforcement logic."""
+    """Validate _require_env_vars enforcement logic."""
 
     def test_dev_never_raises(self):
         _require_env_vars("dev")
@@ -64,14 +69,25 @@ class TestRequireEnvVars:
 
     @patch.dict(os.environ, {}, clear=True)
     def test_prod_raises_when_all_missing(self):
-        with pytest.raises(ConfigurationError, match="Missing required environment variables for 'prod'"):
+        with pytest.raises(
+            ConfigurationError,
+            match="Missing required environment variables for 'prod'",
+        ):
             _require_env_vars("prod")
 
-    @patch.dict(os.environ, {var: "value" for var in _PROD_REQUIRED_VARS}, clear=True)
+    @patch.dict(
+        os.environ,
+        {var: "value" for var in _PROD_REQUIRED_VARS},
+        clear=True,
+    )
     def test_prod_passes_when_all_set(self):
         _require_env_vars("prod")
 
-    @patch.dict(os.environ, {var: "value" for var in _PROD_REQUIRED_VARS}, clear=True)
+    @patch.dict(
+        os.environ,
+        {var: "value" for var in _PROD_REQUIRED_VARS},
+        clear=True,
+    )
     def test_staging_passes_when_all_set(self):
         _require_env_vars("staging")
 
@@ -89,15 +105,116 @@ class TestRequireEnvVars:
             assert var in message
 
 
-class TestLoadSettings:
-    """Integration: load_settings respects environment mode."""
+# ---------------------------------------------------------------------------
+# Integration tests for load_settings (main — thorough env management)
+# ---------------------------------------------------------------------------
 
-    def test_dev_loads_with_defaults(self):
+
+class LoadSettingsDevTest(unittest.TestCase):
+    """In dev mode, defaults are silently used."""
+
+    def setUp(self) -> None:
+        self._saved = {}
+        for key in list(os.environ):
+            if key.startswith("DESKAI_"):
+                self._saved[key] = os.environ.pop(key)
+
+    def tearDown(self) -> None:
+        for key in list(os.environ):
+            if key.startswith("DESKAI_"):
+                del os.environ[key]
+        os.environ.update(self._saved)
+
+    def test_dev_loads_defaults_without_error(self) -> None:
         settings = load_settings()
-        assert settings.environment == "dev"
-        assert settings.dynamodb_table == "deskai-dev-consultation-records"
+        self.assertEqual(settings.environment, "dev")
+        self.assertEqual(settings.websocket_url, "wss://localhost:3001")
+        self.assertEqual(settings.dynamodb_table, "deskai-dev-consultation-records")
 
-    @patch.dict(os.environ, {"DESKAI_ENV": "prod"}, clear=True)
-    def test_prod_raises_without_required_vars(self):
-        with pytest.raises(ConfigurationError):
+    def test_dev_uses_provided_env_var_over_default(self) -> None:
+        os.environ["DESKAI_WEBSOCKET_URL"] = "wss://prod.example.com"
+        settings = load_settings()
+        self.assertEqual(settings.websocket_url, "wss://prod.example.com")
+
+
+class LoadSettingsProdTest(unittest.TestCase):
+    """In prod mode, missing required vars raise ConfigurationError."""
+
+    def setUp(self) -> None:
+        self._saved = {}
+        for key in list(os.environ):
+            if key.startswith("DESKAI_"):
+                self._saved[key] = os.environ.pop(key)
+
+    def tearDown(self) -> None:
+        for key in list(os.environ):
+            if key.startswith("DESKAI_"):
+                del os.environ[key]
+        os.environ.update(self._saved)
+
+    def _set_all_required(self) -> None:
+        os.environ["DESKAI_ENV"] = "prod"
+        os.environ["DESKAI_DYNAMODB_TABLE"] = "deskai-prod-records"
+        os.environ["DESKAI_ARTIFACTS_BUCKET"] = "deskai-prod-artifacts"
+        os.environ["DESKAI_ELEVENLABS_SECRET_NAME"] = "deskai/prod/elevenlabs"
+        os.environ["DESKAI_CLAUDE_SECRET_NAME"] = "deskai/prod/claude"
+        os.environ["DESKAI_COGNITO_CLIENT_SECRET_NAME"] = "deskai/prod/cognito"
+        os.environ["DESKAI_COGNITO_USER_POOL_ID"] = "us-east-1_ABCDEF"
+        os.environ["DESKAI_COGNITO_CLIENT_ID"] = "prod-client-id"
+        os.environ["DESKAI_WEBSOCKET_URL"] = "wss://ws.deskai.com.br/prod"
+
+    def test_prod_with_all_vars_set_succeeds(self) -> None:
+        self._set_all_required()
+        settings = load_settings()
+        self.assertEqual(settings.environment, "prod")
+        self.assertEqual(settings.dynamodb_table, "deskai-prod-records")
+
+    def test_prod_missing_dynamodb_table_raises(self) -> None:
+        self._set_all_required()
+        del os.environ["DESKAI_DYNAMODB_TABLE"]
+        with self.assertRaises(ConfigurationError) as ctx:
             load_settings()
+        self.assertIn("DESKAI_DYNAMODB_TABLE", str(ctx.exception))
+
+    def test_prod_missing_websocket_url_raises(self) -> None:
+        self._set_all_required()
+        del os.environ["DESKAI_WEBSOCKET_URL"]
+        with self.assertRaises(ConfigurationError) as ctx:
+            load_settings()
+        self.assertIn("DESKAI_WEBSOCKET_URL", str(ctx.exception))
+
+    def test_prod_missing_cognito_user_pool_id_raises(self) -> None:
+        self._set_all_required()
+        del os.environ["DESKAI_COGNITO_USER_POOL_ID"]
+        with self.assertRaises(ConfigurationError) as ctx:
+            load_settings()
+        self.assertIn("DESKAI_COGNITO_USER_POOL_ID", str(ctx.exception))
+
+    def test_prod_missing_multiple_vars_lists_all(self) -> None:
+        self._set_all_required()
+        del os.environ["DESKAI_DYNAMODB_TABLE"]
+        del os.environ["DESKAI_WEBSOCKET_URL"]
+        with self.assertRaises(ConfigurationError) as ctx:
+            load_settings()
+        message = str(ctx.exception)
+        self.assertIn("DESKAI_DYNAMODB_TABLE", message)
+        self.assertIn("DESKAI_WEBSOCKET_URL", message)
+
+    def test_staging_also_enforces_required_vars(self) -> None:
+        self._set_all_required()
+        os.environ["DESKAI_ENV"] = "staging"
+        del os.environ["DESKAI_WEBSOCKET_URL"]
+        with self.assertRaises(ConfigurationError) as ctx:
+            load_settings()
+        self.assertIn("DESKAI_WEBSOCKET_URL", str(ctx.exception))
+
+    def test_prod_empty_string_counts_as_missing(self) -> None:
+        self._set_all_required()
+        os.environ["DESKAI_COGNITO_USER_POOL_ID"] = ""
+        with self.assertRaises(ConfigurationError) as ctx:
+            load_settings()
+        self.assertIn("DESKAI_COGNITO_USER_POOL_ID", str(ctx.exception))
+
+
+if __name__ == "__main__":
+    unittest.main()

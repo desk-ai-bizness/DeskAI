@@ -65,3 +65,8 @@ class EnvironmentConfig:
     @property
     def websocket_api_name(self) -> str:
         return f"{self.resource_prefix}-ws-api"
+
+    @property
+    def cognito_secret_name(self) -> str:
+        """Derive the Cognito client secret name from the environment."""
+        return f"deskai/{self.environment}/cognito"

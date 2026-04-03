@@ -1,4 +1,4 @@
-"""BFF UI config screen configuration -- review screen layout."""
+"""BFF UI config screen configuration -- review screen and consultation list."""
 
 
 def get_review_screen_config() -> dict:
@@ -32,4 +32,13 @@ def get_review_screen_config() -> dict:
                 "visible": True,
             },
         },
+    }
+
+
+def get_consultation_list_config() -> dict:
+    """Return default configuration for the consultation list screen."""
+    return {
+        "page_size": 20,
+        "default_sort": "created_at_desc",
+        "default_status_filter": "all",
     }

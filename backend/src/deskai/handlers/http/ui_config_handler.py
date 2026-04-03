@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from deskai.application.config.get_ui_config import (
+    GetUiConfigUseCase,
+)
 from deskai.domain.auth.exceptions import AuthenticationError
 from deskai.domain.auth.value_objects import AuthContext
 from deskai.handlers.http.middleware import (
@@ -41,5 +44,6 @@ def handle_get_ui_config(
         plan_type=profile.plan_type,
     )
 
-    config = container.get_ui_config.execute(auth_context)
+    use_case = GetUiConfigUseCase()
+    config = use_case.execute(auth_context)
     return json_response(200, config)

@@ -48,6 +48,7 @@ class ComputeStack(Stack):
             "DESKAI_CLAUDE_SECRET_NAME": claude_secret.secret_name,
             "DESKAI_COGNITO_USER_POOL_ID": user_pool_id,
             "DESKAI_COGNITO_CLIENT_ID": user_pool_client_id,
+            "DESKAI_COGNITO_CLIENT_SECRET_NAME": config.cognito_secret_name,
         }
 
         self.lambda_execution_role = iam.Role(

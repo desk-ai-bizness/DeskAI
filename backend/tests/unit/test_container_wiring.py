@@ -4,15 +4,12 @@ import dataclasses
 import os
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from deskai.container import Container, build_container
 from deskai.ports.artifact_repository import ArtifactRepository
 from deskai.ports.event_publisher import EventPublisher
 from deskai.ports.export_generator import ExportGenerator
 from deskai.ports.llm_provider import LLMProvider
 from deskai.ports.ui_config_assembler import UiConfigAssembler
-
 
 # ---------------------------------------------------------------------------
 # Structural checks (from main) — verify Container dataclass shape

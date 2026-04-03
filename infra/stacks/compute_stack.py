@@ -106,14 +106,6 @@ class ComputeStack(Stack):
         )
         self.websocket_role.add_to_policy(
             iam.PolicyStatement(
-                actions=["ssm:GetParameter"],
-                resources=[
-                    f"arn:aws:ssm:{self.region}:{self.account}:parameter/{config.resource_prefix}/websocket-url"
-                ],
-            )
-        )
-        self.websocket_role.add_to_policy(
-            iam.PolicyStatement(
                 actions=["execute-api:ManageConnections"],
                 resources=[
                     f"arn:aws:execute-api:{self.region}:{self.account}:*/*/@connections/*"

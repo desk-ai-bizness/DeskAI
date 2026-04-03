@@ -10,7 +10,7 @@ from deskai.domain.auth.entities import DoctorProfile
 from deskai.domain.auth.value_objects import PlanType
 
 
-@patch("deskai.adapters.persistence.dynamodb_doctor_repository.boto3")
+@patch("deskai.adapters.persistence.base_repository.boto3")
 class DynamoDBDoctorRepositoryTest(unittest.TestCase):
     def _make_repo(
         self, mock_boto3: MagicMock
@@ -21,9 +21,9 @@ class DynamoDBDoctorRepositoryTest(unittest.TestCase):
         mock_boto3.resource.return_value = mock_resource
         return DynamoDBDoctorRepository(table_name="deskai-doctors")
 
-    # --- find_by_cognito_sub ---
+    # --- find_by_identity_provider_id ---
 
-    def test_find_by_cognito_sub_found(
+    def test_find_by_identity_provider_id_found(
         self, mock_boto3: MagicMock
     ) -> None:
         repo = self._make_repo(mock_boto3)
@@ -39,13 +39,13 @@ class DynamoDBDoctorRepositoryTest(unittest.TestCase):
             }
         }
 
-        result = repo.find_by_cognito_sub("sub-abc-123")
+        result = repo.find_by_identity_provider_id("sub-abc-123")
 
         self.assertEqual(
             result,
             DoctorProfile(
                 doctor_id="doc-001",
-                cognito_sub="sub-abc-123",
+                identity_provider_id="sub-abc-123",
                 email="ana@clinic.com",
                 name="Dra. Ana",
                 clinic_id="clinic-01",
@@ -61,17 +61,17 @@ class DynamoDBDoctorRepositoryTest(unittest.TestCase):
             }
         )
 
-    def test_find_by_cognito_sub_not_found(
+    def test_find_by_identity_provider_id_not_found(
         self, mock_boto3: MagicMock
     ) -> None:
         repo = self._make_repo(mock_boto3)
         self.mock_table.get_item.return_value = {}
 
-        result = repo.find_by_cognito_sub("sub-missing")
+        result = repo.find_by_identity_provider_id("sub-missing")
 
         self.assertIsNone(result)
 
-    def test_find_by_cognito_sub_parses_all_fields(
+    def test_find_by_identity_provider_id_parses_all_fields(
         self, mock_boto3: MagicMock
     ) -> None:
         repo = self._make_repo(mock_boto3)
@@ -87,11 +87,11 @@ class DynamoDBDoctorRepositoryTest(unittest.TestCase):
             }
         }
 
-        result = repo.find_by_cognito_sub("sub-xyz-999")
+        result = repo.find_by_identity_provider_id("sub-xyz-999")
 
         self.assertIsNotNone(result)
         self.assertEqual(result.doctor_id, "doc-99")
-        self.assertEqual(result.cognito_sub, "sub-xyz-999")
+        self.assertEqual(result.identity_provider_id, "sub-xyz-999")
         self.assertEqual(result.email, "carlos@saude.com")
         self.assertEqual(result.name, "Dr. Carlos")
         self.assertEqual(result.clinic_id, "clinic-77")
@@ -101,7 +101,7 @@ class DynamoDBDoctorRepositoryTest(unittest.TestCase):
             result.created_at, "2024-06-01T08:30:00Z"
         )
 
-    def test_find_by_cognito_sub_free_trial_plan(
+    def test_find_by_identity_provider_id_free_trial_plan(
         self, mock_boto3: MagicMock
     ) -> None:
         repo = self._make_repo(mock_boto3)
@@ -117,7 +117,7 @@ class DynamoDBDoctorRepositoryTest(unittest.TestCase):
             }
         }
 
-        result = repo.find_by_cognito_sub("sub-trial")
+        result = repo.find_by_identity_provider_id("sub-trial")
 
         self.assertEqual(result.plan_type, PlanType.FREE_TRIAL)
 

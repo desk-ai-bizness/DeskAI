@@ -10,7 +10,7 @@ class DoctorProfileTest(unittest.TestCase):
     def test_doctor_profile_is_frozen(self) -> None:
         p = DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="doc@clinic.com",
             name="Dr. Test",
             clinic_id="c1",
@@ -24,7 +24,7 @@ class DoctorProfileTest(unittest.TestCase):
     def test_doctor_profile_fields(self) -> None:
         p = DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="doc@clinic.com",
             name="Dr. Test",
             clinic_id="c1",

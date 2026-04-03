@@ -58,7 +58,7 @@ SAMPLE_CREATED_AT = "2026-01-15T10:00:00+00:00"
 def make_sample_doctor_profile(
     *,
     doctor_id: str = "doc-001",
-    cognito_sub: str = "cognito-sub-001",
+    identity_provider_id: str = "cognito-sub-001",
     email: str = "dr.test@clinic.com",
     name: str = "Dr. Test",
     clinic_id: str = "clinic-001",
@@ -69,7 +69,7 @@ def make_sample_doctor_profile(
     """Build a DoctorProfile with sensible defaults."""
     return DoctorProfile(
         doctor_id=doctor_id,
-        cognito_sub=cognito_sub,
+        identity_provider_id=identity_provider_id,
         email=email,
         name=name,
         clinic_id=clinic_id,

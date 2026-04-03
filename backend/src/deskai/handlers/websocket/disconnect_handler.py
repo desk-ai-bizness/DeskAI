@@ -1,5 +1,7 @@
 """WebSocket $disconnect handler — start grace period for active sessions."""
 
+from dataclasses import replace
+
 from deskai.domain.session.entities import SessionState
 from deskai.domain.session.services import SessionService
 from deskai.shared.time import utc_now_iso
@@ -17,8 +19,11 @@ def handle_disconnect(event: dict, connection_repo, session_repo) -> dict:
         session = session_repo.find_by_id(connection.session_id)
         if session and session.state in (SessionState.RECORDING, SessionState.ACTIVE):
             now = utc_now_iso()
-            session.state = SessionState.DISCONNECTED
-            session.grace_period_expires_at = SessionService.compute_grace_period_expiry(now)
+            session = replace(
+                session,
+                state=SessionState.DISCONNECTED,
+                grace_period_expires_at=SessionService.compute_grace_period_expiry(now),
+            )
             session_repo.update(session)
 
     connection_repo.remove(connection_id)

@@ -2,6 +2,7 @@
 
 import base64
 import json
+from dataclasses import replace
 
 from deskai.domain.session.services import SessionService
 from deskai.shared.time import utc_now_iso
@@ -49,8 +50,11 @@ def handle_audio_chunk(
     if audio_bytes and transcription_provider is not None:
         transcription_provider.send_audio_chunk(session.session_id, audio_bytes)
 
-    session.audio_chunks_received += 1
-    session.last_activity_at = utc_now_iso()
+    session = replace(
+        session,
+        audio_chunks_received=session.audio_chunks_received + 1,
+        last_activity_at=utc_now_iso(),
+    )
     session_repo.update(session)
 
     apigw.send_to_connection(

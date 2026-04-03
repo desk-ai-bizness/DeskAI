@@ -36,8 +36,8 @@ class ConnectionInfo:
     def __post_init__(self) -> None:
         if not self.connection_id or not self.connection_id.strip():
             raise DomainValidationError("connection_id must be a non-empty string")
-        if not self.session_id or not self.session_id.strip():
-            raise DomainValidationError("session_id must be a non-empty string")
+        if self.session_id is None:
+            raise DomainValidationError("session_id must be a string, got None")
         if not self.doctor_id or not self.doctor_id.strip():
             raise DomainValidationError("doctor_id must be a non-empty string")
         if not self.clinic_id or not self.clinic_id.strip():

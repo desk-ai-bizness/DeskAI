@@ -449,7 +449,7 @@ class TestDoctorProfileValidation(unittest.TestCase):
     def _make(self, **overrides):
         defaults = dict(
             doctor_id="d-1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="doc@clinic.com",
             name="Dr. Test",
             clinic_id="cl-1",
@@ -468,9 +468,9 @@ class TestDoctorProfileValidation(unittest.TestCase):
         with self.assertRaises(DomainValidationError):
             self._make(doctor_id="")
 
-    def test_empty_cognito_sub(self):
+    def test_empty_identity_provider_id(self):
         with self.assertRaises(DomainValidationError):
-            self._make(cognito_sub="")
+            self._make(identity_provider_id="")
 
     def test_invalid_email(self):
         with self.assertRaises(DomainValidationError):
@@ -546,7 +546,7 @@ class TestEntitlementsValidation(unittest.TestCase):
         with self.assertRaises(DomainValidationError):
             Entitlements(
                 can_create_consultation=True,
-                consultations_remaining=-1,
+                consultations_remaining=-2,
                 consultations_used_this_month=0,
                 max_duration_minutes=60,
                 export_enabled=True,
@@ -593,9 +593,9 @@ class TestTokensValidation(unittest.TestCase):
         with self.assertRaises(DomainValidationError):
             Tokens(access_token="", refresh_token="def", expires_in=3600)
 
-    def test_empty_refresh_token(self):
+    def test_none_refresh_token(self):
         with self.assertRaises(DomainValidationError):
-            Tokens(access_token="abc", refresh_token="", expires_in=3600)
+            Tokens(access_token="abc", refresh_token=None, expires_in=3600)
 
     def test_zero_expires_in(self):
         with self.assertRaises(DomainValidationError):

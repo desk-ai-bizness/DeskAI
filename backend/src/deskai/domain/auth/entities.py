@@ -25,8 +25,8 @@ class DoctorProfile:
     def __post_init__(self) -> None:
         if not self.doctor_id or not self.doctor_id.strip():
             raise DomainValidationError("doctor_id must be a non-empty string")
-        if not self.cognito_sub or not self.cognito_sub.strip():
-            raise DomainValidationError("cognito_sub must be a non-empty string")
+        if not self.identity_provider_id or not self.identity_provider_id.strip():
+            raise DomainValidationError("identity_provider_id must be a non-empty string")
         if not self.email or not _EMAIL_RE.match(self.email):
             raise DomainValidationError("email must be a valid email address")
         if not self.name or not self.name.strip():

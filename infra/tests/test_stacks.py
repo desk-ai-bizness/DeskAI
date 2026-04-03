@@ -83,6 +83,7 @@ class StackSynthesisTest(unittest.TestCase):
             consultation_table=storage.consultation_table,
             artifacts_bucket=storage.artifacts_bucket,
             data_key=security.data_key,
+            secrets_key=security.secrets_key,
             elevenlabs_secret=security.elevenlabs_secret,
             claude_secret=security.claude_secret,
             user_pool_id=auth.user_pool.user_pool_id,
@@ -261,6 +262,28 @@ class StackSynthesisTest(unittest.TestCase):
         template.has_resource_properties(
             "AWS::Lambda::Function",
             {"Runtime": "python3.12"},
+        )
+
+
+    def test_compute_stack_grants_secrets_key_decrypt_to_lambda(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+        template.has_resource_properties(
+            "AWS::IAM::Policy",
+            {
+                "PolicyDocument": {
+                    "Statement": Match.array_with(
+                        [
+                            Match.object_like(
+                                {
+                                    "Action": "kms:Decrypt",
+                                    "Effect": "Allow",
+                                }
+                            )
+                        ]
+                    )
+                }
+            },
         )
 
     # --- API ---

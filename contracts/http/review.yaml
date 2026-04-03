@@ -25,8 +25,26 @@ paths:
             application/json:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Not authorized to view this review
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
         "404":
           description: Consultation not found
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
           content:
             application/json:
               schema:
@@ -63,8 +81,32 @@ paths:
             application/json:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Not authorized to update this review
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
         "404":
           description: Consultation not found
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "409":
+          description: Consultation is not in a reviewable state
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
           content:
             application/json:
               schema:
@@ -91,6 +133,12 @@ paths:
             application/json:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Not authorized to finalize this consultation
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
         "404":
           description: Consultation not found
           content:
@@ -99,6 +147,18 @@ paths:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
         "409":
           description: Consultation is not in under_physician_review state
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
           content:
             application/json:
               schema:
@@ -146,17 +206,19 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/TranscriptSegment"
+          additionalProperties: false
         medical_history:
           type: object
           required: [content, edited_by_physician, completeness_warning]
           properties:
             content:
               type: object
-              additionalProperties: true
+              additionalProperties: false
             edited_by_physician:
               type: boolean
             completeness_warning:
               type: boolean
+          additionalProperties: false
         summary:
           type: object
           required: [content, edited_by_physician, completeness_warning]
@@ -167,6 +229,7 @@ components:
               type: boolean
             completeness_warning:
               type: boolean
+          additionalProperties: false
         insights:
           type: array
           items:
@@ -176,7 +239,7 @@ components:
           properties:
             labels:
               type: object
-              additionalProperties: true
+              additionalProperties: false
             section_order:
               type: array
               items:
@@ -185,6 +248,8 @@ components:
               type: array
               items:
                 type: string
+          additionalProperties: false
+      additionalProperties: false
 
     TranscriptSegment:
       type: object
@@ -201,6 +266,7 @@ components:
         end_time:
           type: number
           format: float
+      additionalProperties: false
 
     Insight:
       type: object
@@ -224,6 +290,7 @@ components:
         physician_note:
           type: string
           nullable: true
+      additionalProperties: false
 
     EvidenceExcerpt:
       type: object
@@ -237,19 +304,21 @@ components:
         end_time:
           type: number
           format: float
+      additionalProperties: false
 
     UpdateReviewRequest:
       type: object
       properties:
         medical_history:
           type: object
-          additionalProperties: true
+          additionalProperties: false
         summary:
           type: string
         insights:
           type: array
           items:
             $ref: "#/components/schemas/InsightAction"
+      additionalProperties: false
 
     InsightAction:
       type: object
@@ -263,6 +332,7 @@ components:
           enum: [accept, dismiss, edit]
         physician_note:
           type: string
+      additionalProperties: false
 
     FinalizeView:
       type: object
@@ -280,3 +350,4 @@ components:
         finalized_by:
           type: string
           format: uuid
+      additionalProperties: false

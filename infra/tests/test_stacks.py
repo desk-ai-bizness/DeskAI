@@ -190,7 +190,7 @@ class StackSynthesisTest(unittest.TestCase):
             },
         )
 
-    def test_storage_stack_has_three_gsis(self) -> None:
+    def test_storage_stack_has_four_gsis(self) -> None:
         f = self._create_foundation()
         template = Template.from_stack(f.storage)
         template.has_resource_properties(
@@ -201,6 +201,7 @@ class StackSynthesisTest(unittest.TestCase):
                         Match.object_like({"IndexName": "gsi_doctor_date"}),
                         Match.object_like({"IndexName": "gsi_status"}),
                         Match.object_like({"IndexName": "gsi_patient"}),
+                        Match.object_like({"IndexName": "consultation-session-index"}),
                     ]
                 ),
             },
@@ -425,6 +426,107 @@ class StackSynthesisTest(unittest.TestCase):
         template.resource_count_is("AWS::CloudFront::Distribution", 2)
         template.resource_count_is("AWS::S3::Bucket", 2)
 
+
+    # --- GSI Key Schema ---
+
+    def test_storage_stack_consultation_session_index_has_correct_keys(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.storage)
+        template.has_resource_properties(
+            "AWS::DynamoDB::Table",
+            {
+                "GlobalSecondaryIndexes": Match.array_with(
+                    [
+                        Match.object_like(
+                            {
+                                "IndexName": "consultation-session-index",
+                                "KeySchema": Match.array_with(
+                                    [
+                                        {"AttributeName": "consultation_id", "KeyType": "HASH"},
+                                        {"AttributeName": "created_at", "KeyType": "RANGE"},
+                                    ]
+                                ),
+                                "Projection": {"ProjectionType": "ALL"},
+                            }
+                        )
+                    ]
+                ),
+            },
+        )
+
+    # --- WebSocket URL (SSM) ---
+
+    def test_api_stack_creates_websocket_url_ssm_parameter(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.api)
+        template.has_resource_properties(
+            "AWS::SSM::Parameter",
+            {
+                "Name": Match.string_like_regexp(".*websocket-url"),
+                "Type": "String",
+                "Value": Match.any_value(),
+            },
+        )
+
+    def test_compute_stack_has_websocket_url_param_env_var(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+        template.has_resource_properties(
+            "AWS::Lambda::Function",
+            {
+                "Environment": {
+                    "Variables": Match.object_like(
+                        {"DESKAI_WEBSOCKET_URL_PARAM": Match.string_like_regexp(".*websocket-url")}
+                    )
+                }
+            },
+        )
+
+    def test_compute_stack_grants_ssm_get_parameter(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+        template.has_resource_properties(
+            "AWS::IAM::Policy",
+            {
+                "PolicyDocument": {
+                    "Statement": Match.array_with(
+                        [
+                            Match.object_like(
+                                {
+                                    "Action": "ssm:GetParameter",
+                                    "Effect": "Allow",
+                                }
+                            )
+                        ]
+                    )
+                }
+            },
+        )
+
+    # --- SNS Email Subscription ---
+
+    def test_orchestration_stack_adds_email_subscription_when_configured(self) -> None:
+        from dataclasses import replace
+        config_with_email = replace(DEV_CONFIG, alert_email="ops@deskai.com.br")
+        f = self._create_foundation(config=config_with_email)
+        template = Template.from_stack(f.orchestration)
+        template.has_resource_properties(
+            "AWS::SNS::Subscription",
+            {
+                "Protocol": "email",
+                "Endpoint": "ops@deskai.com.br",
+            },
+        )
+
+    def test_orchestration_stack_no_email_subscription_when_empty(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.orchestration)
+        resources = template.find_resources("AWS::SNS::Subscription")
+        self.assertEqual(
+            len(resources),
+            0,
+            "No SNS subscription should be created when alert_email is empty",
+        )
 
 if __name__ == "__main__":
     unittest.main()

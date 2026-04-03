@@ -15,6 +15,7 @@ class EnvironmentConfig:
     elevenlabs_secret_name: str
     claude_secret_name: str
     monthly_budget_limit_usd: int = 5
+    alert_email: str = ""
 
     @property
     def resource_prefix(self) -> str:

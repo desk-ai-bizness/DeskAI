@@ -43,6 +43,18 @@ paths:
             application/json:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
 
 components:
   securitySchemes:
@@ -63,11 +75,7 @@ components:
   schemas:
     ExportView:
       type: object
-      required:
-        - consultation_id
-        - export_url
-        - expires_at
-        - format
+      required: [consultation_id, export_url, expires_at, format]
       properties:
         consultation_id:
           type: string
@@ -82,3 +90,4 @@ components:
         format:
           type: string
           enum: [pdf]
+      additionalProperties: false

@@ -25,3 +25,11 @@ class AuthProvider(ABC):
         self, email: str, confirmation_code: str, new_password: str
     ) -> None:
         """Complete the forgot-password flow with a confirmation code."""
+
+    @abstractmethod
+    def validate_ws_token(self, token: str) -> dict:
+        """Validate a WebSocket JWT token and return identity claims.
+
+        Returns a dict with at least ``doctor_id``, ``clinic_id``, and ``sub``.
+        Raises ``AuthenticationError`` on any validation failure.
+        """

@@ -216,6 +216,7 @@ def build_container() -> Container:
             consultation_repo=consultation_repo,
             patient_repo=patient_repo,
             audit_repo=audit_repo,
+            doctor_repo=doctor_repo,
         ),
         get_consultation=GetConsultationUseCase(
             consultation_repo=consultation_repo,

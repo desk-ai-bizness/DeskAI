@@ -10,7 +10,7 @@ class DoctorProfile:
     """Doctor identity and clinic context resolved from DynamoDB."""
 
     doctor_id: str
-    cognito_sub: str
+    identity_provider_id: str
     email: str
     name: str
     clinic_id: str

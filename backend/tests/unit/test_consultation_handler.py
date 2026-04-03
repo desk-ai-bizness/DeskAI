@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 from deskai.domain.consultation.exceptions import (
     ConsultationNotFoundError,
+    ConsultationOwnershipError,
 )
 from tests.conftest import (
     make_apigw_event,
@@ -144,8 +145,9 @@ class HandleGetConsultationTest(unittest.TestCase):
             handle_get_consultation,
         )
 
-        consultation = make_sample_consultation(doctor_id="other-doc")
-        self.container.get_consultation.execute.return_value = consultation
+        self.container.get_consultation.execute.side_effect = (
+            ConsultationOwnershipError("You do not own this consultation.")
+        )
 
         event = make_apigw_event(
             path="/v1/consultations/cons-001",

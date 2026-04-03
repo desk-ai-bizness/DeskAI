@@ -29,7 +29,7 @@ class HandleGetUiConfigTest(unittest.TestCase):
         self.container = MagicMock()
         self.profile = DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="a@b.com",
             name="Dr. Test",
             clinic_id="c1",

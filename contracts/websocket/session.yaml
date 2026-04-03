@@ -29,7 +29,6 @@ allOf:
               type: string
               format: uuid
           additionalProperties: false
-
   - if:
       properties:
         action:
@@ -51,7 +50,6 @@ allOf:
               type: string
               format: date-time
           additionalProperties: false
-
   - if:
       properties:
         action:
@@ -66,7 +64,6 @@ allOf:
               type: string
               format: uuid
           additionalProperties: false
-
   - if:
       properties:
         action:
@@ -83,3 +80,20 @@ allOf:
           additionalProperties: false
 
 additionalProperties: false
+
+$defs:
+  ConnectAuth:
+    title: WebSocket $connect Authentication
+    description: >
+      Authentication schema for the WebSocket $connect route. The client must
+      include a valid connection_token as a query-string parameter when opening
+      the WebSocket connection.
+    type: object
+    required: [token]
+    properties:
+      token:
+        type: string
+        description: >
+          The connection_token returned by POST /v1/consultations/{id}/session/start.
+          Passed as a query-string parameter: wss://...?token=<value>
+    additionalProperties: false

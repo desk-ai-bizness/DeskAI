@@ -1,6 +1,9 @@
 """LLM provider contract."""
 
 from abc import ABC, abstractmethod
+from typing import Any
+
+from deskai.domain.ai_pipeline.value_objects import StructuredOutput
 
 
 class LLMProvider(ABC):
@@ -10,6 +13,6 @@ class LLMProvider(ABC):
     def generate_structured_output(
         self,
         task: str,
-        payload: dict[str, object],
-    ) -> dict[str, object]:
+        payload: dict[str, Any],
+    ) -> StructuredOutput:
         """Generate a strict JSON-compatible output payload."""

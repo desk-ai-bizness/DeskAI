@@ -9,7 +9,6 @@ from deskai.bff.views.consultation_view import (
     build_consultation_list_view,
     build_consultation_view,
 )
-from deskai.domain.consultation.exceptions import ConsultationOwnershipError
 from deskai.handlers.http.middleware import (
     error_response,
     extract_auth_context,
@@ -84,12 +83,11 @@ def handle_get_consultation(
             "Consultation ID is required.",
         )
 
-    consultation = container.get_consultation.execute(consultation_id, auth.clinic_id)
-
-    if consultation.doctor_id != auth.doctor_id:
-        raise ConsultationOwnershipError(
-            "You do not own this consultation."
-        )
+    consultation = container.get_consultation.execute(
+        auth_context=auth,
+        consultation_id=consultation_id,
+        clinic_id=auth.clinic_id,
+    )
 
     view = build_consultation_detail_view(consultation)
     return json_response(200, view)

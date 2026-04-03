@@ -341,11 +341,7 @@ class StackSynthesisTest(unittest.TestCase):
         roles = template.find_resources("AWS::IAM::Role")
         lambda_roles = {}
         for lid, r in roles.items():
-            stmts = (
-                r.get("Properties", {})
-                .get("AssumeRolePolicyDocument", {})
-                .get("Statement", [])
-            )
+            stmts = r.get("Properties", {}).get("AssumeRolePolicyDocument", {}).get("Statement", [])
             for stmt in stmts:
                 principal = stmt.get("Principal", {})
                 service = principal.get("Service", "")
@@ -359,8 +355,24 @@ class StackSynthesisTest(unittest.TestCase):
             f"{list(lambda_roles.keys())}",
         )
 
-    def test_compute_stack_lambdas_have_reserved_concurrency(self) -> None:
+    def test_compute_stack_dev_has_no_reserved_concurrency(self) -> None:
         f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+        functions = template.find_resources("AWS::Lambda::Function")
+        for logical_id, resource in functions.items():
+            props = resource.get("Properties", {})
+            self.assertNotIn(
+                "ReservedConcurrentExecutions",
+                props,
+                f"Dev Lambda {logical_id} must not set ReservedConcurrentExecutions "
+                f"(account concurrency is too low)",
+            )
+
+    def test_compute_stack_prod_has_reserved_concurrency(self) -> None:
+        from dataclasses import replace
+
+        prod_config = replace(DEV_CONFIG, environment="prod")
+        f = self._create_foundation(config=prod_config)
         template = Template.from_stack(f.compute)
         functions = template.find_resources("AWS::Lambda::Function")
         for logical_id, resource in functions.items():
@@ -368,12 +380,12 @@ class StackSynthesisTest(unittest.TestCase):
             self.assertIn(
                 "ReservedConcurrentExecutions",
                 props,
-                f"Lambda {logical_id} must have ReservedConcurrentExecutions set",
+                f"Prod Lambda {logical_id} must have ReservedConcurrentExecutions set",
             )
             self.assertGreater(
                 props["ReservedConcurrentExecutions"],
                 0,
-                f"Lambda {logical_id} must have positive reserved concurrency",
+                f"Prod Lambda {logical_id} must have positive reserved concurrency",
             )
 
     def test_compute_stack_grants_secrets_key_decrypt_to_lambda(self) -> None:
@@ -547,7 +559,6 @@ class StackSynthesisTest(unittest.TestCase):
         template.resource_count_is("AWS::CloudFront::Distribution", 2)
         template.resource_count_is("AWS::S3::Bucket", 2)
 
-
     # --- GSI Key Schema ---
 
     def test_storage_stack_consultation_session_index_has_correct_keys(self) -> None:
@@ -628,6 +639,7 @@ class StackSynthesisTest(unittest.TestCase):
 
     def test_orchestration_stack_adds_email_subscription_when_configured(self) -> None:
         from dataclasses import replace
+
         config_with_email = replace(DEV_CONFIG, alert_email="ops@deskai.com.br")
         f = self._create_foundation(config=config_with_email)
         template = Template.from_stack(f.orchestration)
@@ -648,6 +660,7 @@ class StackSynthesisTest(unittest.TestCase):
             0,
             "No SNS subscription should be created when alert_email is empty",
         )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -57,7 +57,8 @@ class ComputeStack(Stack):
             f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{config.claude_secret_name}-??????",
         ]
         ssm_websocket_arn = (
-            f"arn:aws:ssm:{self.region}:{self.account}:parameter/{config.resource_prefix}/websocket-url"
+            f"arn:aws:ssm:{self.region}:{self.account}"
+            f":parameter/{config.resource_prefix}/websocket-url"
         )
 
         # --- BFF role: full DynamoDB + S3, secrets, Cognito, SSM, KMS ---
@@ -112,9 +113,7 @@ class ComputeStack(Stack):
         self.websocket_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["execute-api:ManageConnections"],
-                resources=[
-                    f"arn:aws:execute-api:{self.region}:{self.account}:*/*/@connections/*"
-                ],
+                resources=[f"arn:aws:execute-api:{self.region}:{self.account}:*/*/@connections/*"],
             )
         )
         self.websocket_role.add_to_policy(
@@ -164,13 +163,21 @@ class ComputeStack(Stack):
 
         asset_path = Path(__file__).resolve().parent.parent / ".build" / "lambda"
 
+        # Reserved concurrency is only set in production where the account
+        # has enough quota.  Dev accounts often have just 10 total concurrent
+        # executions, so reserving any would breach the minimum-unreserved limit.
+        bff_concurrency = 50 if config.is_production else None
+        ws_concurrency = 50 if config.is_production else None
+        pipeline_concurrency = 10 if config.is_production else None
+        export_concurrency = 5 if config.is_production else None
+
         self.bff_handler = self._create_function(
             function_id="BffHandler",
             function_name=f"{config.resource_prefix}-bff-handler",
             handler="bff.handler",
             asset_path=asset_path,
             role=self.bff_role,
-            reserved_concurrent_executions=50,
+            reserved_concurrent_executions=bff_concurrency,
         )
         self.websocket_handler = self._create_function(
             function_id="WebsocketHandler",
@@ -178,7 +185,7 @@ class ComputeStack(Stack):
             handler="websocket.handler",
             asset_path=asset_path,
             role=self.websocket_role,
-            reserved_concurrent_executions=50,
+            reserved_concurrent_executions=ws_concurrency,
         )
         self.pipeline_handler = self._create_function(
             function_id="PipelineHandler",
@@ -186,7 +193,7 @@ class ComputeStack(Stack):
             handler="pipeline.handler",
             asset_path=asset_path,
             role=self.pipeline_role,
-            reserved_concurrent_executions=10,
+            reserved_concurrent_executions=pipeline_concurrency,
         )
         self.export_handler = self._create_function(
             function_id="ExportHandler",
@@ -194,7 +201,7 @@ class ComputeStack(Stack):
             handler="exporter.handler",
             asset_path=asset_path,
             role=self.export_role,
-            reserved_concurrent_executions=5,
+            reserved_concurrent_executions=export_concurrency,
         )
 
         for function in [
@@ -238,7 +245,7 @@ class ComputeStack(Stack):
         handler: str,
         asset_path: Path,
         role: iam.IRole,
-        reserved_concurrent_executions: int,
+        reserved_concurrent_executions: int | None,
     ) -> lambda_.Function:
         return lambda_.Function(
             self,

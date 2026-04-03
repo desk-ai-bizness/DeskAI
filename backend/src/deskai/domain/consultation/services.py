@@ -1,5 +1,7 @@
 """Consultation domain services — status transition logic."""
 
+from dataclasses import replace
+
 from deskai.domain.consultation.entities import Consultation, ConsultationStatus
 from deskai.domain.consultation.exceptions import InvalidStatusTransitionError
 from deskai.shared.time import utc_now_iso
@@ -33,22 +35,10 @@ def transition_consultation(
     new_status: ConsultationStatus,
     **kwargs: object,
 ) -> Consultation:
-    """Apply a status transition to a consultation, mutating it in place.
-
-    Raises InvalidStatusTransitionError if the transition is not allowed.
-    Extra keyword arguments are set as attributes on the consultation
-    (e.g. finalized_at, finalized_by, error_details).
-    """
+    """Apply a status transition, returning a new frozen Consultation instance."""
     if not validate_transition(consultation.status, new_status):
         raise InvalidStatusTransitionError(
             from_status=consultation.status.value,
             to_status=new_status.value,
         )
-
-    consultation.status = new_status
-    consultation.updated_at = utc_now_iso()
-
-    for key, value in kwargs.items():
-        setattr(consultation, key, value)
-
-    return consultation
+    return replace(consultation, status=new_status, updated_at=utc_now_iso(), **kwargs)

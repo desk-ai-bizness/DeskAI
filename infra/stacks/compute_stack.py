@@ -48,6 +48,7 @@ class ComputeStack(Stack):
             "DESKAI_CLAUDE_SECRET_NAME": claude_secret.secret_name,
             "DESKAI_COGNITO_USER_POOL_ID": user_pool_id,
             "DESKAI_COGNITO_CLIENT_ID": user_pool_client_id,
+            "DESKAI_WEBSOCKET_URL_PARAM": f"/{config.resource_prefix}/websocket-url",
             "DESKAI_COGNITO_CLIENT_SECRET_NAME": config.cognito_secret_name,
         }
 
@@ -108,6 +109,14 @@ class ComputeStack(Stack):
                     "cognito-idp:ConfirmForgotPassword",
                 ],
                 resources=[user_pool_arn],
+            )
+        )
+        self.lambda_execution_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["ssm:GetParameter"],
+                resources=[
+                    f"arn:aws:ssm:{self.region}:{self.account}:parameter/{config.resource_prefix}/websocket-url"
+                ],
             )
         )
         self.lambda_execution_role.add_to_policy(

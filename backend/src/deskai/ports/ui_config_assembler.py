@@ -1,4 +1,4 @@
-"""Port interface for UI config assembly."""
+"""Port interface for UI configuration assembly."""
 
 from abc import ABC, abstractmethod
 
@@ -6,7 +6,7 @@ from deskai.domain.auth.value_objects import PlanType
 
 
 class UiConfigAssembler(ABC):
-    """Contract for assembling the backend-driven UI configuration."""
+    """Contract for building the UI config payload."""
 
     @abstractmethod
     def assemble(self, plan_type: PlanType) -> dict:

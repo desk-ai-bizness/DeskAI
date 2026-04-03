@@ -12,6 +12,8 @@ from deskai.shared.errors import ConfigurationError
 
 
 class IsStrictEnvironmentTest(unittest.TestCase):
+    """Verify which DESKAI_ENV values enforce required env vars."""
+
     def test_prod_is_strict(self) -> None:
         self.assertTrue(_is_strict_environment("prod"))
 
@@ -29,6 +31,8 @@ class IsStrictEnvironmentTest(unittest.TestCase):
 
 
 class ProdRequiredVarsRegistryTest(unittest.TestCase):
+    """Validate that all critical env vars are in the required list."""
+
     EXPECTED_REQUIRED = {
         "DESKAI_DYNAMODB_TABLE",
         "DESKAI_ARTIFACTS_BUCKET",
@@ -45,6 +49,8 @@ class ProdRequiredVarsRegistryTest(unittest.TestCase):
 
 
 class LoadSettingsDevTest(unittest.TestCase):
+    """In dev mode, defaults are silently used."""
+
     def setUp(self) -> None:
         self._saved = {}
         for key in list(os.environ):
@@ -70,6 +76,8 @@ class LoadSettingsDevTest(unittest.TestCase):
 
 
 class LoadSettingsProdTest(unittest.TestCase):
+    """In prod mode, missing required vars raise ConfigurationError."""
+
     def setUp(self) -> None:
         self._saved = {}
         for key in list(os.environ):

@@ -11,7 +11,6 @@ from deskai.prompts.injection_defense import (
     validate_output_schema,
 )
 
-
 # -------------------------------------------------------------------------
 # detect_injection_patterns
 # -------------------------------------------------------------------------

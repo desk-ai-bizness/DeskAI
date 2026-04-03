@@ -1,11 +1,11 @@
 """API stack for HTTP and WebSocket ingress layers."""
 
 from aws_cdk import Duration, Stack
-from aws_cdk import aws_ssm as ssm
 from aws_cdk import aws_apigatewayv2 as apigwv2
 from aws_cdk import aws_cognito as cognito
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_logs as logs
+from aws_cdk import aws_ssm as ssm
 from aws_cdk.aws_apigatewayv2_authorizers import HttpUserPoolAuthorizer
 from aws_cdk.aws_apigatewayv2_integrations import HttpLambdaIntegration, WebSocketLambdaIntegration
 from aws_cdk.aws_lambda import IFunction

@@ -49,7 +49,8 @@ ESQUEMA DE SAIDA (JSON):
       "importante": 0
     }
   },
-  "aviso_revisao": "Estas observacoes sao sinalizacoes para revisao. O medico e o responsavel pela avaliacao final."
+  "aviso_revisao": "Estas observacoes sao sinalizacoes para revisao. \
+O medico e o responsavel pela avaliacao final."
 }
 
 VALIDACAO:

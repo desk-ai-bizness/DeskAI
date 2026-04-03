@@ -44,7 +44,8 @@ ESQUEMA DE SAIDA (JSON):
   "orientacoes_gerais": "string",
   "retorno": "string",
   "alertas_globais": ["string"],
-  "aviso_revisao": "Este rascunho de prescricao requer revisao e aprovacao do medico antes de qualquer uso."
+  "aviso_revisao": "Este rascunho de prescricao requer revisao e \
+aprovacao do medico antes de qualquer uso."
 }
 
 VALIDACAO:

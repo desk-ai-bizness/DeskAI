@@ -16,6 +16,7 @@ from deskai.prompts.prescription_prompt import (
     PRESCRIPTION_SYSTEM_PROMPT,
     PRESCRIPTION_USER_TEMPLATE,
 )
+from deskai.prompts.prompt_loader import render_prompt
 from deskai.prompts.summary_prompt import (
     SUMMARY_SYSTEM_PROMPT,
     SUMMARY_USER_TEMPLATE,
@@ -24,7 +25,6 @@ from deskai.prompts.transcript_prompt import (
     TRANSCRIPT_SYSTEM_PROMPT,
     TRANSCRIPT_USER_TEMPLATE,
 )
-from deskai.prompts.prompt_loader import render_prompt
 
 # Regex to find Python str.format-style template variables like {name}.
 _FORMAT_VAR_RE = re.compile(r"\{([a-z_][a-z0-9_]*)\}", re.IGNORECASE)

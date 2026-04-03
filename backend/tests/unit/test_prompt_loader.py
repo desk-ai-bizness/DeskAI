@@ -14,7 +14,6 @@ from deskai.prompts.prompt_loader import (
     validate_required_fields,
 )
 
-
 # -------------------------------------------------------------------------
 # render_prompt — safe variable injection
 # -------------------------------------------------------------------------

@@ -49,6 +49,7 @@ class ComputeStack(Stack):
             "DESKAI_COGNITO_USER_POOL_ID": user_pool_id,
             "DESKAI_COGNITO_CLIENT_ID": user_pool_client_id,
             "DESKAI_WEBSOCKET_URL_PARAM": f"/{config.resource_prefix}/websocket-url",
+            "DESKAI_COGNITO_CLIENT_SECRET_NAME": config.cognito_secret_name,
         }
 
         secrets_arns = [

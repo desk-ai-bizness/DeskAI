@@ -55,36 +55,24 @@ class ExtractAuthContextTest(unittest.TestCase):
         )
         mock_uc = MagicMock()
         mock_uc.execute.return_value = profile
-        ctx = extract_auth_context(
-            self._make_event(), mock_uc
-        )
+        ctx = extract_auth_context(self._make_event(), mock_uc)
         self.assertEqual(ctx.doctor_id, "d1")
         self.assertEqual(ctx.clinic_id, "c1")
         self.assertEqual(ctx.plan_type, PlanType.PLUS)
 
     def test_raises_when_sub_missing(self) -> None:
         mock_uc = MagicMock()
-        event = {
-            "requestContext": {
-                "authorizer": {
-                    "jwt": {"claims": {}}
-                }
-            }
-        }
+        event = {"requestContext": {"authorizer": {"jwt": {"claims": {}}}}}
         with self.assertRaises(AuthenticationError):
             extract_auth_context(event, mock_uc)
 
 
 class ErrorResponseTest(unittest.TestCase):
     def test_error_response_shape(self) -> None:
-        resp = error_response(
-            401, "unauthorized", "Bad creds"
-        )
+        resp = error_response(401, "unauthorized", "Bad creds")
         self.assertEqual(resp["statusCode"], 401)
         body = json.loads(resp["body"])
-        self.assertEqual(
-            body["error"]["code"], "unauthorized"
-        )
+        self.assertEqual(body["error"]["code"], "unauthorized")
 
     def test_json_response_shape(self) -> None:
         resp = json_response(200, {"key": "value"})
@@ -95,9 +83,7 @@ class ErrorResponseTest(unittest.TestCase):
 
 class ParseJsonBodyTest(unittest.TestCase):
     def test_parses_valid_json(self) -> None:
-        result = parse_json_body(
-            {"body": '{"email": "a@b.com"}'}
-        )
+        result = parse_json_body({"body": '{"email": "a@b.com"}'})
         self.assertEqual(result["email"], "a@b.com")
 
     def test_returns_empty_dict_for_missing_body(
@@ -108,9 +94,55 @@ class ParseJsonBodyTest(unittest.TestCase):
     def test_returns_empty_dict_for_invalid_json(
         self,
     ) -> None:
-        self.assertEqual(
-            parse_json_body({"body": "not json"}), {}
-        )
+        self.assertEqual(parse_json_body({"body": "not json"}), {})
+
+    # --- Adversarial inputs (API Gateway escaping) ---
+
+    def test_strips_invalid_backslash_escape_from_exclamation(
+        self,
+    ) -> None:
+        """API Gateway HTTP API v2 may inject \\! into the body."""
+        result = parse_json_body({"body": '{"password": "Test123\\!"}'})
+        self.assertEqual(result["password"], "Test123!")
+
+    def test_strips_multiple_invalid_backslash_escapes(
+        self,
+    ) -> None:
+        result = parse_json_body({"body": ('{"p": "a\\!b\\#c\\@d"}')})
+        self.assertEqual(result["p"], "a!b#c@d")
+
+    def test_preserves_valid_json_escapes(self) -> None:
+        result = parse_json_body({"body": '{"msg": "line1\\nline2\\ttab"}'})
+        self.assertEqual(result["msg"], "line1\nline2\ttab")
+
+    def test_preserves_backslash_before_quote(
+        self,
+    ) -> None:
+        result = parse_json_body({"body": '{"val": "say \\"hello\\""}'})
+        self.assertEqual(result["val"], 'say "hello"')
+
+    def test_preserves_unicode_escape(self) -> None:
+        result = parse_json_body({"body": '{"val": "caf\\u00e9"}'})
+        self.assertEqual(result["val"], "caf\u00e9")
+
+    def test_parses_password_with_all_special_chars(
+        self,
+    ) -> None:
+        """Realistic password with symbols that may be escaped."""
+        body = '{"email":"a@b.com","password":"P@ss\\!w0rd\\#123"}'
+        result = parse_json_body({"body": body})
+        self.assertEqual(result["email"], "a@b.com")
+        self.assertEqual(result["password"], "P@ss!w0rd#123")
+
+    def test_handles_base64_encoded_body_with_special_chars(
+        self,
+    ) -> None:
+        import base64
+
+        raw = '{"password": "Test123!"}'
+        encoded = base64.b64encode(raw.encode()).decode()
+        result = parse_json_body({"body": encoded, "isBase64Encoded": True})
+        self.assertEqual(result["password"], "Test123!")
 
 
 class HandleDomainErrorsTest(unittest.TestCase):
@@ -132,9 +164,7 @@ class HandleDomainErrorsTest(unittest.TestCase):
         resp = failing()
         self.assertEqual(resp["statusCode"], 403)
         body = json.loads(resp["body"])
-        self.assertEqual(
-            body["error"]["code"], "plan_limit_exceeded"
-        )
+        self.assertEqual(body["error"]["code"], "plan_limit_exceeded")
 
     def test_maps_trial_expired_to_403(self) -> None:
         @handle_domain_errors
@@ -143,18 +173,14 @@ class HandleDomainErrorsTest(unittest.TestCase):
 
         resp = failing()
         body = json.loads(resp["body"])
-        self.assertEqual(
-            body["error"]["code"], "trial_expired"
-        )
+        self.assertEqual(body["error"]["code"], "trial_expired")
 
     def test_maps_profile_not_found_to_403(
         self,
     ) -> None:
         @handle_domain_errors
         def failing():
-            raise DoctorProfileNotFoundError(
-                "no profile"
-            )
+            raise DoctorProfileNotFoundError("no profile")
 
         resp = failing()
         self.assertEqual(resp["statusCode"], 403)

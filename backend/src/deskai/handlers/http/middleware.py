@@ -64,19 +64,12 @@ def extract_auth_context(
     get_current_user: GetCurrentUserUseCase,
 ) -> AuthContext:
     """Build an AuthContext from API Gateway JWT authorizer claims."""
-    claims = (
-        event.get("requestContext", {})
-        .get("authorizer", {})
-        .get("jwt", {})
-        .get("claims", {})
-    )
+    claims = event.get("requestContext", {}).get("authorizer", {}).get("jwt", {}).get("claims", {})
     identity_provider_id = claims.get("sub")
     email = claims.get("email", "")
 
     if not identity_provider_id:
-        raise AuthenticationError(
-            "Missing user identity in request."
-        )
+        raise AuthenticationError("Missing user identity in request.")
 
     profile = get_current_user.execute(identity_provider_id)
     return AuthContext(
@@ -109,9 +102,7 @@ def error_response(
     }
 
 
-def json_response(
-    status_code: int, body: dict[str, Any]
-) -> dict[str, Any]:
+def json_response(status_code: int, body: dict[str, Any]) -> dict[str, Any]:
     """Build a standard JSON success response."""
     return {
         "statusCode": status_code,
@@ -126,13 +117,27 @@ def no_content_response() -> dict[str, Any]:
 
 
 def parse_json_body(event: dict[str, Any]) -> dict[str, Any]:
-    """Parse the JSON body from an API Gateway v2 event."""
+    """Parse the JSON body from an API Gateway v2 event.
+
+    API Gateway HTTP API v2 may inject invalid backslash escapes (e.g. ``\\!``)
+    into the body string.  We strip those before parsing so that ``json.loads``
+    does not silently fail.
+    """
+    import base64
+    import re
+
     raw = event.get("body", "")
     if not raw:
         return {}
+    if event.get("isBase64Encoded"):
+        raw = base64.b64decode(raw).decode("utf-8")
+    # Remove invalid JSON backslash escapes injected by API Gateway.
+    # Valid JSON escapes: \" \\ \/ \b \f \n \r \t \uXXXX
+    raw = re.sub(r'\\(?!["\\/bfnrtu])', "", raw)
     try:
         return json.loads(raw)
     except (json.JSONDecodeError, TypeError):
+        logger.warning("json_parse_error", extra={"body_preview": raw[:200]})
         return {}
 
 
@@ -147,9 +152,7 @@ def handle_domain_errors(
             return fn(*args, **kwargs)
         except tuple(_EXCEPTION_MAP) as exc:
             status_code, code = next(
-                (sc, c)
-                for cls, (sc, c) in _EXCEPTION_MAP.items()
-                if isinstance(exc, cls)
+                (sc, c) for cls, (sc, c) in _EXCEPTION_MAP.items() if isinstance(exc, cls)
             )
             logger.warning(
                 "domain_error",

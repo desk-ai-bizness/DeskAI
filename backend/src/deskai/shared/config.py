@@ -1,7 +1,24 @@
-"""Environment-driven application settings."""
+"""Environment-driven application settings with production safety."""
 
 from dataclasses import dataclass
 from os import getenv
+
+from deskai.shared.errors import ConfigurationError
+
+_STRICT_ENVIRONMENTS = frozenset({"prod", "staging"})
+
+_PROD_REQUIRED_VARS = frozenset(
+    {
+        "DESKAI_DYNAMODB_TABLE",
+        "DESKAI_ARTIFACTS_BUCKET",
+        "DESKAI_ELEVENLABS_SECRET_NAME",
+        "DESKAI_CLAUDE_SECRET_NAME",
+        "DESKAI_COGNITO_CLIENT_SECRET_NAME",
+        "DESKAI_COGNITO_USER_POOL_ID",
+        "DESKAI_COGNITO_CLIENT_ID",
+        "DESKAI_WEBSOCKET_URL",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -27,11 +44,30 @@ DEFAULT_ARTIFACTS_BUCKET = "deskai-dev-artifacts"
 DEFAULT_UI_CONFIG_KEY = "CONFIG#ui"
 
 
+def _is_strict_environment(env: str) -> bool:
+    """Return True when the environment must have all required vars set."""
+    return env in _STRICT_ENVIRONMENTS
+
+
+def _require_env_vars(environment: str) -> None:
+    """Raise ConfigurationError if any required var is missing or empty."""
+    if not _is_strict_environment(environment):
+        return
+    missing = sorted(var for var in _PROD_REQUIRED_VARS if not getenv(var))
+    if missing:
+        raise ConfigurationError(
+            f"Missing required environment variables for '{environment}': "
+            + ", ".join(missing)
+        )
+
+
 def load_settings() -> Settings:
     """Load backend settings from process environment."""
+    environment = getenv("DESKAI_ENV", "dev")
+    _require_env_vars(environment)
 
     return Settings(
-        environment=getenv("DESKAI_ENV", "dev"),
+        environment=environment,
         contract_version=getenv("DESKAI_CONTRACT_VERSION", "v1"),
         dynamodb_table=getenv("DESKAI_DYNAMODB_TABLE", DEFAULT_DYNAMODB_TABLE),
         artifacts_bucket=getenv("DESKAI_ARTIFACTS_BUCKET", DEFAULT_ARTIFACTS_BUCKET),

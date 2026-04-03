@@ -10,7 +10,7 @@ from deskai.adapters.persistence.dynamodb_audit_repository import (
 from deskai.domain.audit.entities import AuditAction, AuditEvent
 
 
-@patch("deskai.adapters.persistence.dynamodb_audit_repository.boto3")
+@patch("deskai.adapters.persistence.base_repository.boto3")
 class DynamoDBAuditRepositoryTest(unittest.TestCase):
     def _make_repo(
         self, mock_boto3: MagicMock

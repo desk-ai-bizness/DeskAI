@@ -1,5 +1,0 @@
-config
-constructs
-lambda_handlers
-stacks
-tests

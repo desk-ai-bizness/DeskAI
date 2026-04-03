@@ -1,72 +1,46 @@
-"""Unit tests for the GetUiConfig use case."""
+"""Tests for GetUiConfigUseCase -- verifies layer violation is fixed."""
 
-import unittest
+from unittest.mock import MagicMock
 
-from deskai.application.config.get_ui_config import (
-    GetUiConfigUseCase,
-)
+from deskai.application.config.get_ui_config import GetUiConfigUseCase
 from deskai.domain.auth.value_objects import AuthContext, PlanType
+from deskai.ports.ui_config_assembler import UiConfigAssembler
 
 
-class GetUiConfigUseCaseTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.use_case = GetUiConfigUseCase()
-        self.auth_context = AuthContext(
-            doctor_id="doc-001",
-            email="dr.test@clinic.com",
-            clinic_id="clinic-001",
+class TestGetUiConfigUseCase:
+    def test_delegates_to_assembler_port(self):
+        mock_assembler = MagicMock(spec=UiConfigAssembler)
+        mock_assembler.assemble.return_value = {"version": "1.0"}
+
+        use_case = GetUiConfigUseCase(ui_config_assembler=mock_assembler)
+        auth_context = AuthContext(
+            doctor_id="doc-123",
+            email="doc@clinic.com",
+            clinic_id="clinic-1",
             plan_type=PlanType.PLUS,
         )
 
-    def test_execute_returns_dict(self) -> None:
-        result = self.use_case.execute(self.auth_context)
-        self.assertIsInstance(result, dict)
+        result = use_case.execute(auth_context)
 
-    def test_execute_returns_config_with_version(self) -> None:
-        result = self.use_case.execute(self.auth_context)
-        self.assertEqual(result["version"], "1.0")
+        mock_assembler.assemble.assert_called_once_with(PlanType.PLUS)
+        assert result == {"version": "1.0"}
 
-    def test_execute_returns_config_with_locale(self) -> None:
-        result = self.use_case.execute(self.auth_context)
-        self.assertEqual(result["locale"], "pt-BR")
+    def test_passes_plan_type_from_auth_context(self):
+        mock_assembler = MagicMock(spec=UiConfigAssembler)
+        mock_assembler.assemble.return_value = {}
 
-    def test_execute_uses_plan_type_from_auth_context(self) -> None:
-        result = self.use_case.execute(self.auth_context)
-        self.assertIn("feature_flags", result)
+        use_case = GetUiConfigUseCase(ui_config_assembler=mock_assembler)
 
-    def test_execute_returns_all_required_keys(self) -> None:
-        result = self.use_case.execute(self.auth_context)
-        expected_keys = {
-            "version",
-            "locale",
-            "labels",
-            "review_screen",
-            "insight_categories",
-            "status_labels",
-            "feature_flags",
-        }
-        self.assertEqual(set(result.keys()), expected_keys)
+        for plan in PlanType:
+            auth = AuthContext(
+                doctor_id="d", email="e", clinic_id="c", plan_type=plan
+            )
+            use_case.execute(auth)
+            mock_assembler.assemble.assert_called_with(plan)
 
-    def test_execute_with_free_trial_plan(self) -> None:
-        ctx = AuthContext(
-            doctor_id="doc-002",
-            email="dr.trial@clinic.com",
-            clinic_id="clinic-002",
-            plan_type=PlanType.FREE_TRIAL,
-        )
-        result = self.use_case.execute(ctx)
-        self.assertIn("feature_flags", result)
+    def test_does_not_import_from_bff(self):
+        import inspect
+        import deskai.application.config.get_ui_config as mod
 
-    def test_execute_with_pro_plan(self) -> None:
-        ctx = AuthContext(
-            doctor_id="doc-003",
-            email="dr.pro@clinic.com",
-            clinic_id="clinic-003",
-            plan_type=PlanType.PRO,
-        )
-        result = self.use_case.execute(ctx)
-        self.assertIn("feature_flags", result)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        source = inspect.getsource(mod)
+        assert "deskai.bff" not in source

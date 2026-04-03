@@ -2,16 +2,29 @@ name: App CI
 
 on:
   pull_request:
-    paths:
-      - 'app/**'
-      - '.github/workflows/app-ci.yml'
   push:
     branches: [main]
     paths:
       - 'app/**'
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            app:
+              - 'app/**'
+              - '.github/workflows/app-ci.yml'
+
   app:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,3 +46,16 @@ jobs:
       - name: Build
         working-directory: app
         run: npm run build
+
+  app-gate:
+    if: always()
+    needs: [app]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check app result
+        run: |
+          if [[ "${{ needs.app.result }}" == "failure" ]]; then
+            echo "App CI failed"
+            exit 1
+          fi
+          echo "App CI passed or was skipped"

@@ -1,14 +1,20 @@
 """Transcription provider adapter contract."""
 
 from abc import ABC, abstractmethod
-from typing import Any
+
+from deskai.domain.transcription.value_objects import (
+    FinalTranscript,
+    TranscriptionSessionInfo,
+)
 
 
 class TranscriptionProvider(ABC):
     """Provider contract for real-time transcription."""
 
     @abstractmethod
-    def start_realtime_session(self, session_id: str, language: str) -> dict[str, Any]:
+    def start_realtime_session(
+        self, session_id: str, language: str
+    ) -> TranscriptionSessionInfo:
         """Start a provider-side session."""
 
     @abstractmethod
@@ -16,11 +22,13 @@ class TranscriptionProvider(ABC):
         """Send one audio chunk to the provider."""
 
     @abstractmethod
-    def finish_realtime_session(self, session_id: str) -> dict[str, Any]:
+    def finish_realtime_session(
+        self, session_id: str
+    ) -> TranscriptionSessionInfo:
         """Close session and request transcript finalization."""
 
     @abstractmethod
-    def fetch_final_transcript(self, session_id: str) -> dict[str, Any]:
+    def fetch_final_transcript(self, session_id: str) -> FinalTranscript:
         """Retrieve the final transcript for a closed session."""
 
     @abstractmethod

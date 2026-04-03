@@ -53,4 +53,6 @@ class Consultation:
         if not self.specialty or not self.specialty.strip():
             raise DomainValidationError("specialty must be a non-empty string")
         if not isinstance(self.status, ConsultationStatus):
-            raise DomainValidationError(f"status must be a ConsultationStatus, got {type(self.status).__name__}")
+            raise DomainValidationError(
+                f"status must be a ConsultationStatus, got {type(self.status).__name__}"
+            )

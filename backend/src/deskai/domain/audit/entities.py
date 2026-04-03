@@ -39,7 +39,9 @@ class AuditEvent:
         if not self.consultation_id or not self.consultation_id.strip():
             raise DomainValidationError("consultation_id must be a non-empty string")
         if not isinstance(self.event_type, AuditAction):
-            raise DomainValidationError(f"event_type must be an AuditAction, got {type(self.event_type).__name__}")
+            raise DomainValidationError(
+                f"event_type must be an AuditAction, got {type(self.event_type).__name__}"
+            )
         if not self.actor_id or not self.actor_id.strip():
             raise DomainValidationError("actor_id must be a non-empty string")
         if not self.timestamp or not self.timestamp.strip():

@@ -1,12 +1,11 @@
 """Tests for CognitoAuthProvider.validate_ws_token."""
 
-import json
 import time
 from unittest.mock import MagicMock, patch
 
 import pytest
-from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from jose import jwt
 
 from deskai.domain.auth.exceptions import AuthenticationError

@@ -54,7 +54,9 @@ class Session:
         if not self.clinic_id or not self.clinic_id.strip():
             raise DomainValidationError("clinic_id must be a non-empty string")
         if not isinstance(self.state, SessionState):
-            raise DomainValidationError(f"state must be a SessionState, got {type(self.state).__name__}")
+            raise DomainValidationError(
+                f"state must be a SessionState, got {type(self.state).__name__}"
+            )
         if self.duration_seconds < 0:
             raise DomainValidationError("duration_seconds must be non-negative")
         if self.audio_chunks_received < 0:

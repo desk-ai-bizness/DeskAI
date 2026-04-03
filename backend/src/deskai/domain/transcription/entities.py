@@ -35,4 +35,7 @@ class NormalizedTranscript:
         if not self.language or not self.language.strip():
             raise DomainValidationError("language must be a non-empty string")
         if not isinstance(self.completeness_status, CompletenessStatus):
-            raise DomainValidationError(f"completeness_status must be a CompletenessStatus, got {type(self.completeness_status).__name__}")
+            raise DomainValidationError(
+                "completeness_status must be a CompletenessStatus, got"
+                f" {type(self.completeness_status).__name__}"
+            )

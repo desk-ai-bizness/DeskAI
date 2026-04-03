@@ -14,7 +14,7 @@ class DoctorProfile:
     """Doctor identity and clinic context resolved from DynamoDB."""
 
     doctor_id: str
-    cognito_sub: str
+    identity_provider_id: str
     email: str
     name: str
     clinic_id: str
@@ -36,6 +36,8 @@ class DoctorProfile:
         if not self.clinic_name or not self.clinic_name.strip():
             raise DomainValidationError("clinic_name must be a non-empty string")
         if not isinstance(self.plan_type, PlanType):
-            raise DomainValidationError(f"plan_type must be a PlanType, got {type(self.plan_type).__name__}")
+            raise DomainValidationError(
+                f"plan_type must be a PlanType, got {type(self.plan_type).__name__}"
+            )
         if not self.created_at or not self.created_at.strip():
             raise DomainValidationError("created_at must be a non-empty string")

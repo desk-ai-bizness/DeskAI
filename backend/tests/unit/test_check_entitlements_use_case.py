@@ -28,7 +28,7 @@ class CheckEntitlementsUseCaseTest(unittest.TestCase):
     ) -> DoctorProfile:
         return DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="doc@test.com",
             name="Dr. Test",
             clinic_id="c1",

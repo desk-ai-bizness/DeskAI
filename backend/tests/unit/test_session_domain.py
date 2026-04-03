@@ -5,7 +5,7 @@ from dataclasses import FrozenInstanceError
 from datetime import UTC, datetime
 
 from deskai.domain.consultation.entities import ConsultationStatus
-from deskai.domain.session.entities import Session, SessionState, VALID_SESSION_TRANSITIONS
+from deskai.domain.session.entities import VALID_SESSION_TRANSITIONS, Session, SessionState
 from deskai.domain.session.exceptions import (
     AudioChunkRejectedError,
     GracePeriodExpiredError,
@@ -90,37 +90,57 @@ class TestValidSessionTransitions(unittest.TestCase):
 
 class TestAudioChunk(unittest.TestCase):
     def test_creation(self):
-        chunk = AudioChunk(chunk_index=0, audio_data=b"\x00\x01\x02", timestamp="2026-04-01T10:00:01+00:00", session_id="s-1")
+        chunk = AudioChunk(
+            chunk_index=0, audio_data=b"\x00\x01\x02",
+            timestamp="2026-04-01T10:00:01+00:00", session_id="s-1",
+        )
         assert chunk.chunk_index == 0
 
     def test_frozen_immutability(self):
-        chunk = AudioChunk(chunk_index=0, audio_data=b"\x00", timestamp="2026-04-01T10:00:01+00:00", session_id="s-1")
+        chunk = AudioChunk(
+            chunk_index=0, audio_data=b"\x00",
+            timestamp="2026-04-01T10:00:01+00:00", session_id="s-1",
+        )
         with self.assertRaises(FrozenInstanceError):
             chunk.chunk_index = 5
 
 
 class TestConnectionInfo(unittest.TestCase):
     def test_creation(self):
-        conn = ConnectionInfo(connection_id="conn-1", session_id="s-1", doctor_id="d-1", clinic_id="cl-1", connected_at="2026-04-01T10:00:00+00:00")
+        conn = ConnectionInfo(
+            connection_id="conn-1", session_id="s-1",
+            doctor_id="d-1", clinic_id="cl-1",
+            connected_at="2026-04-01T10:00:00+00:00",
+        )
         assert conn.connection_id == "conn-1"
 
     def test_frozen_immutability(self):
-        conn = ConnectionInfo(connection_id="conn-1", session_id="s-1", doctor_id="d-1", clinic_id="cl-1", connected_at="2026-04-01T10:00:00+00:00")
+        conn = ConnectionInfo(
+            connection_id="conn-1", session_id="s-1",
+            doctor_id="d-1", clinic_id="cl-1",
+            connected_at="2026-04-01T10:00:00+00:00",
+        )
         with self.assertRaises(FrozenInstanceError):
             conn.connection_id = "conn-2"
 
 
 class TestExceptions(unittest.TestCase):
     def test_all_exceptions_inherit_from_deskai_error(self):
-        for exc_class in [SessionNotFoundError, SessionAlreadyActiveError, SessionNotActiveError,
-                          InvalidSessionStateError, AudioChunkRejectedError, GracePeriodExpiredError,
-                          SessionOwnershipError, InvalidSessionTransitionError]:
+        for exc_class in [
+            SessionNotFoundError, SessionAlreadyActiveError,
+            SessionNotActiveError, InvalidSessionStateError,
+            AudioChunkRejectedError, GracePeriodExpiredError,
+            SessionOwnershipError, InvalidSessionTransitionError,
+        ]:
             assert issubclass(exc_class, DeskAIError)
 
     def test_exceptions_are_instantiable_with_message(self):
-        for exc_class in [SessionNotFoundError, SessionAlreadyActiveError, SessionNotActiveError,
-                          InvalidSessionStateError, AudioChunkRejectedError, GracePeriodExpiredError,
-                          SessionOwnershipError]:
+        for exc_class in [
+            SessionNotFoundError, SessionAlreadyActiveError,
+            SessionNotActiveError, InvalidSessionStateError,
+            AudioChunkRejectedError, GracePeriodExpiredError,
+            SessionOwnershipError,
+        ]:
             exc = exc_class("test message")
             assert str(exc) == "test message"
 
@@ -134,32 +154,60 @@ class TestExceptions(unittest.TestCase):
 
 class TestValidateSessionStart(unittest.TestCase):
     def test_success_when_started_and_correct_doctor(self):
-        SessionService.validate_session_start(consultation_status=ConsultationStatus.STARTED, consultation_doctor_id="d-1", requesting_doctor_id="d-1")
+        SessionService.validate_session_start(
+            consultation_status=ConsultationStatus.STARTED,
+            consultation_doctor_id="d-1",
+            requesting_doctor_id="d-1",
+        )
 
     def test_raises_when_consultation_not_started_recording(self):
         with self.assertRaises(InvalidSessionStateError):
-            SessionService.validate_session_start(consultation_status=ConsultationStatus.RECORDING, consultation_doctor_id="d-1", requesting_doctor_id="d-1")
+            SessionService.validate_session_start(
+                consultation_status=ConsultationStatus.RECORDING,
+                consultation_doctor_id="d-1",
+                requesting_doctor_id="d-1",
+            )
 
     def test_raises_when_consultation_finalized(self):
         with self.assertRaises(InvalidSessionStateError):
-            SessionService.validate_session_start(consultation_status=ConsultationStatus.FINALIZED, consultation_doctor_id="d-1", requesting_doctor_id="d-1")
+            SessionService.validate_session_start(
+                consultation_status=ConsultationStatus.FINALIZED,
+                consultation_doctor_id="d-1",
+                requesting_doctor_id="d-1",
+            )
 
     def test_raises_when_wrong_doctor(self):
         with self.assertRaises(SessionOwnershipError):
-            SessionService.validate_session_start(consultation_status=ConsultationStatus.STARTED, consultation_doctor_id="d-1", requesting_doctor_id="d-999")
+            SessionService.validate_session_start(
+                consultation_status=ConsultationStatus.STARTED,
+                consultation_doctor_id="d-1",
+                requesting_doctor_id="d-999",
+            )
 
 
 class TestValidateAudioChunk(unittest.TestCase):
     def test_success_when_recording(self):
-        SessionService.validate_audio_chunk(session_state=SessionState.RECORDING, session_doctor_id="d-1", requesting_doctor_id="d-1")
+        SessionService.validate_audio_chunk(
+            session_state=SessionState.RECORDING,
+            session_doctor_id="d-1",
+            requesting_doctor_id="d-1",
+        )
 
     def test_raises_when_ended(self):
         with self.assertRaises(AudioChunkRejectedError):
-            SessionService.validate_audio_chunk(session_state=SessionState.ENDED, session_doctor_id="d-1", requesting_doctor_id="d-1")
+            SessionService.validate_audio_chunk(
+                session_state=SessionState.ENDED,
+                session_doctor_id="d-1",
+                requesting_doctor_id="d-1",
+            )
 
     def test_raises_when_wrong_doctor(self):
         with self.assertRaises(SessionOwnershipError):
-            SessionService.validate_audio_chunk(session_state=SessionState.RECORDING, session_doctor_id="d-1", requesting_doctor_id="d-999")
+            SessionService.validate_audio_chunk(
+                session_state=SessionState.RECORDING,
+                session_doctor_id="d-1",
+                requesting_doctor_id="d-999",
+            )
 
 
 class TestValidateSessionEnd(unittest.TestCase):
@@ -180,17 +228,32 @@ class TestComputeGracePeriodExpiry(unittest.TestCase):
 
 class TestIsGracePeriodExpired(unittest.TestCase):
     def test_expired_when_past(self):
-        assert SessionService.is_grace_period_expired("2026-04-01T10:05:00+00:00", "2026-04-01T10:06:00+00:00") is True
+        assert SessionService.is_grace_period_expired(
+            "2026-04-01T10:05:00+00:00",
+            "2026-04-01T10:06:00+00:00",
+        ) is True
 
     def test_not_expired_when_before(self):
-        assert SessionService.is_grace_period_expired("2026-04-01T10:05:00+00:00", "2026-04-01T10:03:00+00:00") is False
+        assert SessionService.is_grace_period_expired(
+            "2026-04-01T10:05:00+00:00",
+            "2026-04-01T10:03:00+00:00",
+        ) is False
 
 
 class TestCanReconnect(unittest.TestCase):
     def test_true_when_disconnected_and_grace_not_expired(self):
-        s = Session(session_id="s-1", consultation_id="c-1", doctor_id="d-1", clinic_id="cl-1", state=SessionState.DISCONNECTED, grace_period_expires_at="2099-12-31T23:59:59+00:00")
+        s = Session(
+            session_id="s-1", consultation_id="c-1",
+            doctor_id="d-1", clinic_id="cl-1",
+            state=SessionState.DISCONNECTED,
+            grace_period_expires_at="2099-12-31T23:59:59+00:00",
+        )
         assert SessionService.can_reconnect(s) is True
 
     def test_false_when_ended(self):
-        s = Session(session_id="s-1", consultation_id="c-1", doctor_id="d-1", clinic_id="cl-1", state=SessionState.ENDED)
+        s = Session(
+            session_id="s-1", consultation_id="c-1",
+            doctor_id="d-1", clinic_id="cl-1",
+            state=SessionState.ENDED,
+        )
         assert SessionService.can_reconnect(s) is False

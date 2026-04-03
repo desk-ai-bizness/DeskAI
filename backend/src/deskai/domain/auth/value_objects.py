@@ -34,7 +34,9 @@ class AuthContext:
         if not self.clinic_id or not self.clinic_id.strip():
             raise DomainValidationError("clinic_id must be a non-empty string")
         if not isinstance(self.plan_type, PlanType):
-            raise DomainValidationError(f"plan_type must be a PlanType, got {type(self.plan_type).__name__}")
+            raise DomainValidationError(
+                f"plan_type must be a PlanType, got {type(self.plan_type).__name__}"
+            )
 
 
 @dataclass(frozen=True)
@@ -50,8 +52,10 @@ class Entitlements:
     trial_days_remaining: int | None
 
     def __post_init__(self) -> None:
-        if self.consultations_remaining < 0:
-            raise DomainValidationError("consultations_remaining must be non-negative")
+        if self.consultations_remaining < -1:
+            raise DomainValidationError(
+                "consultations_remaining must be non-negative or -1 (unlimited)"
+            )
         if self.consultations_used_this_month < 0:
             raise DomainValidationError("consultations_used_this_month must be non-negative")
         if self.max_duration_minutes < 0:
@@ -71,7 +75,7 @@ class Tokens:
     def __post_init__(self) -> None:
         if not self.access_token or not self.access_token.strip():
             raise DomainValidationError("access_token must be a non-empty string")
-        if not self.refresh_token or not self.refresh_token.strip():
-            raise DomainValidationError("refresh_token must be a non-empty string")
+        if self.refresh_token is None:
+            raise DomainValidationError("refresh_token must be a string, got None")
         if self.expires_in <= 0:
-            raise DomainValidationError("expires_in must be a positive integer")
+            raise DomainValidationError("expires_in must be positive")

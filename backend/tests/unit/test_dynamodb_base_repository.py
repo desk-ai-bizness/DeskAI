@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 from botocore.exceptions import ClientError, EndpointConnectionError, ReadTimeoutError
 
 from deskai.adapters.persistence.base_repository import (
-    DynamoDBBaseRepository,
     _BASE_BACKOFF_SECONDS,
     _MAX_RETRIES,
+    DynamoDBBaseRepository,
 )
 from deskai.shared.errors import (
     ConflictError,

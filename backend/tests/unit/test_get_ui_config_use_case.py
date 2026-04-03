@@ -40,6 +40,7 @@ class TestGetUiConfigUseCase:
 
     def test_does_not_import_from_bff(self):
         import inspect
+
         import deskai.application.config.get_ui_config as mod
 
         source = inspect.getsource(mod)

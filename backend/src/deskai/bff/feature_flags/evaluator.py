@@ -22,8 +22,6 @@ def evaluate_flags(
         "audio_retention_days": limits["retention_days"],
         "export_pdf_enabled": feature_flags["export_pdf_enabled"],
         "insights_enabled": feature_flags["insights_enabled"],
-        "audio_playback_enabled": feature_flags[
-            "audio_playback_enabled"
-        ],
+        "audio_playback_enabled": feature_flags["audio_playback_enabled"],
         "trial_duration_days": TRIAL_DURATION_DAYS,
     }

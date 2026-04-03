@@ -4,11 +4,8 @@ from abc import ABC, abstractmethod
 
 
 class ExportGenerator(ABC):
-    """Contract for generating exportable consultation documents."""
+    """Contract for generating consultation exports."""
 
     @abstractmethod
-    def generate_pdf(
-        self,
-        consultation_data: dict,
-    ) -> bytes:
+    def generate_pdf(self, consultation_data: dict) -> bytes:
         """Generate a PDF export from finalized consultation data."""

@@ -4,12 +4,8 @@ from abc import ABC, abstractmethod
 
 
 class EventPublisher(ABC):
-    """Contract for publishing domain events to an external bus."""
+    """Contract for publishing domain events."""
 
     @abstractmethod
-    def publish(
-        self,
-        event_type: str,
-        payload: dict,
-    ) -> None:
+    def publish(self, event_type: str, payload: dict) -> None:
         """Publish a domain event with the given type and payload."""

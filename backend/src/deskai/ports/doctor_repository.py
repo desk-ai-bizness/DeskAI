@@ -15,3 +15,7 @@ class DoctorRepository(ABC):
     @abstractmethod
     def count_consultations_this_month(self, doctor_id: str) -> int:
         """Count consultations created by this doctor in the current calendar month."""
+
+    @abstractmethod
+    def find_created_at(self, doctor_id: str) -> str | None:
+        """Return the ISO 8601 account creation timestamp for the doctor, or None."""

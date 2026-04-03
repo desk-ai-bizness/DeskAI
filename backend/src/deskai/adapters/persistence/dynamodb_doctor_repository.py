@@ -2,8 +2,7 @@
 
 from datetime import UTC, datetime
 
-import boto3
-
+from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
 from deskai.domain.auth.entities import DoctorProfile
 from deskai.domain.auth.value_objects import PlanType
 from deskai.ports.doctor_repository import DoctorRepository
@@ -12,18 +11,13 @@ from deskai.shared.logging import get_logger
 logger = get_logger()
 
 
-class DynamoDBDoctorRepository(DoctorRepository):
+class DynamoDBDoctorRepository(DynamoDBBaseRepository, DoctorRepository):
     """Resolve doctor profiles and consultation counts from DynamoDB."""
 
-    def __init__(self, table_name: str) -> None:
-        self._table_name = table_name
-        dynamodb = boto3.resource("dynamodb")
-        self._table = dynamodb.Table(table_name)
-
-    def find_by_cognito_sub(
-        self, cognito_sub: str
+    def find_by_identity_provider_id(
+        self, identity_provider_id: str
     ) -> DoctorProfile | None:
-        response = self._table.get_item(
+        response = self._safe_get_item(
             Key={
                 "PK": f"DOCTOR#{cognito_sub}",
                 "SK": "PROFILE",
@@ -50,7 +44,7 @@ class DynamoDBDoctorRepository(DoctorRepository):
         now = datetime.now(tz=UTC)
         month_prefix = now.strftime("%Y-%m")
 
-        response = self._table.query(
+        response = self._safe_query(
             IndexName="gsi_doctor_date",
             Select="COUNT",
             KeyConditionExpression=(
@@ -63,3 +57,18 @@ class DynamoDBDoctorRepository(DoctorRepository):
             },
         )
         return response.get("Count", 0)
+
+    def find_created_at(self, doctor_id: str) -> str | None:
+        response = self._safe_query(
+            KeyConditionExpression="PK = :pk AND SK = :sk",
+            ExpressionAttributeValues={
+                ":pk": f"DOCTOR#{doctor_id}",
+                ":sk": "PROFILE",
+            },
+            ProjectionExpression="created_at",
+            Limit=1,
+        )
+        items = response.get("Items", [])
+        if not items:
+            return None
+        return items[0].get("created_at")

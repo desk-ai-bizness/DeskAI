@@ -86,5 +86,52 @@ class BuildContainerTest(unittest.TestCase):
         )
 
 
+class BuildContainerResilienceTest(unittest.TestCase):
+    """Container must initialize even when secrets are inaccessible."""
+
+    @patch.dict(os.environ, _REQUIRED_ENV, clear=False)
+    def test_build_container_succeeds_when_secrets_unavailable(self) -> None:
+        """Simulates KMS AccessDeniedException on secret fetch.
+
+        Auth, patients, consultations, and ui-config endpoints should
+        still work even if the transcription secret cannot be loaded.
+        """
+        from botocore.exceptions import ClientError
+
+        kms_error = ClientError(
+            {"Error": {"Code": "AccessDeniedException", "Message": "Access to KMS is not allowed"}},
+            "GetSecretValue",
+        )
+        with (
+            patch("deskai.adapters.auth.cognito_provider.boto3") as mock_boto3,
+            patch("deskai.adapters.persistence.base_repository.boto3") as mock_dynamo,
+            patch(
+                "deskai.adapters.transcription.elevenlabs_config.boto3"
+            ) as mock_secrets,
+            patch("deskai.adapters.storage.s3_client.boto3") as mock_s3,
+        ):
+            mock_boto3.client.return_value = MagicMock()
+            mock_dynamo.resource.return_value.Table.return_value = MagicMock()
+            mock_secrets.client.return_value.get_secret_value.side_effect = kms_error
+            mock_s3.client.return_value = MagicMock()
+
+            container = build_container()
+
+        self.assertIsInstance(container, Container)
+        self.assertIsInstance(container.authenticate, AuthenticateUseCase)
+
+    @patch.dict(os.environ, _REQUIRED_ENV, clear=False)
+    def test_transcription_provider_is_lazy(self) -> None:
+        """TranscriptionProvider should be a lazy wrapper, not eagerly loaded."""
+        from deskai.adapters.transcription.lazy_provider import (
+            LazyTranscriptionProvider,
+        )
+
+        container = _build_with_mocked_boto()
+        self.assertIsInstance(
+            container.transcription_provider, LazyTranscriptionProvider
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

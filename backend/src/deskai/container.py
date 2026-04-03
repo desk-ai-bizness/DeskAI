@@ -128,11 +128,8 @@ def build_container() -> Container:
     from deskai.adapters.storage.s3_transcript_repository import (
         S3TranscriptRepository,
     )
-    from deskai.adapters.transcription.elevenlabs_config import (
-        load_elevenlabs_config,
-    )
-    from deskai.adapters.transcription.elevenlabs_provider import (
-        ElevenLabsScribeProvider,
+    from deskai.adapters.transcription.lazy_provider import (
+        LazyTranscriptionProvider,
     )
 
     settings = load_settings()
@@ -166,8 +163,18 @@ def build_container() -> Container:
         table_name=settings.dynamodb_table,
     )
 
-    elevenlabs_config = load_elevenlabs_config(settings.elevenlabs_secret_name)
-    transcription_provider = ElevenLabsScribeProvider(config=elevenlabs_config)
+    def _build_transcription_provider():
+        from deskai.adapters.transcription.elevenlabs_config import (
+            load_elevenlabs_config,
+        )
+        from deskai.adapters.transcription.elevenlabs_provider import (
+            ElevenLabsScribeProvider,
+        )
+
+        config = load_elevenlabs_config(settings.elevenlabs_secret_name)
+        return ElevenLabsScribeProvider(config=config)
+
+    transcription_provider = LazyTranscriptionProvider(_build_transcription_provider)
 
     s3_client = S3Client(bucket_name=settings.artifacts_bucket)
     transcript_repo = S3TranscriptRepository(s3_client=s3_client)

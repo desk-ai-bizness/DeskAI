@@ -1,6 +1,7 @@
 """API stack for HTTP and WebSocket ingress layers."""
 
 from aws_cdk import Duration, Stack
+from aws_cdk import aws_ssm as ssm
 from aws_cdk import aws_apigatewayv2 as apigwv2
 from aws_cdk import aws_cognito as cognito
 from aws_cdk import aws_iam as iam
@@ -159,4 +160,14 @@ class ApiStack(Stack):
             web_socket_api=self.websocket_api,
             stage_name=config.environment,
             auto_deploy=True,
+        )
+
+        # Store WebSocket URL in SSM so Lambdas read it at runtime.
+        # Avoids CDK DependencyCycle between api and compute stacks.
+        self.websocket_url_param = ssm.StringParameter(
+            self,
+            "WebSocketUrlParam",
+            parameter_name=f"/{config.resource_prefix}/websocket-url",
+            string_value=self.websocket_stage.url,
+            description="WebSocket API endpoint URL for Lambda runtime lookup",
         )

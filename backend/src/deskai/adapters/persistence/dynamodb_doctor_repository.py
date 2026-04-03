@@ -20,12 +20,12 @@ class DynamoDBDoctorRepository(DoctorRepository):
         dynamodb = boto3.resource("dynamodb")
         self._table = dynamodb.Table(table_name)
 
-    def find_by_cognito_sub(
-        self, cognito_sub: str
+    def find_by_identity_provider_id(
+        self, identity_provider_id: str
     ) -> DoctorProfile | None:
         response = self._table.get_item(
             Key={
-                "PK": f"DOCTOR#{cognito_sub}",
+                "PK": f"DOCTOR#{identity_provider_id}",
                 "SK": "PROFILE",
             },
         )
@@ -35,7 +35,7 @@ class DynamoDBDoctorRepository(DoctorRepository):
 
         return DoctorProfile(
             doctor_id=item["doctor_id"],
-            cognito_sub=cognito_sub,
+            identity_provider_id=identity_provider_id,
             email=item["email"],
             name=item["name"],
             clinic_id=item["clinic_id"],

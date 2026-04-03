@@ -1,4 +1,4 @@
-"""BFF adapter that implements the UiConfigAssembler port."""
+"""BFF adapter implementing the UiConfigAssembler port."""
 
 from deskai.bff.feature_flags.evaluator import evaluate_flags
 from deskai.bff.ui_config.labels import (
@@ -12,7 +12,7 @@ from deskai.ports.ui_config_assembler import UiConfigAssembler
 
 
 class BffUiConfigAssembler(UiConfigAssembler):
-    """Compose the full UIConfigView payload using BFF helpers."""
+    """Concrete BFF implementation that composes the full UI config."""
 
     def assemble(self, plan_type: PlanType) -> dict:
         flags = evaluate_flags(plan_type)
@@ -24,8 +24,14 @@ class BffUiConfigAssembler(UiConfigAssembler):
             "insight_categories": get_insight_categories(),
             "status_labels": get_status_labels(),
             "feature_flags": {
-                "export_enabled": bool(flags.get("export_pdf_enabled", False)),
-                "insights_enabled": bool(flags.get("insights_enabled", False)),
-                "audio_playback_enabled": bool(flags.get("audio_playback_enabled", False)),
+                "export_enabled": bool(
+                    flags.get("export_pdf_enabled", False)
+                ),
+                "insights_enabled": bool(
+                    flags.get("insights_enabled", False)
+                ),
+                "audio_playback_enabled": bool(
+                    flags.get("audio_playback_enabled", False)
+                ),
             },
         }

@@ -2,10 +2,15 @@
 
 from abc import ABC, abstractmethod
 
+from deskai.domain.consultation.entities import Consultation
+from deskai.domain.export.value_objects import ExportFormat, ExportResult
+
 
 class ExportGenerator(ABC):
-    """Contract for generating consultation exports."""
+    """Contract for generating exportable consultation documents."""
 
     @abstractmethod
-    def generate_pdf(self, consultation_data: dict) -> bytes:
-        """Generate a PDF export from finalized consultation data."""
+    def generate(
+        self, consultation: Consultation, fmt: ExportFormat
+    ) -> ExportResult:
+        """Produce an export artifact for the given consultation."""

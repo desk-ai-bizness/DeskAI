@@ -70,15 +70,15 @@ def extract_auth_context(
         .get("jwt", {})
         .get("claims", {})
     )
-    cognito_sub = claims.get("sub")
+    identity_provider_id = claims.get("sub")
     email = claims.get("email", "")
 
-    if not cognito_sub:
+    if not identity_provider_id:
         raise AuthenticationError(
             "Missing user identity in request."
         )
 
-    profile = get_current_user.execute(cognito_sub)
+    profile = get_current_user.execute(identity_provider_id)
     return AuthContext(
         doctor_id=profile.doctor_id,
         email=email or profile.email,

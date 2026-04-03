@@ -1,7 +1,6 @@
 """DynamoDB adapter for session persistence."""
 
-import boto3
-
+from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
 from deskai.domain.session.entities import Session, SessionState
 from deskai.ports.session_repository import SessionRepository
 from deskai.shared.logging import get_logger
@@ -9,7 +8,7 @@ from deskai.shared.logging import get_logger
 logger = get_logger()
 
 
-class DynamoDBSessionRepository(SessionRepository):
+class DynamoDBSessionRepository(DynamoDBBaseRepository, SessionRepository):
     """Persist and query sessions in DynamoDB.
 
     Key schema:
@@ -21,16 +20,11 @@ class DynamoDBSessionRepository(SessionRepository):
         GSI1SK = SESSION#{session_id}
     """
 
-    def __init__(self, table_name: str) -> None:
-        self._table_name = table_name
-        dynamodb = boto3.resource("dynamodb")
-        self._table = dynamodb.Table(table_name)
-
     def save(self, session: Session) -> None:
-        self._table.put_item(Item=self._to_item(session))
+        self._safe_put_item(Item=self._to_item(session))
 
     def find_by_id(self, session_id: str) -> Session | None:
-        response = self._table.get_item(
+        response = self._safe_get_item(
             Key={"PK": f"SESSION#{session_id}", "SK": "METADATA"},
         )
         item = response.get("Item")
@@ -41,7 +35,7 @@ class DynamoDBSessionRepository(SessionRepository):
     def find_active_by_consultation_id(
         self, consultation_id: str
     ) -> Session | None:
-        response = self._table.query(
+        response = self._safe_query(
             IndexName="consultation-session-index",
             KeyConditionExpression="GSI1PK = :pk",
             ExpressionAttributeValues={
@@ -54,10 +48,10 @@ class DynamoDBSessionRepository(SessionRepository):
         return self._to_entity(items[0])
 
     def update(self, session: Session) -> None:
-        self._table.put_item(Item=self._to_item(session))
+        self._safe_put_item(Item=self._to_item(session))
 
     def delete(self, session_id: str) -> None:
-        self._table.delete_item(
+        self._safe_delete_item(
             Key={"PK": f"SESSION#{session_id}", "SK": "METADATA"},
         )
 

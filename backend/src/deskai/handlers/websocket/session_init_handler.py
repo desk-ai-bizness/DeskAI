@@ -1,6 +1,7 @@
 """WebSocket session.init handler — bind connection to a consultation session."""
 
 import json
+from dataclasses import replace
 
 from deskai.domain.session.entities import SessionState
 from deskai.shared.time import utc_now_iso
@@ -25,9 +26,12 @@ def handle_session_init(event: dict, connection_repo, session_repo, apigw) -> di
     if session.doctor_id != connection.doctor_id:
         return {"statusCode": 403, "body": "Session ownership mismatch"}
 
-    session.connection_id = connection_id
-    session.state = SessionState.RECORDING
-    session.last_activity_at = utc_now_iso()
+    session = replace(
+        session,
+        connection_id=connection_id,
+        state=SessionState.RECORDING,
+        last_activity_at=utc_now_iso(),
+    )
     session_repo.update(session)
 
     apigw.send_to_connection(

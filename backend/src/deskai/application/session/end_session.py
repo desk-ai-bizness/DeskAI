@@ -1,6 +1,6 @@
 """End a real-time consultation session."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from deskai.domain.audit.entities import AuditAction, AuditEvent
@@ -74,16 +74,22 @@ class EndSessionUseCase:
         ended = datetime.fromisoformat(now)
         duration = int((ended - started).total_seconds())
 
-        session.state = SessionState.ENDED
-        session.ended_at = now
-        session.duration_seconds = duration
+        session = replace(
+            session,
+            state=SessionState.ENDED,
+            ended_at=now,
+            duration_seconds=duration,
+        )
 
         self.session_repo.update(session)
 
-        consultation.status = ConsultationStatus.IN_PROCESSING
-        consultation.session_ended_at = now
-        consultation.processing_started_at = now
-        consultation.updated_at = now
+        consultation = replace(
+            consultation,
+            status=ConsultationStatus.IN_PROCESSING,
+            session_ended_at=now,
+            processing_started_at=now,
+            updated_at=now,
+        )
         self.consultation_repo.save(consultation)
 
         self.audit_repo.append(

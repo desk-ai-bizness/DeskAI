@@ -1,6 +1,6 @@
 """Process an audio chunk during a real-time session."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from deskai.domain.session.exceptions import SessionNotFoundError
 from deskai.domain.session.services import SessionService
@@ -34,6 +34,9 @@ class ProcessAudioChunkUseCase:
 
         self.transcription_provider.send_audio_chunk(session_id, audio_data)
 
-        session.audio_chunks_received += 1
-        session.last_activity_at = utc_now_iso()
+        session = replace(
+            session,
+            audio_chunks_received=session.audio_chunks_received + 1,
+            last_activity_at=utc_now_iso(),
+        )
         self.session_repo.update(session)

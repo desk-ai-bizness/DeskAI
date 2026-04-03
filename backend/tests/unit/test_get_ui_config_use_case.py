@@ -33,7 +33,7 @@ class TestGetUiConfigUseCase:
 
         for plan in PlanType:
             auth = AuthContext(
-                doctor_id="d", email="e", clinic_id="c", plan_type=plan
+                doctor_id="d", email="d@c.com", clinic_id="c", plan_type=plan
             )
             use_case.execute(auth)
             mock_assembler.assemble.assert_called_with(plan)

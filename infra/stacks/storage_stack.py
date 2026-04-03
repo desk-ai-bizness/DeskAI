@@ -71,6 +71,14 @@ class StorageStack(Stack):
             sort_key=dynamodb.Attribute(name="GSI3SK", type=dynamodb.AttributeType.STRING),
             projection_type=dynamodb.ProjectionType.ALL,
         )
+        self.consultation_table.add_global_secondary_index(
+            index_name="consultation-session-index",
+            partition_key=dynamodb.Attribute(
+                name="consultation_id", type=dynamodb.AttributeType.STRING
+            ),
+            sort_key=dynamodb.Attribute(name="created_at", type=dynamodb.AttributeType.STRING),
+            projection_type=dynamodb.ProjectionType.ALL,
+        )
 
         self.artifacts_bucket = s3.Bucket(
             self,

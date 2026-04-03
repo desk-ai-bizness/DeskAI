@@ -1,6 +1,6 @@
 """Security stack for encryption, secrets, and IAM guardrails."""
 
-from aws_cdk import SecretValue, Stack
+from aws_cdk import Stack
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_kms as kms
 from aws_cdk import aws_secretsmanager as secretsmanager

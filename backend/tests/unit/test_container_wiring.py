@@ -64,7 +64,7 @@ _SECRET = '{"elevenlabs_api_key": "k"}'
 def _build():
     with (
         patch("deskai.adapters.auth.cognito_provider.boto3") as b1,
-        patch("deskai.adapters.persistence.dynamodb_doctor_repository.boto3") as b2,
+        patch("deskai.adapters.persistence.base_repository.boto3") as b2,
         patch("deskai.adapters.transcription.elevenlabs_config.boto3") as b3,
         patch("deskai.adapters.storage.s3_client.boto3") as b4,
     ):

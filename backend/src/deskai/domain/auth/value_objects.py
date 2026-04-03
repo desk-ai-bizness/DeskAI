@@ -75,7 +75,7 @@ class Tokens:
     def __post_init__(self) -> None:
         if not self.access_token or not self.access_token.strip():
             raise DomainValidationError("access_token must be a non-empty string")
-        if not self.refresh_token or not self.refresh_token.strip():
-            raise DomainValidationError("refresh_token must be a non-empty string")
+        if self.refresh_token is None:
+            raise DomainValidationError("refresh_token must be a string, got None")
         if self.expires_in <= 0:
             raise DomainValidationError("expires_in must be positive")

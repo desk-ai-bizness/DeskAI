@@ -15,5 +15,7 @@ jobs:
   deploy-placeholder:
     runs-on: ubuntu-latest
     steps:
-      - name: Placeholder
-        run: echo "Deployment pipeline placeholder. Implement in Task 004+."
+      - name: Not implemented
+        run: |
+          echo "ERROR: Deployment pipeline is not yet implemented. See Task 004+."
+          exit 1

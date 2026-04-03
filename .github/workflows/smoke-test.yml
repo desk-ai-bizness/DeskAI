@@ -1,0 +1,28 @@
+name: Post-Deploy Smoke Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'API Gateway URL (defaults to dev)'
+        required: false
+        type: string
+  workflow_run:
+    workflows: ["Infra CI"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Run smoke tests
+        working-directory: backend
+        run: python scripts/smoke_test.py ${{ inputs.api_url && format('--api-url {0}', inputs.api_url) || '' }}

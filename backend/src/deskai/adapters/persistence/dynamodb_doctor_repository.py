@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 
 from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
+from deskai.adapters.persistence.schema import DoctorProfileFields as F
 from deskai.domain.auth.entities import DoctorProfile
 from deskai.domain.auth.value_objects import PlanType
 from deskai.ports.doctor_repository import DoctorRepository
@@ -14,13 +15,11 @@ logger = get_logger()
 class DynamoDBDoctorRepository(DynamoDBBaseRepository, DoctorRepository):
     """Resolve doctor profiles and consultation counts from DynamoDB."""
 
-    def find_by_identity_provider_id(
-        self, identity_provider_id: str
-    ) -> DoctorProfile | None:
+    def find_by_identity_provider_id(self, identity_provider_id: str) -> DoctorProfile | None:
         response = self._safe_get_item(
             Key={
-                "PK": f"DOCTOR#{identity_provider_id}",
-                "SK": "PROFILE",
+                F.PK: f"DOCTOR#{identity_provider_id}",
+                F.SK: "PROFILE",
             },
         )
         item = response.get("Item")
@@ -28,29 +27,24 @@ class DynamoDBDoctorRepository(DynamoDBBaseRepository, DoctorRepository):
             return None
 
         return DoctorProfile(
-            doctor_id=item["doctor_id"],
+            doctor_id=item[F.DOCTOR_ID],
             identity_provider_id=identity_provider_id,
-            email=item["email"],
-            name=item["name"],
-            clinic_id=item["clinic_id"],
-            clinic_name=item["clinic_name"],
-            plan_type=PlanType(item["plan_type"]),
-            created_at=item["created_at"],
+            email=item[F.EMAIL],
+            name=item.get(F.FULL_NAME) or item.get(F.LEGACY_NAME, ""),
+            clinic_id=item[F.CLINIC_ID],
+            clinic_name=item.get(F.CLINIC_NAME, ""),
+            plan_type=PlanType(item[F.PLAN_TYPE]),
+            created_at=item[F.CREATED_AT],
         )
 
-    def count_consultations_this_month(
-        self, doctor_id: str
-    ) -> int:
+    def count_consultations_this_month(self, doctor_id: str) -> int:
         now = datetime.now(tz=UTC)
         month_prefix = now.strftime("%Y-%m")
 
         response = self._safe_query(
             IndexName="gsi_doctor_date",
             Select="COUNT",
-            KeyConditionExpression=(
-                "GSI1PK = :pk"
-                " AND begins_with(GSI1SK, :sk_prefix)"
-            ),
+            KeyConditionExpression=("GSI1PK = :pk AND begins_with(GSI1SK, :sk_prefix)"),
             ExpressionAttributeValues={
                 ":pk": f"DOCTOR#{doctor_id}",
                 ":sk_prefix": f"CONSULTATION#{month_prefix}",

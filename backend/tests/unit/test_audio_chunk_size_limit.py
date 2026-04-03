@@ -4,6 +4,8 @@ import base64
 import json
 from unittest.mock import MagicMock
 
+from deskai.domain.session.entities import Session, SessionState
+from deskai.domain.session.value_objects import ConnectionInfo
 from deskai.handlers.websocket.audio_chunk_handler import (
     MAX_AUDIO_CHUNK_BYTES,
     handle_audio_chunk,
@@ -19,16 +21,23 @@ def _make_event(audio_bytes: bytes) -> dict:
 
 
 def _make_mocks():
-    connection = MagicMock()
-    connection.session_id = "sess-1"
-    connection.doctor_id = "doc-1"
+    connection = ConnectionInfo(
+        connection_id="conn-1",
+        session_id="sess-1",
+        doctor_id="doc-1",
+        clinic_id="clinic-1",
+        connected_at="2026-04-02T10:00:00+00:00",
+    )
 
-    session = MagicMock()
-    session.session_id = "sess-1"
-    session.state = "recording"
-    session.doctor_id = "doc-1"
-    session.audio_chunks_received = 0
-    session.last_activity_at = None
+    session = Session(
+        session_id="sess-1",
+        consultation_id="cons-1",
+        doctor_id="doc-1",
+        clinic_id="clinic-1",
+        state=SessionState.RECORDING,
+        started_at="2026-04-02T10:00:00+00:00",
+        audio_chunks_received=0,
+    )
 
     conn_repo = MagicMock()
     conn_repo.find_by_connection_id.return_value = connection

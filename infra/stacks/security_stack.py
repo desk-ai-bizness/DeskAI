@@ -1,6 +1,6 @@
 """Security stack for encryption, secrets, and IAM guardrails."""
 
-from aws_cdk import SecretValue, Stack
+from aws_cdk import Stack
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_kms as kms
 from aws_cdk import aws_secretsmanager as secretsmanager
@@ -132,9 +132,11 @@ class SecurityStack(Stack):
             secret_name=config.elevenlabs_secret_name,
             encryption_key=self.secrets_key,
             description="ElevenLabs Scribe v2 API credentials for transcription.",
-            secret_object_value={
-                "api_key": SecretValue.unsafe_plain_text("replace-in-aws-secrets-manager"),
-            },
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template='{"api_key": ""}',
+                generate_string_key="placeholder",
+                exclude_punctuation=True,
+            ),
         )
 
         self.claude_secret = secretsmanager.Secret(
@@ -143,7 +145,9 @@ class SecurityStack(Stack):
             secret_name=config.claude_secret_name,
             encryption_key=self.secrets_key,
             description="Claude API credentials placeholder for MVP bootstrap.",
-            secret_object_value={
-                "api_key": SecretValue.unsafe_plain_text("replace-in-aws-secrets-manager"),
-            },
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template='{"api_key": ""}',
+                generate_string_key="placeholder",
+                exclude_punctuation=True,
+            ),
         )

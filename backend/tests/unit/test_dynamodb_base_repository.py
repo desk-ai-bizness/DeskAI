@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 from botocore.exceptions import ClientError, EndpointConnectionError, ReadTimeoutError
 
 from deskai.adapters.persistence.base_repository import (
-    DynamoDBBaseRepository,
     _BASE_BACKOFF_SECONDS,
     _MAX_RETRIES,
+    DynamoDBBaseRepository,
 )
 from deskai.shared.errors import (
     ConflictError,
@@ -35,6 +35,8 @@ class TestDynamoDBBaseRepository(unittest.TestCase):
         mock_resource.Table.return_value = self.mock_table
         mock_boto3.resource.return_value = mock_resource
         return DynamoDBBaseRepository(table_name="test-table")
+
+    # -- safe wrappers delegate correctly --------------------------------
 
     def test_safe_put_item_delegates(self, mock_boto3: MagicMock) -> None:
         repo = self._make_repo(mock_boto3)
@@ -70,6 +72,8 @@ class TestDynamoDBBaseRepository(unittest.TestCase):
             ExpressionAttributeValues={":pk": "TEST#1"},
         )
         self.assertEqual(result, {"Items": []})
+
+    # -- error mapping ---------------------------------------------------
 
     def test_conditional_check_raises_conflict(self, mock_boto3: MagicMock) -> None:
         repo = self._make_repo(mock_boto3)
@@ -119,6 +123,8 @@ class TestDynamoDBBaseRepository(unittest.TestCase):
         with self.assertRaises(ConnectionError):
             repo._safe_get_item(Key={"PK": "x"})
 
+    # -- throttle retry behaviour ----------------------------------------
+
     @patch("deskai.adapters.persistence.base_repository.time.sleep")
     def test_throttle_retries_with_backoff(
         self, mock_sleep: MagicMock, mock_boto3: MagicMock
@@ -131,6 +137,7 @@ class TestDynamoDBBaseRepository(unittest.TestCase):
             {"ResponseMetadata": {"HTTPStatusCode": 200}},
         ]
         repo._safe_put_item(Item={"PK": "x"})
+
         self.assertEqual(mock_sleep.call_count, 2)
         mock_sleep.assert_any_call(_BASE_BACKOFF_SECONDS * 1)
         mock_sleep.assert_any_call(_BASE_BACKOFF_SECONDS * 2)
@@ -142,8 +149,10 @@ class TestDynamoDBBaseRepository(unittest.TestCase):
         repo = self._make_repo(mock_boto3)
         throttle = _make_client_error("ThrottlingException")
         self.mock_table.put_item.side_effect = [throttle] * _MAX_RETRIES
+
         with self.assertRaises(ThrottleError):
             repo._safe_put_item(Item={"PK": "x"})
+
         self.assertEqual(mock_sleep.call_count, _MAX_RETRIES)
 
     @patch("deskai.adapters.persistence.base_repository.time.sleep")
@@ -167,10 +176,12 @@ class TestDynamoDBBaseRepository(unittest.TestCase):
         repo = self._make_repo(mock_boto3)
         throttle = _make_client_error("ThrottlingException")
         self.mock_table.put_item.side_effect = [throttle] * _MAX_RETRIES
+
         with self.assertRaises(ThrottleError):
             repo._safe_put_item(Item={"PK": "x"})
+
         expected_delays = [
-            _BASE_BACKOFF_SECONDS * (2**i) for i in range(_MAX_RETRIES)
+            _BASE_BACKOFF_SECONDS * (2 ** i) for i in range(_MAX_RETRIES)
         ]
         actual_delays = [c.args[0] for c in mock_sleep.call_args_list]
         self.assertEqual(actual_delays, expected_delays)
@@ -178,6 +189,8 @@ class TestDynamoDBBaseRepository(unittest.TestCase):
 
 @patch("deskai.adapters.persistence.base_repository.boto3")
 class TestPaginatedQuery(unittest.TestCase):
+    """Tests for _paginated_query auto-pagination."""
+
     def _make_repo(self, mock_boto3: MagicMock) -> DynamoDBBaseRepository:
         self.mock_table = MagicMock()
         mock_resource = MagicMock()
@@ -203,8 +216,11 @@ class TestPaginatedQuery(unittest.TestCase):
         result = repo._paginated_query(KeyConditionExpression="PK = :pk")
         self.assertEqual(result, [{"id": "1"}, {"id": "2"}])
         self.assertEqual(self.mock_table.query.call_count, 2)
+
         second_call_kwargs = self.mock_table.query.call_args_list[1][1]
-        self.assertEqual(second_call_kwargs["ExclusiveStartKey"], {"PK": "cursor"})
+        self.assertEqual(
+            second_call_kwargs["ExclusiveStartKey"], {"PK": "cursor"}
+        )
 
     def test_empty_result(self, mock_boto3: MagicMock) -> None:
         repo = self._make_repo(mock_boto3)
@@ -225,19 +241,35 @@ class TestPaginatedQuery(unittest.TestCase):
 
 
 class TestConditionExpressionHelper(unittest.TestCase):
+    """Tests for the _build_condition_expression static helper."""
+
     def test_builds_correct_structure(self) -> None:
-        result = DynamoDBBaseRepository._build_condition_expression("version", 5)
-        self.assertEqual(result["ConditionExpression"], "#cond_attr = :cond_val")
-        self.assertEqual(result["ExpressionAttributeNames"], {"#cond_attr": "version"})
-        self.assertEqual(result["ExpressionAttributeValues"], {":cond_val": 5})
+        result = DynamoDBBaseRepository._build_condition_expression(
+            "version", 5
+        )
+        self.assertEqual(
+            result["ConditionExpression"], "#cond_attr = :cond_val"
+        )
+        self.assertEqual(
+            result["ExpressionAttributeNames"], {"#cond_attr": "version"}
+        )
+        self.assertEqual(
+            result["ExpressionAttributeValues"], {":cond_val": 5}
+        )
 
     def test_with_string_value(self) -> None:
-        result = DynamoDBBaseRepository._build_condition_expression("status", "active")
-        self.assertEqual(result["ExpressionAttributeValues"], {":cond_val": "active"})
+        result = DynamoDBBaseRepository._build_condition_expression(
+            "status", "active"
+        )
+        self.assertEqual(
+            result["ExpressionAttributeValues"], {":cond_val": "active"}
+        )
 
 
 @patch("deskai.adapters.persistence.base_repository.boto3")
 class TestInitialization(unittest.TestCase):
+    """Tests for constructor behaviour."""
+
     def test_stores_table_name(self, mock_boto3: MagicMock) -> None:
         mock_resource = MagicMock()
         mock_boto3.resource.return_value = mock_resource

@@ -29,14 +29,19 @@ _THROTTLE_CODES = frozenset(
 
 
 class DynamoDBBaseRepository:
-    """Centralised DynamoDB access with error mapping, retry, and pagination."""
+    """Centralised DynamoDB access with error mapping, retry, and pagination.
+
+    Every concrete repository inherits from this class **and** its port
+    interface.  The ``__init__`` here owns the boto3 resource and table
+    reference so subclasses do not duplicate that boilerplate.
+    """
 
     def __init__(self, table_name: str) -> None:
         self._table_name = table_name
         dynamodb = boto3.resource("dynamodb")
         self._table = dynamodb.Table(table_name)
 
-    # --- safe wrappers ---
+    # -- safe wrappers (thin delegation to _execute) ---------------------
 
     def _safe_put_item(self, **kwargs: Any) -> dict:
         return self._execute("put_item", **kwargs)
@@ -53,10 +58,10 @@ class DynamoDBBaseRepository:
     def _safe_query(self, **kwargs: Any) -> dict:
         return self._execute("query", **kwargs)
 
-    # --- pagination ---
+    # -- pagination helper -----------------------------------------------
 
     def _paginated_query(self, **kwargs: Any) -> list[dict]:
-        """Auto-paginate a DynamoDB query, following LastEvaluatedKey."""
+        """Auto-paginate a DynamoDB query via LastEvaluatedKey."""
         all_items: list[dict] = []
         while True:
             response = self._safe_query(**kwargs)
@@ -67,20 +72,20 @@ class DynamoDBBaseRepository:
             kwargs["ExclusiveStartKey"] = last_key
         return all_items
 
-    # --- condition expression helper ---
+    # -- condition expression helper -------------------------------------
 
     @staticmethod
     def _build_condition_expression(
         attribute: str, expected_value: Any
     ) -> dict[str, Any]:
-        """Build a ConditionExpression dict for optimistic concurrency."""
+        """Build a ``ConditionExpression`` dict for optimistic concurrency."""
         return {
             "ConditionExpression": "#cond_attr = :cond_val",
             "ExpressionAttributeNames": {"#cond_attr": attribute},
             "ExpressionAttributeValues": {":cond_val": expected_value},
         }
 
-    # --- core execution with retry + error mapping ---
+    # -- core execute with error mapping + retry -------------------------
 
     def _execute(self, operation: str, **kwargs: Any) -> dict:
         method = getattr(self._table, operation)
@@ -105,7 +110,7 @@ class DynamoDBBaseRepository:
                     ) from exc
 
                 if code in _THROTTLE_CODES:
-                    delay = _BASE_BACKOFF_SECONDS * (2**attempt)
+                    delay = _BASE_BACKOFF_SECONDS * (2 ** attempt)
                     logger.warning(
                         "DynamoDB throttle on %s (attempt %d/%d), "
                         "retrying in %.2fs",

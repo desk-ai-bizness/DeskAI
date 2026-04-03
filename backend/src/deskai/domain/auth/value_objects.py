@@ -34,7 +34,9 @@ class AuthContext:
         if not self.clinic_id or not self.clinic_id.strip():
             raise DomainValidationError("clinic_id must be a non-empty string")
         if not isinstance(self.plan_type, PlanType):
-            raise DomainValidationError(f"plan_type must be a PlanType, got {type(self.plan_type).__name__}")
+            raise DomainValidationError(
+                f"plan_type must be a PlanType, got {type(self.plan_type).__name__}"
+            )
 
 
 @dataclass(frozen=True)
@@ -51,7 +53,9 @@ class Entitlements:
 
     def __post_init__(self) -> None:
         if self.consultations_remaining < -1:
-            raise DomainValidationError("consultations_remaining must be non-negative or -1 (unlimited)")
+            raise DomainValidationError(
+                "consultations_remaining must be non-negative or -1 (unlimited)"
+            )
         if self.consultations_used_this_month < 0:
             raise DomainValidationError("consultations_used_this_month must be non-negative")
         if self.max_duration_minutes < 0:

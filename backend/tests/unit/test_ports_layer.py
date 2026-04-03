@@ -11,7 +11,6 @@ from deskai.domain.export.value_objects import ExportFormat, ExportResult
 from deskai.domain.transcription.entities import NormalizedTranscript
 from deskai.domain.transcription.value_objects import (
     FinalTranscript,
-    PartialTranscript,
     SpeakerSegment,
     TranscriptionSessionInfo,
 )
@@ -26,7 +25,6 @@ from deskai.ports.llm_provider import LLMProvider
 from deskai.ports.storage_provider import StorageProvider
 from deskai.ports.transcript_repository import TranscriptRepository
 from deskai.ports.transcription_provider import TranscriptionProvider
-
 
 # ── 1. Cognito rename ──────────────────────────────────────────────
 
@@ -43,7 +41,7 @@ class DoctorRepositoryRenameTest(unittest.TestCase):
         self.assertTrue(
             hasattr(DoctorRepository, "find_by_identity_provider_id")
         )
-        method = getattr(DoctorRepository, "find_by_identity_provider_id")
+        method = DoctorRepository.find_by_identity_provider_id
         self.assertTrue(getattr(method, "__isabstractmethod__", False))
 
 

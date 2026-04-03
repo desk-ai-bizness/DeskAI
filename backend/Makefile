@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: install lint format typecheck test check
+.PHONY: install lint format typecheck test check hooks
 
 install:
 	$(PYTHON) -m pip install --upgrade pip
@@ -19,3 +19,7 @@ test:
 	PYTHONPATH=src $(PYTHON) -m unittest discover -s tests -p 'test_*.py'
 
 check: lint typecheck test
+
+hooks:
+	$(PYTHON) -m pip install pre-commit
+	cd .. && pre-commit install

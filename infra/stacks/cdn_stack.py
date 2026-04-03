@@ -1,6 +1,7 @@
 """CDN stack for public website and authenticated app delivery."""
 
 from aws_cdk import RemovalPolicy, Stack
+from aws_cdk import aws_certificatemanager as acm
 from aws_cdk import aws_cloudfront as cloudfront
 from aws_cdk import aws_s3 as s3
 from aws_cdk.aws_cloudfront_origins import S3BucketOrigin
@@ -63,11 +64,21 @@ class CdnStack(Stack):
         self.website_bucket.grant_read(website_oai)
         self.app_bucket.grant_read(app_oai)
 
+        certificate = None
+        if config.acm_certificate_arn:
+            certificate = acm.Certificate.from_certificate_arn(
+                self, "ImportedCert", config.acm_certificate_arn
+            )
+        website_domain_names = list(config.website_domain_names) if certificate else None
+        app_domain_names = list(config.app_domain_names) if certificate else None
+
         self.website_distribution = cloudfront.Distribution(
             self,
             "WebsiteDistribution",
             comment=f"{config.resource_prefix} public website distribution",
             default_root_object="index.html",
+            certificate=certificate,
+            domain_names=website_domain_names,
             default_behavior=cloudfront.BehaviorOptions(
                 origin=S3BucketOrigin.with_origin_access_identity(
                     self.website_bucket,
@@ -85,6 +96,8 @@ class CdnStack(Stack):
             "AppDistribution",
             comment=f"{config.resource_prefix} authenticated app distribution",
             default_root_object="index.html",
+            certificate=certificate,
+            domain_names=app_domain_names,
             default_behavior=cloudfront.BehaviorOptions(
                 origin=S3BucketOrigin.with_origin_access_identity(
                     self.app_bucket,

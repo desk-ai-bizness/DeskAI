@@ -1,7 +1,6 @@
 """DynamoDB adapter for WebSocket connection persistence."""
 
-import boto3
-
+from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
 from deskai.domain.session.value_objects import ConnectionInfo
 from deskai.ports.connection_repository import ConnectionRepository
 from deskai.shared.logging import get_logger
@@ -9,7 +8,7 @@ from deskai.shared.logging import get_logger
 logger = get_logger()
 
 
-class DynamoDBConnectionRepository(ConnectionRepository):
+class DynamoDBConnectionRepository(DynamoDBBaseRepository, ConnectionRepository):
     """Persist and query WebSocket connections in DynamoDB.
 
     Key schema:
@@ -17,13 +16,8 @@ class DynamoDBConnectionRepository(ConnectionRepository):
         SK = METADATA
     """
 
-    def __init__(self, table_name: str) -> None:
-        self._table_name = table_name
-        dynamodb = boto3.resource("dynamodb")
-        self._table = dynamodb.Table(table_name)
-
     def save(self, connection: ConnectionInfo) -> None:
-        self._table.put_item(
+        self._safe_put_item(
             Item={
                 "PK": f"CONNECTION#{connection.connection_id}",
                 "SK": "METADATA",
@@ -38,7 +32,7 @@ class DynamoDBConnectionRepository(ConnectionRepository):
     def find_by_connection_id(
         self, connection_id: str
     ) -> ConnectionInfo | None:
-        response = self._table.get_item(
+        response = self._safe_get_item(
             Key={"PK": f"CONNECTION#{connection_id}", "SK": "METADATA"},
         )
         item = response.get("Item")
@@ -47,7 +41,7 @@ class DynamoDBConnectionRepository(ConnectionRepository):
         return self._to_entity(item)
 
     def remove(self, connection_id: str) -> None:
-        self._table.delete_item(
+        self._safe_delete_item(
             Key={"PK": f"CONNECTION#{connection_id}", "SK": "METADATA"},
         )
 

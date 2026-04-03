@@ -9,7 +9,7 @@ from deskai.adapters.persistence.dynamodb_consultation_repository import (
 from deskai.domain.consultation.entities import Consultation, ConsultationStatus
 
 
-@patch("deskai.adapters.persistence.dynamodb_consultation_repository.boto3")
+@patch("deskai.adapters.persistence.base_repository.boto3")
 class DynamoDBConsultationRepositoryTest(unittest.TestCase):
     def _make_repo(
         self, mock_boto3: MagicMock

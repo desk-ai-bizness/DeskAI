@@ -19,7 +19,7 @@ class DynamoDBDoctorRepository(DynamoDBBaseRepository, DoctorRepository):
     ) -> DoctorProfile | None:
         response = self._safe_get_item(
             Key={
-                "PK": f"DOCTOR#{cognito_sub}",
+                "PK": f"DOCTOR#{identity_provider_id}",
                 "SK": "PROFILE",
             },
         )
@@ -29,7 +29,7 @@ class DynamoDBDoctorRepository(DynamoDBBaseRepository, DoctorRepository):
 
         return DoctorProfile(
             doctor_id=item["doctor_id"],
-            cognito_sub=cognito_sub,
+            identity_provider_id=identity_provider_id,
             email=item["email"],
             name=item["name"],
             clinic_id=item["clinic_id"],

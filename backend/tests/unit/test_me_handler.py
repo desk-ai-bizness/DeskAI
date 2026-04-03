@@ -32,7 +32,7 @@ class HandleGetMeTest(unittest.TestCase):
     def test_handle_get_me_success(self) -> None:
         profile = DoctorProfile(
             doctor_id="d1",
-            cognito_sub="sub-1",
+            identity_provider_id="sub-1",
             email="a@b.com",
             name="Dr. Test",
             clinic_id="c1",

@@ -43,6 +43,18 @@ paths:
             application/json:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
     get:
       operationId: listConsultations
       summary: List consultations for the authenticated doctor
@@ -54,14 +66,7 @@ paths:
           required: false
           schema:
             type: string
-            enum:
-              - started
-              - recording
-              - in_processing
-              - processing_failed
-              - draft_generated
-              - under_physician_review
-              - finalized
+            enum: [started, recording, in_processing, processing_failed, draft_generated, under_physician_review, finalized]
         - in: query
           name: from
           required: false
@@ -110,6 +115,18 @@ paths:
             application/json:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
 
   /v1/consultations/{consultation_id}:
     get:
@@ -145,6 +162,18 @@ paths:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
         "404":
           description: Consultation not found
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
           content:
             application/json:
               schema:
@@ -194,7 +223,18 @@ paths:
         "409":
           description: >
             State conflict — consultation is not in "started" status.
-            A session can only be started when the consultation status is "started".
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
           content:
             application/json:
               schema:
@@ -244,7 +284,18 @@ paths:
         "409":
           description: >
             State conflict — consultation is not in "recording" status.
-            A session can only be ended when the consultation status is "recording".
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
           content:
             application/json:
               schema:
@@ -273,6 +324,7 @@ components:
           format: date
         notes:
           type: string
+      additionalProperties: false
 
     PatientSummary:
       type: object
@@ -283,18 +335,11 @@ components:
           format: uuid
         name:
           type: string
+      additionalProperties: false
 
     ConsultationView:
       type: object
-      required:
-        - consultation_id
-        - patient
-        - doctor_id
-        - clinic_id
-        - specialty
-        - status
-        - created_at
-        - updated_at
+      required: [consultation_id, patient, doctor_id, clinic_id, specialty, status, created_at, updated_at]
       properties:
         consultation_id:
           type: string
@@ -311,14 +356,7 @@ components:
           type: string
         status:
           type: string
-          enum:
-            - started
-            - recording
-            - in_processing
-            - processing_failed
-            - draft_generated
-            - under_physician_review
-            - finalized
+          enum: [started, recording, in_processing, processing_failed, draft_generated, under_physician_review, finalized]
         scheduled_date:
           type: string
           format: date
@@ -328,6 +366,7 @@ components:
         updated_at:
           type: string
           format: date-time
+      additionalProperties: false
 
     ConsultationListView:
       type: object
@@ -343,6 +382,7 @@ components:
           type: integer
         page_size:
           type: integer
+      additionalProperties: false
 
     ConsultationDetailView:
       allOf:
@@ -369,6 +409,7 @@ components:
                 duration_seconds:
                   type: integer
                   nullable: true
+              additionalProperties: false
             processing:
               type: object
               required: [started_at, completed_at, error_details]
@@ -385,6 +426,7 @@ components:
                   type: object
                   additionalProperties: true
                   nullable: true
+              additionalProperties: false
             has_draft:
               type: boolean
             finalized_at:
@@ -395,15 +437,11 @@ components:
               type: string
               format: uuid
               nullable: true
+          additionalProperties: false
 
     SessionStartView:
       type: object
-      required:
-        - session_id
-        - websocket_url
-        - connection_token
-        - max_duration_minutes
-        - started_at
+      required: [session_id, websocket_url, connection_token, max_duration_minutes, started_at]
       properties:
         session_id:
           type: string
@@ -418,14 +456,11 @@ components:
         started_at:
           type: string
           format: date-time
+      additionalProperties: false
 
     SessionEndView:
       type: object
-      required:
-        - session_id
-        - ended_at
-        - duration_seconds
-        - status
+      required: [session_id, ended_at, duration_seconds, status]
       properties:
         session_id:
           type: string
@@ -438,3 +473,4 @@ components:
         status:
           type: string
           enum: [in_processing]
+      additionalProperties: false

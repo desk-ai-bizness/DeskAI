@@ -1,7 +1,6 @@
 """DynamoDB adapter for patient persistence."""
 
-import boto3
-
+from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
 from deskai.domain.patient.entities import Patient
 from deskai.ports.patient_repository import PatientRepository
 from deskai.shared.logging import get_logger
@@ -9,7 +8,7 @@ from deskai.shared.logging import get_logger
 logger = get_logger()
 
 
-class DynamoDBPatientRepository(PatientRepository):
+class DynamoDBPatientRepository(DynamoDBBaseRepository, PatientRepository):
     """Persist and query patients in DynamoDB.
 
     Key schema:
@@ -17,13 +16,8 @@ class DynamoDBPatientRepository(PatientRepository):
         SK = PATIENT#{patient_id}
     """
 
-    def __init__(self, table_name: str) -> None:
-        self._table_name = table_name
-        dynamodb = boto3.resource("dynamodb")
-        self._table = dynamodb.Table(table_name)
-
     def save(self, patient: Patient) -> None:
-        self._table.put_item(
+        self._safe_put_item(
             Item={
                 "PK": f"CLINIC#{patient.clinic_id}",
                 "SK": f"PATIENT#{patient.patient_id}",
@@ -38,7 +32,7 @@ class DynamoDBPatientRepository(PatientRepository):
     def find_by_id(
         self, patient_id: str, clinic_id: str
     ) -> Patient | None:
-        response = self._table.get_item(
+        response = self._safe_get_item(
             Key={
                 "PK": f"CLINIC#{clinic_id}",
                 "SK": f"PATIENT#{patient_id}",
@@ -52,7 +46,7 @@ class DynamoDBPatientRepository(PatientRepository):
     def find_by_clinic(
         self, clinic_id: str, search_term: str = ""
     ) -> list[Patient]:
-        response = self._table.query(
+        items = self._paginated_query(
             KeyConditionExpression=(
                 "PK = :pk AND begins_with(SK, :sk_prefix)"
             ),
@@ -61,9 +55,7 @@ class DynamoDBPatientRepository(PatientRepository):
                 ":sk_prefix": "PATIENT#",
             },
         )
-        patients = [
-            self._to_entity(item) for item in response.get("Items", [])
-        ]
+        patients = [self._to_entity(item) for item in items]
         if search_term:
             term_lower = search_term.lower()
             patients = [

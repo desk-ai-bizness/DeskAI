@@ -61,6 +61,10 @@ class ComputeStack(Stack):
         )
 
         # --- BFF role: full DynamoDB + S3, secrets, Cognito, SSM, KMS ---
+        # NOTE: We use manual IAM policies (not secret.grant_read) to avoid
+        # cross-stack dependency cycles.  grant_read adds a resource policy
+        # on the secret (SecurityStack) referencing the role ARN (ComputeStack),
+        # creating SecurityStack -> ComputeStack -> SecurityStack cycle.
         self.bff_role = self._create_role(
             "BffRole", f"{config.resource_prefix}-bff-role", permissions_boundary
         )

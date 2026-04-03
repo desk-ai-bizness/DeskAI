@@ -124,7 +124,7 @@ class FinalizeTranscriptUseCaseTest(unittest.TestCase):
         self.assertEqual(call_kwargs["clinic_id"], "clinic-001")
         self.assertEqual(call_kwargs["consultation_id"], "cons-001")
         normalized = call_kwargs["normalized"]
-        self.assertEqual(normalized["provider_name"], "elevenlabs")
+        self.assertEqual(normalized.provider_name, "elevenlabs")
 
     @patch(f"{_MOD}.new_uuid", side_effect=["evt-uuid-1"])
     @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-02T12:00:00+00:00")

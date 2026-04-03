@@ -24,10 +24,14 @@ class TestStubExportGenerator:
     def test_implements_port(self):
         assert issubclass(StubExportGenerator, ExportGenerator)
 
-    def test_generate_pdf_raises_not_implemented(self):
+    def test_generate_raises_not_implemented(self):
         stub = StubExportGenerator()
-        with pytest.raises(NotImplementedError, match="ExportGenerator.generate_pdf"):
-            stub.generate_pdf({"consultation": "data"})
+        from deskai.domain.export.value_objects import ExportFormat
+        from tests.conftest import make_sample_consultation
+
+        consultation = make_sample_consultation()
+        with pytest.raises(NotImplementedError, match="ExportGenerator.generate"):
+            stub.generate(consultation, ExportFormat.PDF)
 
 
 class TestStubLLMProvider:

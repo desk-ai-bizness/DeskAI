@@ -1,11 +1,13 @@
 """Unit tests for the consultation domain."""
 
 import unittest
+from dataclasses import FrozenInstanceError
 
 from deskai.domain.consultation.entities import (
     Consultation,
     ConsultationStatus,
 )
+from deskai.shared.errors import DomainValidationError
 
 
 class ConsultationStatusTest(unittest.TestCase):
@@ -53,9 +55,8 @@ class ConsultationEntityTest(unittest.TestCase):
         )
         self.assertEqual(c.status, ConsultationStatus.FINALIZED)
 
-    def test_consultation_is_mutable_dataclass(self) -> None:
-        """Consultation is a plain (non-frozen) dataclass -- status
-        can be updated as the consultation progresses."""
+    def test_consultation_is_frozen_dataclass(self) -> None:
+        """Consultation is a frozen dataclass — attribute assignment raises."""
         c = Consultation(
             consultation_id="c-003",
             clinic_id="clinic-1",
@@ -63,12 +64,18 @@ class ConsultationEntityTest(unittest.TestCase):
             patient_id="pat-1",
             specialty="general",
         )
-        c.status = ConsultationStatus.RECORDING
-        self.assertEqual(c.status, ConsultationStatus.RECORDING)
+        with self.assertRaises(FrozenInstanceError):
+            c.status = ConsultationStatus.RECORDING  # type: ignore[misc]
 
-
-# Stub: rules.py and value_objects.py are empty stubs.
-# Tests will be expanded in Task 006 when domain logic is implemented.
+    def test_empty_consultation_id_raises(self) -> None:
+        with self.assertRaises(DomainValidationError):
+            Consultation(
+                consultation_id="",
+                clinic_id="clinic-1",
+                doctor_id="doc-1",
+                patient_id="pat-1",
+                specialty="general",
+            )
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from aws_cdk import aws_cognito as cognito
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_logs as logs
 from aws_cdk import aws_ssm as ssm
-from aws_cdk.aws_apigatewayv2_authorizers import HttpUserPoolAuthorizer
+from aws_cdk.aws_apigatewayv2_authorizers import HttpUserPoolAuthorizer, WebSocketLambdaAuthorizer
 from aws_cdk.aws_apigatewayv2_integrations import HttpLambdaIntegration, WebSocketLambdaIntegration
 from aws_cdk.aws_lambda import IFunction
 
@@ -127,11 +127,21 @@ class ApiStack(Stack):
             "WebSocketLambdaIntegration",
             handler=websocket_handler,
         )
+
+        ws_connect_authorizer = WebSocketLambdaAuthorizer(
+            "WebSocketConnectAuthorizer",
+            handler=websocket_handler,
+            identity_source=["route.request.querystring.token"],
+        )
+
         self.websocket_api = apigwv2.WebSocketApi(
             self,
             "WebSocketApi",
             api_name=config.websocket_api_name,
-            connect_route_options=apigwv2.WebSocketRouteOptions(integration=websocket_integration),
+            connect_route_options=apigwv2.WebSocketRouteOptions(
+                integration=websocket_integration,
+                authorizer=ws_connect_authorizer,
+            ),
             disconnect_route_options=apigwv2.WebSocketRouteOptions(
                 integration=websocket_integration
             ),

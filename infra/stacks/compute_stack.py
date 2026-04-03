@@ -1,4 +1,4 @@
-"""Compute stack for baseline Lambda functions and execution roles."""
+"""Compute stack for per-Lambda functions with least-privilege IAM roles."""
 
 from pathlib import Path
 
@@ -16,7 +16,7 @@ from constructs import Construct
 
 
 class ComputeStack(Stack):
-    """Provision reusable compute primitives for BFF and background processing."""
+    """Provision per-Lambda compute primitives with least-privilege IAM roles."""
 
     def __init__(
         self,
@@ -51,55 +51,34 @@ class ComputeStack(Stack):
             "DESKAI_WEBSOCKET_URL_PARAM": f"/{config.resource_prefix}/websocket-url",
         }
 
-        self.lambda_execution_role = iam.Role(
-            self,
-            "LambdaExecutionRole",
-            role_name=f"{config.resource_prefix}-lambda-exec-role",
-            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
-            permissions_boundary=permissions_boundary,
-            managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name(
-                    "service-role/AWSLambdaBasicExecutionRole"
-                )
-            ],
+        secrets_arns = [
+            f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{config.elevenlabs_secret_name}-??????",
+            f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{config.claude_secret_name}-??????",
+        ]
+        ssm_websocket_arn = (
+            f"arn:aws:ssm:{self.region}:{self.account}:parameter/{config.resource_prefix}/websocket-url"
         )
 
-        consultation_table.grant_read_write_data(self.lambda_execution_role)
-        artifacts_bucket.grant_read_write(self.lambda_execution_role)
-
-        self.lambda_execution_role.add_to_policy(
-            iam.PolicyStatement(
-                actions=["events:PutEvents"],
-                resources=[
-                    f"arn:aws:events:{self.region}:{self.account}:event-bus/{config.resource_prefix}-*"
-                ],
-            )
+        # --- BFF role: full DynamoDB + S3, secrets, Cognito, SSM, KMS ---
+        self.bff_role = self._create_role(
+            "BffRole", f"{config.resource_prefix}-bff-role", permissions_boundary
         )
-        self.lambda_execution_role.add_to_policy(
+        consultation_table.grant_read_write_data(self.bff_role)
+        artifacts_bucket.grant_read_write(self.bff_role)
+        secrets_key.grant_decrypt(self.bff_role)
+        self.bff_role.add_to_policy(
             iam.PolicyStatement(
-                actions=[
-                    "kms:Encrypt",
-                    "kms:Decrypt",
-                    "kms:GenerateDataKey",
-                    "kms:DescribeKey",
-                ],
+                actions=["kms:Encrypt", "kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"],
                 resources=[data_key.key_arn],
             )
         )
-        secrets_key.grant_decrypt(self.lambda_execution_role)
-        self.lambda_execution_role.add_to_policy(
+        self.bff_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
-                # Derive ARNs from config (single source of truth for secret names).
-                # The -?????? suffix matches the 6-char random ID Secrets Manager
-                # appends. No cross-stack exports — avoids CDK rename issues.
-                resources=[
-                    f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{config.elevenlabs_secret_name}-??????",
-                    f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{config.claude_secret_name}-??????",
-                ],
+                resources=secrets_arns,
             )
         )
-        self.lambda_execution_role.add_to_policy(
+        self.bff_role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
                     "cognito-idp:InitiateAuth",
@@ -110,7 +89,22 @@ class ComputeStack(Stack):
                 resources=[user_pool_arn],
             )
         )
-        self.lambda_execution_role.add_to_policy(
+        self.bff_role.add_to_policy(
+            iam.PolicyStatement(actions=["ssm:GetParameter"], resources=[ssm_websocket_arn])
+        )
+
+        # --- WebSocket role: DynamoDB r/w, ManageConnections, KMS, SSM ---
+        self.websocket_role = self._create_role(
+            "WebsocketRole", f"{config.resource_prefix}-ws-role", permissions_boundary
+        )
+        consultation_table.grant_read_write_data(self.websocket_role)
+        self.websocket_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["kms:Encrypt", "kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"],
+                resources=[data_key.key_arn],
+            )
+        )
+        self.websocket_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["ssm:GetParameter"],
                 resources=[
@@ -118,12 +112,56 @@ class ComputeStack(Stack):
                 ],
             )
         )
-        self.lambda_execution_role.add_to_policy(
+        self.websocket_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["execute-api:ManageConnections"],
                 resources=[
                     f"arn:aws:execute-api:{self.region}:{self.account}:*/*/@connections/*"
                 ],
+            )
+        )
+        self.websocket_role.add_to_policy(
+            iam.PolicyStatement(actions=["ssm:GetParameter"], resources=[ssm_websocket_arn])
+        )
+
+        # --- Pipeline role: DynamoDB r/w, S3 r/w, secrets, events, KMS ---
+        self.pipeline_role = self._create_role(
+            "PipelineRole", f"{config.resource_prefix}-pipeline-role", permissions_boundary
+        )
+        consultation_table.grant_read_write_data(self.pipeline_role)
+        artifacts_bucket.grant_read_write(self.pipeline_role)
+        secrets_key.grant_decrypt(self.pipeline_role)
+        self.pipeline_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["kms:Encrypt", "kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"],
+                resources=[data_key.key_arn],
+            )
+        )
+        self.pipeline_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
+                resources=secrets_arns,
+            )
+        )
+        self.pipeline_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["events:PutEvents"],
+                resources=[
+                    f"arn:aws:events:{self.region}:{self.account}:event-bus/{config.resource_prefix}-*"
+                ],
+            )
+        )
+
+        # --- Export role: DynamoDB read-only, S3 read-only, KMS decrypt ---
+        self.export_role = self._create_role(
+            "ExportRole", f"{config.resource_prefix}-export-role", permissions_boundary
+        )
+        consultation_table.grant_read_data(self.export_role)
+        artifacts_bucket.grant_read(self.export_role)
+        self.export_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["kms:Decrypt", "kms:DescribeKey"],
+                resources=[data_key.key_arn],
             )
         )
 
@@ -134,24 +172,32 @@ class ComputeStack(Stack):
             function_name=f"{config.resource_prefix}-bff-handler",
             handler="bff.handler",
             asset_path=asset_path,
+            role=self.bff_role,
+            reserved_concurrent_executions=50,
         )
         self.websocket_handler = self._create_function(
             function_id="WebsocketHandler",
             function_name=f"{config.resource_prefix}-ws-handler",
             handler="websocket.handler",
             asset_path=asset_path,
+            role=self.websocket_role,
+            reserved_concurrent_executions=50,
         )
         self.pipeline_handler = self._create_function(
             function_id="PipelineHandler",
             function_name=f"{config.resource_prefix}-pipeline-handler",
             handler="pipeline.handler",
             asset_path=asset_path,
+            role=self.pipeline_role,
+            reserved_concurrent_executions=10,
         )
         self.export_handler = self._create_function(
             function_id="ExportHandler",
             function_name=f"{config.resource_prefix}-export-handler",
             handler="exporter.handler",
             asset_path=asset_path,
+            role=self.export_role,
+            reserved_concurrent_executions=5,
         )
 
         for function in [
@@ -168,6 +214,25 @@ class ComputeStack(Stack):
                 removal_policy=RemovalPolicy.RETAIN if retain_logs else RemovalPolicy.DESTROY,
             )
 
+    def _create_role(
+        self,
+        role_id: str,
+        role_name: str,
+        permissions_boundary: iam.IManagedPolicy,
+    ) -> iam.Role:
+        return iam.Role(
+            self,
+            role_id,
+            role_name=role_name,
+            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+            permissions_boundary=permissions_boundary,
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name(
+                    "service-role/AWSLambdaBasicExecutionRole"
+                )
+            ],
+        )
+
     def _create_function(
         self,
         *,
@@ -175,6 +240,8 @@ class ComputeStack(Stack):
         function_name: str,
         handler: str,
         asset_path: Path,
+        role: iam.IRole,
+        reserved_concurrent_executions: int,
     ) -> lambda_.Function:
         return lambda_.Function(
             self,
@@ -183,8 +250,9 @@ class ComputeStack(Stack):
             runtime=lambda_.Runtime.PYTHON_3_12,
             handler=handler,
             code=lambda_.Code.from_asset(str(asset_path)),
-            role=self.lambda_execution_role,
+            role=role,
             timeout=Duration.seconds(30),
             memory_size=256,
             environment=self._shared_environment,
+            reserved_concurrent_executions=reserved_concurrent_executions,
         )

@@ -4,6 +4,9 @@ from dataclasses import dataclass
 
 from deskai.domain.consultation.entities import Consultation
 from deskai.ports.consultation_repository import ConsultationRepository
+from deskai.shared.logging import get_logger, log_context
+
+logger = get_logger()
 
 
 @dataclass(frozen=True)
@@ -18,6 +21,16 @@ class ListConsultationsUseCase:
         start_date: str = "",
         end_date: str = "",
     ) -> list[Consultation]:
-        return self.consultation_repo.find_by_doctor_and_date_range(
+        results = self.consultation_repo.find_by_doctor_and_date_range(
             doctor_id, start_date, end_date
         )
+        logger.debug(
+            "consultations_listed",
+            extra=log_context(
+                doctor_id=doctor_id,
+                start_date=start_date or None,
+                end_date=end_date or None,
+                count=len(results),
+            ),
+        )
+        return results

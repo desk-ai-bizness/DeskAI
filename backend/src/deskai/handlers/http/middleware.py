@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from collections.abc import Callable
 from functools import wraps
 from typing import Any
@@ -35,7 +36,7 @@ from deskai.domain.session.exceptions import (
     SessionNotActiveError,
     SessionOwnershipError,
 )
-from deskai.shared.logging import get_logger
+from deskai.shared.logging import get_logger, log_context
 
 logger = get_logger()
 
@@ -137,7 +138,7 @@ def parse_json_body(event: dict[str, Any]) -> dict[str, Any]:
     try:
         return json.loads(raw)
     except (json.JSONDecodeError, TypeError):
-        logger.warning("json_parse_error", extra={"body_preview": raw[:200]})
+        logger.warning("json_parse_error", extra=log_context(body_length=len(raw)))
         return {}
 
 
@@ -148,22 +149,67 @@ def handle_domain_errors(
 
     @wraps(fn)
     def wrapper(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        event = args[0] if args else {}
+        http_ctx = event.get("requestContext", {}).get("http", {})
+        method = http_ctx.get("method", "")
+        path = http_ctx.get("path", "")
+        request_id = event.get("requestContext", {}).get("requestId", "")
+
+        logger.info(
+            "http_request_received",
+            extra=log_context(
+                http_method=method,
+                http_path=path,
+                request_id=request_id,
+            ),
+        )
+
+        start = time.monotonic()
         try:
-            return fn(*args, **kwargs)
+            result = fn(*args, **kwargs)
+            duration_ms = int((time.monotonic() - start) * 1000)
+            status_code = result.get("statusCode", 0)
+            logger.info(
+                "http_request_completed",
+                extra=log_context(
+                    http_method=method,
+                    http_path=path,
+                    http_status=status_code,
+                    duration_ms=duration_ms,
+                    request_id=request_id,
+                ),
+            )
+            return result
         except tuple(_EXCEPTION_MAP) as exc:
+            duration_ms = int((time.monotonic() - start) * 1000)
             status_code, code = next(
                 (sc, c) for cls, (sc, c) in _EXCEPTION_MAP.items() if isinstance(exc, cls)
             )
             logger.warning(
                 "domain_error",
-                extra={
-                    "error_code": code,
-                    "error_type": type(exc).__name__,
-                },
+                extra=log_context(
+                    error_code=code,
+                    error_type=type(exc).__name__,
+                    http_method=method,
+                    http_path=path,
+                    http_status=status_code,
+                    duration_ms=duration_ms,
+                    request_id=request_id,
+                ),
             )
             return error_response(status_code, code, str(exc))
         except Exception:
-            logger.exception("unhandled_error")
+            duration_ms = int((time.monotonic() - start) * 1000)
+            logger.exception(
+                "unhandled_error",
+                extra=log_context(
+                    http_method=method,
+                    http_path=path,
+                    http_status=500,
+                    duration_ms=duration_ms,
+                    request_id=request_id,
+                ),
+            )
             return error_response(
                 500,
                 "internal_error",

@@ -14,7 +14,10 @@ from deskai.ports.consultation_repository import ConsultationRepository
 from deskai.ports.doctor_repository import DoctorRepository
 from deskai.ports.patient_repository import PatientRepository
 from deskai.shared.identifiers import new_uuid
+from deskai.shared.logging import get_logger, log_context
 from deskai.shared.time import utc_now_iso
+
+logger = get_logger()
 
 
 @dataclass(frozen=True)
@@ -47,15 +50,36 @@ class CreateConsultationUseCase:
             created_at=created_at or "",
             consultations_used_this_month=used,
         )
+        logger.info(
+            "consultation_creation_started",
+            extra=log_context(
+                doctor_id=auth_context.doctor_id,
+                clinic_id=auth_context.clinic_id,
+                patient_id=patient_id,
+            ),
+        )
+
         if entitlements.trial_expired:
+            logger.warning(
+                "consultation_creation_blocked",
+                extra=log_context(reason="trial_expired", doctor_id=auth_context.doctor_id),
+            )
             raise TrialExpiredError("Free trial period has expired")
         if not entitlements.can_create_consultation:
+            logger.warning(
+                "consultation_creation_blocked",
+                extra=log_context(reason="plan_limit", doctor_id=auth_context.doctor_id, used=used),
+            )
             raise PlanLimitExceededError(
                 f"Monthly consultation limit reached ({used}/{used})"
             )
 
         patient = self.patient_repo.find_by_id(patient_id, auth_context.clinic_id)
         if not patient:
+            logger.warning(
+                "consultation_creation_failed",
+                extra=log_context(reason="patient_not_found", patient_id=patient_id),
+            )
             raise PatientNotFoundError(f"Patient {patient_id} not found")
 
         now = utc_now_iso()
@@ -73,6 +97,17 @@ class CreateConsultationUseCase:
         )
 
         self.consultation_repo.save(consultation)
+
+        logger.info(
+            "consultation_created",
+            extra=log_context(
+                consultation_id=consultation.consultation_id,
+                doctor_id=auth_context.doctor_id,
+                clinic_id=auth_context.clinic_id,
+                patient_id=patient_id,
+                specialty=specialty,
+            ),
+        )
 
         self.audit_repo.append(
             AuditEvent(

@@ -1,9 +1,10 @@
 """WebSocket Lambda router — routes API Gateway WebSocket events to handlers."""
 
 import json
-import logging
 
-logger = logging.getLogger(__name__)
+from deskai.shared.logging import get_logger, log_context
+
+logger = get_logger()
 
 _container = None
 
@@ -96,15 +97,19 @@ def handler(event: dict, context) -> dict:
 
     route_key = event.get("requestContext", {}).get("routeKey", "")
 
+    connection_id = event.get("requestContext", {}).get("connectionId", "")
+
     if route_key == "$connect":
         from deskai.handlers.websocket.connect_handler import handle_connect
 
+        logger.info("ws_connect", extra=log_context(connection_id=connection_id))
         c = _get_container()
         return handle_connect(event, c.connection_repo, c.auth_provider)
 
     if route_key == "$disconnect":
         from deskai.handlers.websocket.disconnect_handler import handle_disconnect
 
+        logger.info("ws_disconnect", extra=log_context(connection_id=connection_id))
         c = _get_container()
         return handle_disconnect(event, c.connection_repo, c.session_repo)
 
@@ -117,6 +122,9 @@ def handler(event: dict, context) -> dict:
         action = route_key
 
     if action:
+        logger.debug(
+            "ws_route", extra=log_context(action=action, connection_id=connection_id),
+        )
         if action == "session.init":
             from deskai.handlers.websocket.session_init_handler import (
                 handle_session_init,
@@ -160,5 +168,5 @@ def handler(event: dict, context) -> dict:
 
             return handle_ping(event)
 
-    logger.warning("Unrecognized route: %s", route_key)
+    logger.warning("ws_unrecognized_route", extra=log_context(route_key=route_key))
     return {"statusCode": 400, "body": "Unrecognized route"}

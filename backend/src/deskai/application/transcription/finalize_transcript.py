@@ -15,7 +15,10 @@ from deskai.ports.consultation_repository import ConsultationRepository
 from deskai.ports.transcript_repository import TranscriptRepository
 from deskai.ports.transcription_provider import TranscriptionProvider
 from deskai.shared.identifiers import new_uuid
+from deskai.shared.logging import get_logger, log_context
 from deskai.shared.time import utc_now_iso
+
+logger = get_logger()
 
 
 @dataclass(frozen=True)
@@ -33,6 +36,13 @@ class FinalizeTranscriptUseCase:
         consultation_id: str,
         clinic_id: str,
     ) -> NormalizedTranscript:
+        logger.info(
+            "transcript_finalization_started",
+            extra=log_context(
+                session_id=session_id, consultation_id=consultation_id, clinic_id=clinic_id,
+            ),
+        )
+
         consultation = self.consultation_repo.find_by_id(
             consultation_id, clinic_id
         )
@@ -42,6 +52,12 @@ class FinalizeTranscriptUseCase:
                 session_id
             )
         except TranscriptionError as exc:
+            logger.error(
+                "transcript_fetch_failed",
+                extra=log_context(
+                    session_id=session_id, consultation_id=consultation_id, error=str(exc),
+                ),
+            )
             consultation = self._mark_failed(consultation, str(exc))
             self.consultation_repo.save(consultation)
             raise
@@ -51,6 +67,10 @@ class FinalizeTranscriptUseCase:
             consultation_id=consultation_id,
             raw_response=raw_response,
         )
+        logger.info(
+            "raw_transcript_saved",
+            extra=log_context(consultation_id=consultation_id, session_id=session_id),
+        )
 
         try:
             normalized = TranscriptionNormalizer.normalize_elevenlabs_response(
@@ -59,6 +79,12 @@ class FinalizeTranscriptUseCase:
                 provider_session_id=session_id,
             )
         except NormalizationError as exc:
+            logger.error(
+                "transcript_normalization_failed",
+                extra=log_context(
+                    session_id=session_id, consultation_id=consultation_id, error=str(exc),
+                ),
+            )
             consultation = self._mark_failed(consultation, str(exc))
             self.consultation_repo.save(consultation)
             raise
@@ -67,6 +93,13 @@ class FinalizeTranscriptUseCase:
             clinic_id=clinic_id,
             consultation_id=consultation_id,
             normalized=normalized,
+        )
+        logger.info(
+            "transcript_finalized",
+            extra=log_context(
+                consultation_id=consultation_id,
+                completeness=str(normalized.completeness_status),
+            ),
         )
 
         now = utc_now_iso()

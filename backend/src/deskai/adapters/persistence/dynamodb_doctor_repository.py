@@ -7,7 +7,7 @@ from deskai.adapters.persistence.schema import DoctorProfileFields as F
 from deskai.domain.auth.entities import DoctorProfile
 from deskai.domain.auth.value_objects import PlanType
 from deskai.ports.doctor_repository import DoctorRepository
-from deskai.shared.logging import get_logger
+from deskai.shared.logging import get_logger, log_context
 
 logger = get_logger()
 
@@ -23,6 +23,10 @@ class DynamoDBDoctorRepository(DynamoDBBaseRepository, DoctorRepository):
             },
         )
         item = response.get("Item")
+        logger.debug(
+            "dynamodb_doctor_profile_lookup",
+            extra=log_context(found=item is not None),
+        )
         if item is None:
             return None
 
@@ -50,7 +54,12 @@ class DynamoDBDoctorRepository(DynamoDBBaseRepository, DoctorRepository):
                 ":sk_prefix": f"CONSULTATION#{month_prefix}",
             },
         )
-        return response.get("Count", 0)
+        count = response.get("Count", 0)
+        logger.debug(
+            "dynamodb_consultation_count",
+            extra=log_context(doctor_id=doctor_id, month=month_prefix, count=count),
+        )
+        return count
 
     def find_created_at(self, doctor_id: str) -> str | None:
         response = self._safe_query(

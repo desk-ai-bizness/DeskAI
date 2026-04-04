@@ -14,7 +14,10 @@ from deskai.ports.audit_repository import AuditRepository
 from deskai.ports.consultation_repository import ConsultationRepository
 from deskai.ports.session_repository import SessionRepository
 from deskai.shared.identifiers import new_uuid
+from deskai.shared.logging import get_logger, log_context
 from deskai.shared.time import utc_now_iso
+
+logger = get_logger()
 
 
 @dataclass(frozen=True)
@@ -31,6 +34,13 @@ class StartSessionUseCase:
         doctor_id: str,
         clinic_id: str,
     ) -> Session:
+        logger.info(
+            "session_start_requested",
+            extra=log_context(
+                consultation_id=consultation_id, doctor_id=doctor_id, clinic_id=clinic_id,
+            ),
+        )
+
         consultation = self.consultation_repo.find_by_id(consultation_id, clinic_id)
         if consultation is None:
             raise ConsultationNotFoundError(
@@ -48,6 +58,12 @@ class StartSessionUseCase:
                 consultation_id
             )
             if existing is not None:
+                logger.info(
+                    "session_start_idempotent",
+                    extra=log_context(
+                        consultation_id=consultation_id, session_id=existing.session_id,
+                    ),
+                )
                 return existing
 
         SessionService.validate_session_start(
@@ -65,6 +81,15 @@ class StartSessionUseCase:
         )
 
         self.session_repo.save(session)
+
+        logger.info(
+            "session_started",
+            extra=log_context(
+                session_id=session.session_id,
+                consultation_id=consultation_id,
+                doctor_id=doctor_id,
+            ),
+        )
 
         consultation = replace(
             consultation,

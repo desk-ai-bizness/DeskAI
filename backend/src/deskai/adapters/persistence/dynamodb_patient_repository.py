@@ -4,7 +4,7 @@ from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
 from deskai.adapters.persistence.schema import PatientFields as F
 from deskai.domain.patient.entities import Patient
 from deskai.ports.patient_repository import PatientRepository
-from deskai.shared.logging import get_logger
+from deskai.shared.logging import get_logger, log_context
 
 logger = get_logger()
 
@@ -29,6 +29,10 @@ class DynamoDBPatientRepository(DynamoDBBaseRepository, PatientRepository):
                 F.CREATED_AT: patient.created_at,
             }
         )
+        logger.info(
+            "dynamodb_patient_saved",
+            extra=log_context(patient_id=patient.patient_id, clinic_id=patient.clinic_id),
+        )
 
     def find_by_id(
         self, patient_id: str, clinic_id: str
@@ -41,7 +45,15 @@ class DynamoDBPatientRepository(DynamoDBBaseRepository, PatientRepository):
         )
         item = response.get("Item")
         if item is None:
+            logger.debug(
+                "dynamodb_patient_not_found",
+                extra=log_context(patient_id=patient_id, clinic_id=clinic_id),
+            )
             return None
+        logger.debug(
+            "dynamodb_patient_found",
+            extra=log_context(patient_id=patient_id, clinic_id=clinic_id),
+        )
         return self._to_entity(item)
 
     def find_by_clinic(
@@ -62,6 +74,10 @@ class DynamoDBPatientRepository(DynamoDBBaseRepository, PatientRepository):
             patients = [
                 p for p in patients if term_lower in p.name.lower()
             ]
+        logger.debug(
+            "dynamodb_patients_queried",
+            extra=log_context(clinic_id=clinic_id, count=len(patients)),
+        )
         return patients
 
     @staticmethod

@@ -20,7 +20,6 @@ import unittest
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-
 # ---------------------------------------------------------------------------
 # Doctor Profile contract
 # ---------------------------------------------------------------------------

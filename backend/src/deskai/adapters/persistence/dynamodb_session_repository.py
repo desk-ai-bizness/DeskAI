@@ -16,9 +16,9 @@ class DynamoDBSessionRepository(DynamoDBBaseRepository, SessionRepository):
         PK = SESSION#{session_id}
         SK = METADATA
 
-    GSI consultation-session-index:
-        GSI1PK = CONSULTATION#{consultation_id}
-        GSI1SK = SESSION#{session_id}
+    GSI gsi_consultation_session:
+        GSI4PK = CONSULTATION#{consultation_id}
+        GSI4SK = SESSION#{session_id}
     """
 
     def save(self, session: Session) -> None:
@@ -39,20 +39,20 @@ class DynamoDBSessionRepository(DynamoDBBaseRepository, SessionRepository):
         item = response.get("Item")
         if item is None:
             logger.debug(
-                "dynamodb_session_not_found", extra=log_context(session_id=session_id),
+                "dynamodb_session_not_found",
+                extra=log_context(session_id=session_id),
             )
             return None
         logger.debug(
-            "dynamodb_session_found", extra=log_context(session_id=session_id),
+            "dynamodb_session_found",
+            extra=log_context(session_id=session_id),
         )
         return self._to_entity(item)
 
-    def find_active_by_consultation_id(
-        self, consultation_id: str
-    ) -> Session | None:
+    def find_active_by_consultation_id(self, consultation_id: str) -> Session | None:
         response = self._safe_query(
-            IndexName="consultation-session-index",
-            KeyConditionExpression="GSI1PK = :pk",
+            IndexName="gsi_consultation_session",
+            KeyConditionExpression="GSI4PK = :pk",
             ExpressionAttributeValues={
                 ":pk": f"CONSULTATION#{consultation_id}",
             },
@@ -85,8 +85,8 @@ class DynamoDBSessionRepository(DynamoDBBaseRepository, SessionRepository):
         item: dict[str, object] = {
             F.PK: f"SESSION#{session.session_id}",
             F.SK: "METADATA",
-            F.GSI1PK: f"CONSULTATION#{session.consultation_id}",
-            F.GSI1SK: f"SESSION#{session.session_id}",
+            F.GSI4PK: f"CONSULTATION#{session.consultation_id}",
+            F.GSI4SK: f"SESSION#{session.session_id}",
             F.SESSION_ID: session.session_id,
             F.CONSULTATION_ID: session.consultation_id,
             F.DOCTOR_ID: session.doctor_id,

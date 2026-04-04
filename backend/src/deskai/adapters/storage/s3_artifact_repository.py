@@ -4,6 +4,9 @@ from deskai.adapters.storage.s3_artifact_keys import build_artifact_key
 from deskai.adapters.storage.s3_client import S3Client
 from deskai.domain.consultation.value_objects import ArtifactType
 from deskai.ports.artifact_repository import ArtifactRepository
+from deskai.shared.logging import get_logger, log_context
+
+logger = get_logger()
 
 
 class S3ArtifactRepository(ArtifactRepository):
@@ -21,6 +24,14 @@ class S3ArtifactRepository(ArtifactRepository):
     ) -> None:
         key = build_artifact_key(clinic_id, consultation_id, artifact_type)
         self._s3.put_json(key, data)
+        logger.info(
+            "artifact_saved",
+            extra=log_context(
+                consultation_id=consultation_id,
+                clinic_id=clinic_id,
+                artifact_type=str(artifact_type),
+            ),
+        )
 
     def get_artifact(
         self,
@@ -29,4 +40,14 @@ class S3ArtifactRepository(ArtifactRepository):
         artifact_type: ArtifactType,
     ) -> dict | None:
         key = build_artifact_key(clinic_id, consultation_id, artifact_type)
-        return self._s3.get_json(key)
+        result = self._s3.get_json(key)
+        logger.debug(
+            "artifact_fetched",
+            extra=log_context(
+                consultation_id=consultation_id,
+                clinic_id=clinic_id,
+                artifact_type=str(artifact_type),
+                found=result is not None,
+            ),
+        )
+        return result

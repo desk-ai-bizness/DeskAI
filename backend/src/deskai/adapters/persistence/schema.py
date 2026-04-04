@@ -147,12 +147,17 @@ class ConsultationFields:
 
 
 class SessionFields:
-    """DynamoDB attribute names for a session item."""
+    """DynamoDB attribute names for a session item.
+
+    GSI: gsi_consultation_session
+        GSI4PK = CONSULTATION#{consultation_id}
+        GSI4SK = SESSION#{session_id}
+    """
 
     PK = "PK"
     SK = "SK"
-    GSI1PK = "GSI1PK"
-    GSI1SK = "GSI1SK"
+    GSI4PK = "GSI4PK"
+    GSI4SK = "GSI4SK"
     SESSION_ID = "session_id"
     CONSULTATION_ID = "consultation_id"
     DOCTOR_ID = "doctor_id"
@@ -187,8 +192,8 @@ class SessionFields:
         item: dict[str, object] = {
             cls.PK: f"SESSION#{session_id}",
             cls.SK: "METADATA",
-            cls.GSI1PK: f"CONSULTATION#{consultation_id}",
-            cls.GSI1SK: f"SESSION#{session_id}",
+            cls.GSI4PK: f"CONSULTATION#{consultation_id}",
+            cls.GSI4SK: f"SESSION#{session_id}",
             cls.SESSION_ID: session_id,
             cls.CONSULTATION_ID: consultation_id,
             cls.DOCTOR_ID: doctor_id,

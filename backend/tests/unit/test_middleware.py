@@ -2,6 +2,7 @@
 
 import json
 import unittest
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 from deskai.domain.auth.entities import DoctorProfile
@@ -51,7 +52,7 @@ class ExtractAuthContextTest(unittest.TestCase):
             clinic_id="c1",
             clinic_name="Clinic",
             plan_type=PlanType.PLUS,
-            created_at="2026-01-01T00:00:00+00:00",
+            created_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         mock_uc = MagicMock()
         mock_uc.execute.return_value = profile

@@ -37,7 +37,8 @@ class S3Client:
         except ClientError as exc:
             if exc.response["Error"]["Code"] == "NoSuchKey":
                 logger.debug(
-                    "s3_get_json", extra=log_context(bucket=self._bucket, key=key, found=False),
+                    "s3_get_json",
+                    extra=log_context(bucket=self._bucket, key=key, found=False),
                 )
                 return None
             raise
@@ -53,7 +54,10 @@ class S3Client:
         logger.debug(
             "s3_put_bytes",
             extra=log_context(
-                bucket=self._bucket, key=key, content_type=content_type, size_bytes=len(data),
+                bucket=self._bucket,
+                key=key,
+                content_type=content_type,
+                size_bytes=len(data),
             ),
         )
 
@@ -68,6 +72,24 @@ class S3Client:
             else:
                 raise
         logger.debug(
-            "s3_exists_check", extra=log_context(bucket=self._bucket, key=key, exists=result),
+            "s3_exists_check",
+            extra=log_context(bucket=self._bucket, key=key, exists=result),
         )
         return result
+
+    def generate_presigned_url(self, key: str, expires_in_seconds: int = 3600) -> str:
+        """Generate a time-limited download URL for the given key."""
+        url = self._s3.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": self._bucket, "Key": key},
+            ExpiresIn=expires_in_seconds,
+        )
+        logger.debug(
+            "s3_presigned_url",
+            extra=log_context(
+                bucket=self._bucket,
+                key=key,
+                expires_in=expires_in_seconds,
+            ),
+        )
+        return url

@@ -1,6 +1,7 @@
 """Create a new consultation for a patient."""
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 from deskai.domain.audit.entities import AuditAction, AuditEvent
 from deskai.domain.auth.exceptions import PlanLimitExceededError, TrialExpiredError
@@ -47,7 +48,7 @@ class CreateConsultationUseCase:
         created_at = self.doctor_repo.find_created_at(auth_context.doctor_id)
         entitlements = compute_entitlements(
             plan_type=auth_context.plan_type,
-            created_at=created_at or "",
+            created_at=created_at or datetime.now(tz=UTC),
             consultations_used_this_month=used,
         )
         logger.info(
@@ -70,9 +71,7 @@ class CreateConsultationUseCase:
                 "consultation_creation_blocked",
                 extra=log_context(reason="plan_limit", doctor_id=auth_context.doctor_id, used=used),
             )
-            raise PlanLimitExceededError(
-                f"Monthly consultation limit reached ({used}/{used})"
-            )
+            raise PlanLimitExceededError(f"Monthly consultation limit reached ({used}/{used})")
 
         patient = self.patient_repo.find_by_id(patient_id, auth_context.clinic_id)
         if not patient:

@@ -1,6 +1,7 @@
 """Tests for plan entitlement enforcement in CreateConsultationUseCase."""
 
 import unittest
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 from deskai.domain.auth.exceptions import PlanLimitExceededError, TrialExpiredError
@@ -9,8 +10,8 @@ from tests.conftest import make_sample_auth_context, make_sample_patient
 
 _MOD = "deskai.application.consultation.create_consultation"
 
-ACTIVE_TRIAL_CREATED_AT = "2026-03-25T00:00:00+00:00"
-EXPIRED_TRIAL_CREATED_AT = "2025-01-01T00:00:00+00:00"
+ACTIVE_TRIAL_CREATED_AT = datetime(2026, 3, 25, tzinfo=UTC)
+EXPIRED_TRIAL_CREATED_AT = datetime(2025, 1, 1, tzinfo=UTC)
 
 
 class CreateConsultationEntitlementTest(unittest.TestCase):
@@ -51,7 +52,7 @@ class CreateConsultationEntitlementTest(unittest.TestCase):
     def test_plus_at_limit_raises(self, _t, _u) -> None:
         auth = make_sample_auth_context(plan_type=PlanType.PLUS)
         self.doctor_repo.count_consultations_this_month.return_value = 50
-        self.doctor_repo.find_created_at.return_value = "2026-01-15T10:00:00+00:00"
+        self.doctor_repo.find_created_at.return_value = datetime(2026, 1, 15, 10, 0, 0, tzinfo=UTC)
 
         with self.assertRaises(PlanLimitExceededError):
             self.use_case.execute(
@@ -82,7 +83,7 @@ class CreateConsultationEntitlementTest(unittest.TestCase):
     def test_pro_plan_unlimited(self, _t, _u) -> None:
         auth = make_sample_auth_context(plan_type=PlanType.PRO)
         self.doctor_repo.count_consultations_this_month.return_value = 999
-        self.doctor_repo.find_created_at.return_value = "2026-01-15T10:00:00+00:00"
+        self.doctor_repo.find_created_at.return_value = datetime(2026, 1, 15, 10, 0, 0, tzinfo=UTC)
         self.patient_repo.find_by_id.return_value = make_sample_patient()
 
         result = self.use_case.execute(
@@ -98,7 +99,7 @@ class CreateConsultationEntitlementTest(unittest.TestCase):
     def test_plus_under_limit_succeeds(self, _t, _u) -> None:
         auth = make_sample_auth_context(plan_type=PlanType.PLUS)
         self.doctor_repo.count_consultations_this_month.return_value = 30
-        self.doctor_repo.find_created_at.return_value = "2026-01-15T10:00:00+00:00"
+        self.doctor_repo.find_created_at.return_value = datetime(2026, 1, 15, 10, 0, 0, tzinfo=UTC)
         self.patient_repo.find_by_id.return_value = make_sample_patient()
 
         result = self.use_case.execute(
@@ -129,7 +130,7 @@ class CreateConsultationEntitlementTest(unittest.TestCase):
     def test_entitlement_checked_before_patient_lookup(self, _t, _u) -> None:
         auth = make_sample_auth_context(plan_type=PlanType.PLUS)
         self.doctor_repo.count_consultations_this_month.return_value = 50
-        self.doctor_repo.find_created_at.return_value = "2026-01-15T10:00:00+00:00"
+        self.doctor_repo.find_created_at.return_value = datetime(2026, 1, 15, 10, 0, 0, tzinfo=UTC)
 
         with self.assertRaises(PlanLimitExceededError):
             self.use_case.execute(

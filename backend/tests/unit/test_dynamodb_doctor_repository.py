@@ -1,6 +1,7 @@
 """Unit tests for the DynamoDB doctor repository adapter."""
 
 import unittest
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 from deskai.adapters.persistence.dynamodb_doctor_repository import (
@@ -61,7 +62,7 @@ class DynamoDBDoctorRepositoryTest(unittest.TestCase):
                 clinic_id="clinic-01",
                 clinic_name="Clinica Vida",
                 plan_type=PlanType.PLUS,
-                created_at="2025-01-15T10:00:00Z",
+                created_at=datetime.fromisoformat("2025-01-15T10:00:00Z"),
             ),
         )
         self.mock_table.get_item.assert_called_once_with(
@@ -103,7 +104,7 @@ class DynamoDBDoctorRepositoryTest(unittest.TestCase):
         self.assertEqual(result.clinic_id, "clinic-77")
         self.assertEqual(result.clinic_name, "Centro Saude")
         self.assertEqual(result.plan_type, PlanType.PRO)
-        self.assertEqual(result.created_at, "2024-06-01T08:30:00Z")
+        self.assertEqual(result.created_at, datetime.fromisoformat("2024-06-01T08:30:00Z"))
 
     def test_find_by_identity_provider_id_free_trial_plan(self, mock_boto3: MagicMock) -> None:
         repo = self._make_repo(mock_boto3)

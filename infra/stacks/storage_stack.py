@@ -72,11 +72,9 @@ class StorageStack(Stack):
             projection_type=dynamodb.ProjectionType.ALL,
         )
         self.consultation_table.add_global_secondary_index(
-            index_name="consultation-session-index",
-            partition_key=dynamodb.Attribute(
-                name="consultation_id", type=dynamodb.AttributeType.STRING
-            ),
-            sort_key=dynamodb.Attribute(name="created_at", type=dynamodb.AttributeType.STRING),
+            index_name="gsi_consultation_session",
+            partition_key=dynamodb.Attribute(name="GSI4PK", type=dynamodb.AttributeType.STRING),
+            sort_key=dynamodb.Attribute(name="GSI4SK", type=dynamodb.AttributeType.STRING),
             projection_type=dynamodb.ProjectionType.ALL,
         )
 

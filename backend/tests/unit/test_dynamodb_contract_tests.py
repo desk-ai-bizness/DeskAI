@@ -226,8 +226,8 @@ class TestSessionContract(unittest.TestCase):
         raw_item = {
             "PK": "SESSION#sess-001",
             "SK": "METADATA",
-            "GSI1PK": "CONSULTATION#cons-001",
-            "GSI1SK": "SESSION#sess-001",
+            "GSI4PK": "CONSULTATION#cons-001",
+            "GSI4SK": "SESSION#sess-001",
             "session_id": "sess-001",
             "consultation_id": "cons-001",
             "doctor_id": "doc-001",
@@ -308,8 +308,8 @@ class TestSessionContract(unittest.TestCase):
 
         self.assertEqual(item["PK"], "SESSION#sess-002")
         self.assertEqual(item["SK"], "METADATA")
-        self.assertEqual(item["GSI1PK"], "CONSULTATION#cons-002")
-        self.assertEqual(item["GSI1SK"], "SESSION#sess-002")
+        self.assertEqual(item["GSI4PK"], "CONSULTATION#cons-002")
+        self.assertEqual(item["GSI4SK"], "SESSION#sess-002")
         self.assertEqual(item["session_id"], "sess-002")
         self.assertEqual(item["state"], "active")
 

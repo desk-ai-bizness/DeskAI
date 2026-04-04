@@ -56,8 +56,8 @@ class DynamoDBSessionRepositoryTest(unittest.TestCase):
 
         call_kwargs = self.mock_table.put_item.call_args[1]
         item = call_kwargs["Item"]
-        self.assertEqual(item["GSI1PK"], "CONSULTATION#cons-001")
-        self.assertEqual(item["GSI1SK"], "SESSION#sess-001")
+        self.assertEqual(item["GSI4PK"], "CONSULTATION#cons-001")
+        self.assertEqual(item["GSI4SK"], "SESSION#sess-001")
 
     # ---- find_by_id ----
 
@@ -122,7 +122,7 @@ class DynamoDBSessionRepositoryTest(unittest.TestCase):
         self.assertEqual(result.session_id, "sess-001")
         self.assertEqual(result.state, SessionState.ACTIVE)
         call_kwargs = self.mock_table.query.call_args[1]
-        self.assertEqual(call_kwargs["IndexName"], "consultation-session-index")
+        self.assertEqual(call_kwargs["IndexName"], "gsi_consultation_session")
 
     def test_find_active_by_consultation_id_returns_none_when_not_found(
         self, mock_boto3: MagicMock

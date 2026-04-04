@@ -13,6 +13,8 @@ from deskai.domain.auth.value_objects import (
 )
 from deskai.domain.consultation.entities import Consultation, ConsultationStatus
 from deskai.domain.patient.entities import Patient
+from deskai.domain.transcription.entities import NormalizedTranscript
+from deskai.domain.transcription.value_objects import CompletenessStatus, SpeakerSegment
 
 # ---------------------------------------------------------------------------
 # AWS client mocks
@@ -216,3 +218,160 @@ def make_sample_audit_event(**overrides: Any) -> AuditEvent:
     )
     defaults.update(overrides)
     return AuditEvent(**defaults)
+
+
+# ---------------------------------------------------------------------------
+# AI Pipeline fixtures
+# ---------------------------------------------------------------------------
+
+
+def make_sample_normalized_transcript(**overrides: Any) -> NormalizedTranscript:
+    """Build a NormalizedTranscript with sensible defaults."""
+    defaults: dict[str, Any] = dict(
+        consultation_id="cons-001",
+        provider_name="elevenlabs",
+        provider_session_id="sess-001",
+        language="pt-BR",
+        transcript_text=("Doutor: Como voce esta? Paciente: Estou com dor de cabeca ha dois dias."),
+        speaker_segments=[
+            SpeakerSegment(
+                speaker="doctor",
+                text="Como voce esta?",
+                start_time=0.0,
+                end_time=1.5,
+                confidence=0.95,
+            ),
+            SpeakerSegment(
+                speaker="patient",
+                text="Estou com dor de cabeca ha dois dias.",
+                start_time=2.0,
+                end_time=4.0,
+                confidence=0.90,
+            ),
+        ],
+        completeness_status=CompletenessStatus.COMPLETE,
+    )
+    defaults.update(overrides)
+    return NormalizedTranscript(**defaults)
+
+
+def make_sample_anamnesis_output() -> dict[str, Any]:
+    """Valid anamnesis JSON matching prompt schema."""
+    return {
+        "queixa_principal": {
+            "descricao": "Dor de cabeca",
+            "duracao": "2 dias",
+        },
+        "historia_doenca_atual": {
+            "narrativa": "Paciente relata dor de cabeca...",
+            "sintomas": [
+                {
+                    "nome": "cefaleia",
+                    "inicio": "2 dias",
+                    "intensidade": "moderada",
+                    "fatores_agravantes": "nao_informado",
+                    "fatores_atenuantes": "nao_informado",
+                    "localizacao": "frontal",
+                }
+            ],
+        },
+        "historico_medico_pregresso": {
+            "doencas_previas": [],
+            "cirurgias_previas": [],
+            "internacoes_previas": [],
+        },
+        "medicamentos_em_uso": [],
+        "alergias": {"relatadas": [], "nega_alergias": False},
+        "revisao_de_sistemas": {
+            "sistemas_mencionados": [],
+            "sistemas_nao_avaliados": ["cardiovascular", "respiratorio"],
+        },
+        "achados_exame_fisico": [],
+        "observacoes_adicionais": "nao_informado",
+        "campos_incompletos": ["achados_exame_fisico"],
+    }
+
+
+def make_sample_summary_output() -> dict[str, Any]:
+    """Valid SOAP summary JSON matching prompt schema."""
+    return {
+        "subjetivo": {
+            "queixa_principal": "Dor de cabeca",
+            "historia": "Paciente relata cefaleia frontal ha 2 dias.",
+            "informacoes_adicionais": "nao_informado",
+        },
+        "objetivo": {
+            "exame_fisico": "nao_informado",
+            "sinais_vitais": {
+                "pressao_arterial": "nao_informado",
+                "frequencia_cardiaca": "nao_informado",
+                "temperatura": "nao_informado",
+                "saturacao_o2": "nao_informado",
+                "outros": "nao_informado",
+            },
+            "exames_complementares": "nao_informado",
+        },
+        "avaliacao": {
+            "hipoteses_diagnosticas": [
+                {
+                    "descricao": "Cefaleia tensional",
+                    "cid10_sugerido": "G44.2",
+                    "confianca": "media",
+                }
+            ],
+            "observacoes": "",
+        },
+        "plano": {
+            "condutas": ["Orientacao sobre higiene do sono"],
+            "exames_solicitados": [],
+            "encaminhamentos": [],
+            "prescricoes_mencionadas": [],
+            "orientacoes_ao_paciente": ["Retornar se piora"],
+            "retorno": "Se necessario",
+        },
+        "codigos_cid10_sugeridos": [
+            {
+                "codigo": "G44.2",
+                "descricao": "Cefaleia tensional",
+                "justificativa": "Relato de dor de cabeca frontal",
+            }
+        ],
+        "aviso_revisao": (
+            "Este resumo requer revisao e aprovacao do medico antes de ser finalizado."
+        ),
+    }
+
+
+def make_sample_insights_output() -> dict[str, Any]:
+    """Valid insights JSON matching prompt schema."""
+    return {
+        "observacoes": [
+            {
+                "categoria": "lacuna_de_documentacao",
+                "descricao": "Exame fisico nao registrado",
+                "severidade": "moderado",
+                "evidencia": {
+                    "trecho": "Estou com dor de cabeca ha dois dias",
+                    "contexto": ("Paciente relata sintoma sem exame fisico documentado"),
+                },
+                "sugestao_revisao": "Registrar achados do exame fisico",
+            }
+        ],
+        "resumo_observacoes": {
+            "total": 1,
+            "por_categoria": {
+                "lacuna_de_documentacao": 1,
+                "inconsistencia": 0,
+                "atencao_clinica": 0,
+            },
+            "por_severidade": {
+                "informativo": 0,
+                "moderado": 1,
+                "importante": 0,
+            },
+        },
+        "aviso_revisao": (
+            "Estas observacoes sao sinalizacoes para revisao. "
+            "O medico e o responsavel pela avaliacao final."
+        ),
+    }

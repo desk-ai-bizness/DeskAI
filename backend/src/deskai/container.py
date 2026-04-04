@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from deskai.adapters.auth.cognito_provider import CognitoAuthProvider
 from deskai.adapters.events.stub_publisher import StubEventPublisher
 from deskai.adapters.export.stub_generator import StubExportGenerator
-from deskai.adapters.llm.stub_provider import StubLLMProvider
+from deskai.adapters.llm.lazy_provider import LazyLLMProvider
 from deskai.adapters.persistence.dynamodb_audit_repository import (
     DynamoDBAuditRepository,
 )
@@ -23,6 +23,9 @@ from deskai.adapters.persistence.dynamodb_patient_repository import (
 )
 from deskai.adapters.persistence.dynamodb_session_repository import (
     DynamoDBSessionRepository,
+)
+from deskai.application.ai_pipeline.run_pipeline import (
+    RunPipelineUseCase,
 )
 from deskai.application.auth.authenticate import AuthenticateUseCase
 from deskai.application.auth.check_entitlements import (
@@ -116,6 +119,7 @@ class Container:
     end_session: EndSessionUseCase
     process_audio_chunk: ProcessAudioChunkUseCase
     finalize_transcript: FinalizeTranscriptUseCase
+    run_pipeline: RunPipelineUseCase
     get_ui_config: GetUiConfigUseCase
 
 
@@ -183,7 +187,18 @@ def build_container() -> Container:
 
     event_publisher = StubEventPublisher()
     export_generator = StubExportGenerator()
-    llm_provider = StubLLMProvider()
+
+    def _build_llm_provider():
+        from deskai.adapters.llm.claude_provider import ClaudeLLMProvider
+        from deskai.adapters.secrets.secrets_manager import (
+            SecretsManagerClient,
+        )
+
+        secrets = SecretsManagerClient()
+        secret = secrets.get_secret(settings.claude_secret_name)
+        return ClaudeLLMProvider(api_key=secret["api_key"])
+
+    llm_provider = LazyLLMProvider(_build_llm_provider)
     ui_config_assembler = BffUiConfigAssembler()
 
     return Container(
@@ -256,6 +271,14 @@ def build_container() -> Container:
             transcription_provider=transcription_provider,
             transcript_repo=transcript_repo,
             consultation_repo=consultation_repo,
+            audit_repo=audit_repo,
+        ),
+        run_pipeline=RunPipelineUseCase(
+            llm_provider=llm_provider,
+            artifact_repo=artifact_repo,
+            consultation_repo=consultation_repo,
+            transcript_repo=transcript_repo,
+            patient_repo=patient_repo,
             audit_repo=audit_repo,
         ),
         get_ui_config=GetUiConfigUseCase(

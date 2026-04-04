@@ -38,10 +38,10 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-AI processing pipeline complete — ready for review/finalization workflows
+Backend complete — ready for frontend implementation
 
 ### Overall Progress
-80% complete
+87% complete
 
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
@@ -62,9 +62,10 @@ AI processing pipeline complete — ready for review/finalization workflows
 - Task 008 completed: real-time session transport with session domain layer (Session entity, 6-state SessionState, AudioChunk/ConnectionInfo VOs, SessionService with 6 validation methods, 7 exception types), port interfaces (SessionRepository, ConnectionRepository), HTTP session handlers (POST .../session/start, POST .../session/end), BFF session views (SessionStartView, SessionEndView), 6 WebSocket handlers ($connect, $disconnect, session.init, audio.chunk, session.stop, client.ping), WebSocket Lambda router, DynamoDB session/connection adapters, CDK WebSocket API Gateway with ManageConnections IAM, ApiGatewayManagement helper, stub transcript delivery, container and BFF router wiring, settings expanded (websocket_url, max_session_duration_minutes), 128 new tests (461 total), zero regressions, lint clean
 - Task 009 completed: ElevenLabs Scribe v2 transcription provider integrated through internal adapter interface. Transcription domain layer (NormalizedTranscript entity, SpeakerSegment/PartialTranscript/CompletenessStatus VOs, TranscriptionNormalizer service, 5 exception types). ElevenLabs adapter with HTTP batch upload for Lambda compatibility, tenacity retry, Secrets Manager config. S3 artifact persistence (S3Client, S3ArtifactRepository, S3TranscriptRepository) with existing key strategy. TranscriptionProvider port extended to 5 methods. ProcessAudioChunk and FinalizeTranscript use cases. WebSocket handlers updated (audio.chunk forwards to provider, session.stop triggers finalization). Container wired with all new dependencies. 108 new tests (569 total), zero regressions, lint clean
 - Task 010 completed: AI processing pipeline with Claude API (Anthropic) generating medical history, SOAP summary, and evidence-backed insights. Domain layer (6 exceptions, InsightCategory/InsightSeverity enums, EvidenceExcerpt/Insight/GenerationMetadata/ArtifactResult VOs, PipelineResult entity, ArtifactValidator and EvidenceLinker services). ClaudeLLMProvider adapter with tenacity retry and Secrets Manager config, LazyLLMProvider for deferred initialization, SecretsManagerClient adapter. RunPipelineUseCase orchestrating sequential 3-step pipeline (anamnesis → summary → insights) with schema validation, evidence linking, partial completion support, and audit trail. Pipeline Lambda handler for Step Functions/EventBridge trigger. Container wired: StubLLMProvider replaced with LazyLLMProvider backed by ClaudeLLMProvider. anthropic dependency added. 145 new tests (951 total), zero regressions, lint clean
+- Task 011 completed: Review, finalization, and export workflows. Review domain (InsightAction enum, InsightReviewItem/ReviewPayload/FinalizedRecord entities, finalization guards, 5 exception types, ReviewUpdate VO). Export domain (ExportRequest/ExportArtifact entities, ExportGenerationError, S3 key builders). 4 use cases (OpenReview with draft→review transition, UpdateReview with per-field audit, FinalizeConsultation with idempotency, GenerateExport with presigned URLs). PdfExportGenerator adapter (replaces stub, no external deps). S3StorageProvider with presigned URL generation. HTTP handlers for GET/PUT review, POST finalize, POST export. BFF views (ReviewView, FinalizeView, ExportView). Middleware exception map + BFF router wired. Container updated with 4 new use cases. 164 new tests (1115 total), zero regressions, lint clean
 
 ### Immediate Next Step
-Start `011-implement-review-finalization-and-export-workflows.md`
+Start `012-build-authenticated-react-app.md`
 
 ## 5. Priority Queue
 
@@ -72,9 +73,9 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `011-implement-review-finalization-and-export-workflows.md` | Implement review, finalization, and export workflows | planned | Adds physician edits, explicit final approval, audit attribution, and export generation |
-| 2 | `012-build-authenticated-react-app.md` | Build authenticated React app | planned | Frontend for consultation flow, review, and finalization |
-| 3 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure |
+| 1 | `012-build-authenticated-react-app.md` | Build authenticated React app | planned | Frontend for consultation flow, review, and finalization |
+| 2 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure |
+| 3 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | planned | Dashboards, alarms, retention, IAM tightening |
 
 ## 6. Active Blockers
 
@@ -82,7 +83,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 011 |
+| None | No active blockers | N/A | N/A | Begin Task 012 |
 
 ## 7. Task Index
 
@@ -100,7 +101,7 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | 008 | `008-implement-realtime-consultation-session-transport.md` | Implement real-time consultation session transport | Backend | Critical | done | `006-model-consultation-domain-persistence-and-audit.md`, `007-build-bff-contracts-ui-config-and-feature-flags.md` | 100 | Session domain (6-state Session, SessionService, 7 exceptions), ports (SessionRepository, ConnectionRepository), use cases (StartSession, EndSession with idempotency), HTTP handlers (session/start, session/end), 6 WebSocket handlers ($connect, $disconnect, session.init, audio.chunk, session.stop, client.ping), DynamoDB session/connection adapters, CDK WebSocket API + ManageConnections IAM, BFF session views, stub transcript delivery, 128 new tests (461 total) |
 | 009 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | Backend | Critical | done | `008-implement-realtime-consultation-session-transport.md` | 100 | ElevenLabs Scribe v2 adapter (HTTP batch for Lambda, tenacity retry, Secrets Manager config), transcription domain (NormalizedTranscript, SpeakerSegment, CompletenessStatus, TranscriptionNormalizer, 5 exceptions), S3 persistence (S3Client, ArtifactRepository, TranscriptRepository), ProcessAudioChunk and FinalizeTranscript use cases, WebSocket handler wiring, container DI updated, 108 new tests (569 total) |
 | 010 | `010-build-ai-processing-pipeline-and-artifacts.md` | Build AI processing pipeline and artifacts | Backend | Critical | done | `006-model-consultation-domain-persistence-and-audit.md`, `009-integrate-transcription-provider-and-normalization.md` | 100 | AI pipeline with Claude API: domain layer (6 exceptions, InsightCategory/Severity enums, EvidenceExcerpt/Insight/GenerationMetadata/ArtifactResult VOs, PipelineResult entity, ArtifactValidator/EvidenceLinker services), ClaudeLLMProvider adapter (tenacity retry, Secrets Manager), LazyLLMProvider, SecretsManagerClient, RunPipelineUseCase (3-step sequential: anamnesis→summary→insights, schema validation, evidence linking, partial completion, audit trail), pipeline Lambda handler, container wired, 145 new tests (951 total) |
-| 011 | `011-implement-review-finalization-and-export-workflows.md` | Implement review, finalization, and export workflows | Backend | Critical | planned | `007-build-bff-contracts-ui-config-and-feature-flags.md`, `010-build-ai-processing-pipeline-and-artifacts.md` | 0 | Adds physician edits, explicit final approval, audit attribution, and export generation from finalized content |
+| 011 | `011-implement-review-finalization-and-export-workflows.md` | Implement review, finalization, and export workflows | Backend | Critical | done | `007-build-bff-contracts-ui-config-and-feature-flags.md`, `010-build-ai-processing-pipeline-and-artifacts.md` | 100 | Review domain (InsightAction, ReviewPayload, FinalizedRecord, finalization guards, 5 exceptions), export domain (ExportRequest, ExportArtifact, PdfExportGenerator), 4 use cases (OpenReview, UpdateReview, FinalizeConsultation, GenerateExport), HTTP handlers (GET/PUT review, POST finalize, POST export), BFF views, middleware + router wired, container updated, 164 new tests (1115 total) |
 | 012 | `012-build-authenticated-react-app.md` | Build authenticated React app | Frontend | Critical | planned | `005-implement-authentication-and-plan-access-control.md`, `007-build-bff-contracts-ui-config-and-feature-flags.md`, `008-implement-realtime-consultation-session-transport.md`, `011-implement-review-finalization-and-export-workflows.md` | 0 | Builds the physician-facing app for login, live consultation, review, editing, and finalization in `pt-BR` |
 | 013 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | Frontend | Medium | planned | `003-bootstrap-repository-and-engineering-foundation.md`, `004-provision-aws-foundation-with-cdk.md` | 0 | Delivers the static marketing website and login entrypoints with MVP-accurate messaging and SEO-friendly structure |
 | 014 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | Security | High | planned | `004-provision-aws-foundation-with-cdk.md`, `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md`, `011-implement-review-finalization-and-export-workflows.md` | 0 | Adds dashboards, alarms, retention controls, PHI-aware logging, IAM tightening, and budget enforcement |
@@ -114,7 +115,7 @@ Track major delivery checkpoints for the MVP.
 | --- | --- | --- | --- |
 | Project Setup | Task system ready for execution | done | Template and manager files created |
 | Infrastructure Ready | AWS baseline in place | done | Tasks 003 and 004 completed. Dev environment deployed 2026-04-02: 9 stacks live in us-east-1, health endpoint verified. Lambda packaging and env var issues from Task 005 fixed (OI-007). |
-| Backend Ready | Core API and business logic in place | planned | Covered by Tasks 005 through 011 |
+| Backend Ready | Core API and business logic in place | done | Tasks 005 through 011 completed. All core backend endpoints implemented: auth, consultations, sessions, transcription, AI pipeline, review, finalization, export. 1115 tests passing. |
 | Frontend Ready | Core MVP interface in place | planned | Covered by Tasks 012 and 013 |
 | MVP Ready | End-to-end usable first version | planned | Covered by Tasks 014 and 015 |
 
@@ -146,6 +147,8 @@ Track cross-task decisions, missing information, or conflicts.
 List the most recently changed tasks first.
 
 | Date | Task File | Change |
+| 2026-04-04 | `011-implement-review-finalization-and-export-workflows.md` | Completed: Review domain (InsightAction enum, InsightReviewItem/ReviewPayload/FinalizedRecord entities, finalization guards, 5 exceptions, ReviewUpdate VO), export domain (ExportRequest/ExportArtifact, ExportGenerationError, S3 key builders), PdfExportGenerator adapter (replaces stub), S3StorageProvider + presigned URLs, 4 use cases (OpenReview, UpdateReview, FinalizeConsultation, GenerateExport), HTTP handlers (GET/PUT review, POST finalize, POST export), BFF views (ReviewView, FinalizeView, ExportView), middleware exception map + BFF router wired, container updated, 164 new tests (1115 total) |
+| 2026-04-04 | `@task-manager.md` | Updated for Task 011 completion: status done, progress 87%, priority queue updated, Backend Ready milestone marked done, next step set to Task 012 |
 | --- | --- | --- |
 | 2026-04-03 | `010-build-ai-processing-pipeline-and-artifacts.md` | Completed: Claude API pipeline with domain layer (6 exceptions, InsightCategory/Severity enums, 6 VOs, PipelineResult entity, ArtifactValidator + EvidenceLinker services), ClaudeLLMProvider adapter (tenacity retry, Secrets Manager), LazyLLMProvider, SecretsManagerClient, RunPipelineUseCase (3-step anamnesis→summary→insights with schema validation, evidence linking, partial completion, audit trail), pipeline Lambda handler, container wired (StubLLMProvider replaced), anthropic dependency added, 145 new tests (951 total) |
 | 2026-04-03 | `@task-manager.md` | Updated for Task 010 completion: status done, progress 80%, priority queue updated, next step set to Task 011 |

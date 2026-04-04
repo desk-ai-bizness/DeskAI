@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from deskai.adapters.auth.cognito_provider import CognitoAuthProvider
 from deskai.adapters.events.stub_publisher import StubEventPublisher
-from deskai.adapters.export.stub_generator import StubExportGenerator
+from deskai.adapters.export.pdf_generator import PdfExportGenerator
 from deskai.adapters.llm.lazy_provider import LazyLLMProvider
 from deskai.adapters.persistence.dynamodb_audit_repository import (
     DynamoDBAuditRepository,
@@ -51,11 +51,23 @@ from deskai.application.consultation.get_consultation import (
 from deskai.application.consultation.list_consultations import (
     ListConsultationsUseCase,
 )
+from deskai.application.export.generate_export import (
+    GenerateExportUseCase,
+)
 from deskai.application.patient.create_patient import (
     CreatePatientUseCase,
 )
 from deskai.application.patient.list_patients import (
     ListPatientsUseCase,
+)
+from deskai.application.review.finalize_consultation import (
+    FinalizeConsultationUseCase,
+)
+from deskai.application.review.open_review import (
+    OpenReviewUseCase,
+)
+from deskai.application.review.update_review import (
+    UpdateReviewUseCase,
 )
 from deskai.application.session.end_session import EndSessionUseCase
 from deskai.application.session.start_session import StartSessionUseCase
@@ -79,6 +91,7 @@ from deskai.ports.export_generator import ExportGenerator
 from deskai.ports.llm_provider import LLMProvider
 from deskai.ports.patient_repository import PatientRepository
 from deskai.ports.session_repository import SessionRepository
+from deskai.ports.storage_provider import StorageProvider
 from deskai.ports.transcript_repository import TranscriptRepository
 from deskai.ports.transcription_provider import TranscriptionProvider
 from deskai.ports.ui_config_assembler import UiConfigAssembler
@@ -102,6 +115,7 @@ class Container:
     artifact_repo: ArtifactRepository
     event_publisher: EventPublisher
     export_generator: ExportGenerator
+    storage_provider: StorageProvider
     llm_provider: LLMProvider
     ui_config_assembler: UiConfigAssembler
     authenticate: AuthenticateUseCase
@@ -121,6 +135,10 @@ class Container:
     finalize_transcript: FinalizeTranscriptUseCase
     run_pipeline: RunPipelineUseCase
     get_ui_config: GetUiConfigUseCase
+    open_review: OpenReviewUseCase
+    update_review: UpdateReviewUseCase
+    finalize_consultation: FinalizeConsultationUseCase
+    generate_export: GenerateExportUseCase
 
 
 def build_container() -> Container:
@@ -185,8 +203,13 @@ def build_container() -> Container:
     transcript_repo = S3TranscriptRepository(s3_client=s3_client)
     artifact_repo = S3ArtifactRepository(s3_client=s3_client)
 
+    from deskai.adapters.storage.s3_storage_provider import (
+        S3StorageProvider,
+    )
+
     event_publisher = StubEventPublisher()
-    export_generator = StubExportGenerator()
+    export_generator = PdfExportGenerator()
+    storage_provider = S3StorageProvider(s3_client=s3_client)
 
     def _build_llm_provider():
         from deskai.adapters.llm.claude_provider import ClaudeLLMProvider
@@ -215,6 +238,7 @@ def build_container() -> Container:
         artifact_repo=artifact_repo,
         event_publisher=event_publisher,
         export_generator=export_generator,
+        storage_provider=storage_provider,
         llm_provider=llm_provider,
         ui_config_assembler=ui_config_assembler,
         authenticate=AuthenticateUseCase(
@@ -283,5 +307,27 @@ def build_container() -> Container:
         ),
         get_ui_config=GetUiConfigUseCase(
             ui_config_assembler=ui_config_assembler,
+        ),
+        open_review=OpenReviewUseCase(
+            consultation_repo=consultation_repo,
+            artifact_repo=artifact_repo,
+            audit_repo=audit_repo,
+        ),
+        update_review=UpdateReviewUseCase(
+            consultation_repo=consultation_repo,
+            artifact_repo=artifact_repo,
+            audit_repo=audit_repo,
+        ),
+        finalize_consultation=FinalizeConsultationUseCase(
+            consultation_repo=consultation_repo,
+            artifact_repo=artifact_repo,
+            audit_repo=audit_repo,
+        ),
+        generate_export=GenerateExportUseCase(
+            consultation_repo=consultation_repo,
+            artifact_repo=artifact_repo,
+            export_generator=export_generator,
+            storage_provider=storage_provider,
+            audit_repo=audit_repo,
         ),
     )

@@ -14,6 +14,7 @@ from deskai.domain.session.exceptions import SessionNotFoundError
 from deskai.domain.session.services import SessionService
 from deskai.ports.audit_repository import AuditRepository
 from deskai.ports.consultation_repository import ConsultationRepository
+from deskai.ports.event_publisher import EventPublisher
 from deskai.ports.session_repository import SessionRepository
 from deskai.shared.identifiers import new_uuid
 from deskai.shared.logging import get_logger, log_context
@@ -38,6 +39,7 @@ class EndSessionUseCase:
     consultation_repo: ConsultationRepository
     session_repo: SessionRepository
     audit_repo: AuditRepository
+    event_publisher: EventPublisher
 
     def execute(
         self,
@@ -48,40 +50,35 @@ class EndSessionUseCase:
         logger.info(
             "session_end_requested",
             extra=log_context(
-                consultation_id=consultation_id, doctor_id=doctor_id, clinic_id=clinic_id,
+                consultation_id=consultation_id,
+                doctor_id=doctor_id,
+                clinic_id=clinic_id,
             ),
         )
 
         consultation = self.consultation_repo.find_by_id(consultation_id, clinic_id)
         if consultation is None:
-            raise ConsultationNotFoundError(
-                f"Consultation {consultation_id} not found"
-            )
+            raise ConsultationNotFoundError(f"Consultation {consultation_id} not found")
 
         if consultation.doctor_id != doctor_id:
-            raise ConsultationOwnershipError(
-                "Requesting doctor does not own this consultation"
-            )
+            raise ConsultationOwnershipError("Requesting doctor does not own this consultation")
 
         # Idempotency: if already past recording, return the existing session
         if consultation.status in _POST_SESSION_STATUSES:
-            existing = self.session_repo.find_active_by_consultation_id(
-                consultation_id
-            )
+            existing = self.session_repo.find_active_by_consultation_id(consultation_id)
             if existing is not None:
                 logger.info(
                     "session_end_idempotent",
                     extra=log_context(
-                        consultation_id=consultation_id, session_id=existing.session_id,
+                        consultation_id=consultation_id,
+                        session_id=existing.session_id,
                     ),
                 )
                 return existing
 
         session = self.session_repo.find_active_by_consultation_id(consultation_id)
         if session is None:
-            raise SessionNotFoundError(
-                f"No active session for consultation {consultation_id}"
-            )
+            raise SessionNotFoundError(f"No active session for consultation {consultation_id}")
 
         SessionService.validate_session_end(session.state)
 
@@ -129,6 +126,11 @@ class EndSessionUseCase:
                     "duration_seconds": duration,
                 },
             )
+        )
+
+        self.event_publisher.publish(
+            "consultation.session.ended",
+            {"consultation_id": consultation_id, "clinic_id": clinic_id},
         )
 
         return session

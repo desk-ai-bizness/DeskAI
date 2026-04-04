@@ -261,8 +261,11 @@ def end_session(token: str, consultation_id: str):
 # ─── Step 6: Check consultation status and transcript ────────────────────────
 
 
-def check_result(token: str, consultation_id: str):
-    """Check the consultation status and see if transcript was generated."""
+def check_result(token: str, consultation_id: str) -> bool:
+    """Check the consultation status and see if transcript was generated.
+
+    Returns True if processing completed successfully, False otherwise.
+    """
     print("\n[7/7] Checking consultation result...")
 
     # Poll for status change (processing can take a few seconds)
@@ -273,7 +276,7 @@ def check_result(token: str, consultation_id: str):
         )
         if resp.status_code != 200:
             print(f"  ERROR: {resp.status_code} - {resp.text[:200]}")
-            return
+            return False
 
         data = resp.json()
         current_status = data["status"]
@@ -306,12 +309,12 @@ def check_result(token: str, consultation_id: str):
                     print(
                         f"  - [{insight.get('category')}] {insight.get('description', '')[:100]}"
                     )
-            return
+            return True
 
         if current_status == "processing_failed":
             print("\n  Processing FAILED.")
             print(f"  Error: {data.get('processing', {}).get('error_details', 'N/A')}")
-            return
+            return False
 
         if current_status == "in_processing":
             print("  Still processing... waiting 5s")
@@ -324,6 +327,7 @@ def check_result(token: str, consultation_id: str):
             time.sleep(3)
 
     print("  Timed out waiting for processing to complete.")
+    return False
 
 
 # ─── Main ────────────────────────────────────────────────────────────────────
@@ -373,13 +377,19 @@ def main():
     # Step 6: Wait and check result
     print("\n  Waiting 10s for processing pipeline...")
     time.sleep(10)
-    check_result(access_token, consultation_id)
+    success = check_result(access_token, consultation_id)
 
     print("\n" + "=" * 60)
-    print("  Test complete!")
+    if success:
+        print("  Test PASSED!")
+    else:
+        print("  Test FAILED!")
     print(f"  Consultation ID: {consultation_id}")
     print(f"  API: {API_BASE}/v1/consultations/{consultation_id}")
     print("=" * 60)
+
+    if not success:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

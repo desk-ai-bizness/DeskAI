@@ -50,6 +50,7 @@ class ComputeStack(Stack):
             "DESKAI_COGNITO_CLIENT_ID": user_pool_client_id,
             "DESKAI_WEBSOCKET_URL_PARAM": f"/{config.resource_prefix}/websocket-url",
             "DESKAI_COGNITO_CLIENT_SECRET_NAME": config.cognito_secret_name,
+            "DESKAI_EVENT_BUS_NAME": f"{config.resource_prefix}-event-bus",
         }
 
         secrets_arns = [
@@ -98,6 +99,14 @@ class ComputeStack(Stack):
         self.bff_role.add_to_policy(
             iam.PolicyStatement(actions=["ssm:GetParameter"], resources=[ssm_websocket_arn])
         )
+        self.bff_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["events:PutEvents"],
+                resources=[
+                    f"arn:aws:events:{self.region}:{self.account}:event-bus/{config.resource_prefix}-*"
+                ],
+            )
+        )
 
         # --- WebSocket role: DynamoDB r/w, ManageConnections, KMS, SSM ---
         self.websocket_role = self._create_role(
@@ -118,6 +127,14 @@ class ComputeStack(Stack):
         )
         self.websocket_role.add_to_policy(
             iam.PolicyStatement(actions=["ssm:GetParameter"], resources=[ssm_websocket_arn])
+        )
+        self.websocket_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["events:PutEvents"],
+                resources=[
+                    f"arn:aws:events:{self.region}:{self.account}:event-bus/{config.resource_prefix}-*"
+                ],
+            )
         )
 
         # --- Pipeline role: DynamoDB r/w, S3 r/w, secrets, events, KMS ---

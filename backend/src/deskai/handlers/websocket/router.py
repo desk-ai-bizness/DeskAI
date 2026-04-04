@@ -31,8 +31,69 @@ def _build_apigw(event: dict):
     return ApiGatewayManagement(endpoint_url=endpoint_url)
 
 
+def _handle_authorizer(event: dict) -> dict:
+    """Handle WebSocket Lambda authorizer REQUEST-type events.
+
+    API Gateway calls this Lambda both as authorizer (``type=REQUEST``)
+    and as the regular route handler.  For the authorizer call we build
+    the container lazily (same cold-start as ``$connect``) and delegate
+    token validation to the auth provider.
+    """
+    token = (event.get("queryStringParameters") or {}).get("token", "")
+    method_arn = event.get("methodArn", "")
+
+    if not token:
+        logger.warning("ws_authorizer_no_token")
+        return _deny_policy(method_arn)
+
+    try:
+        c = _get_container()
+        claims = c.auth_provider.validate_ws_token(token)
+        return {
+            "principalId": claims.get("sub", "unknown"),
+            "policyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Action": "execute-api:Invoke",
+                        "Effect": "Allow",
+                        "Resource": method_arn,
+                    }
+                ],
+            },
+            "context": {
+                "sub": claims.get("sub", ""),
+                "doctor_id": claims.get("doctor_id", ""),
+                "clinic_id": claims.get("clinic_id", ""),
+            },
+        }
+    except Exception:
+        logger.warning("ws_authorizer_denied")
+        return _deny_policy(method_arn)
+
+
+def _deny_policy(method_arn: str) -> dict:
+    return {
+        "principalId": "unauthorized",
+        "policyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Action": "execute-api:Invoke",
+                    "Effect": "Deny",
+                    "Resource": method_arn,
+                }
+            ],
+        },
+    }
+
+
 def handler(event: dict, context) -> dict:
     """Route WebSocket events to the appropriate handler."""
+    # Detect authorizer invocation (no routeKey, has type=REQUEST).
+    if event.get("type") == "REQUEST":
+        return _handle_authorizer(event)
+
     route_key = event.get("requestContext", {}).get("routeKey", "")
 
     if route_key == "$connect":
@@ -47,10 +108,15 @@ def handler(event: dict, context) -> dict:
         c = _get_container()
         return handle_disconnect(event, c.connection_repo, c.session_repo)
 
+    # Named routes arrive with their route key directly (e.g. "session.init").
+    # $default carries the action in the body.  Normalise both to ``action``.
     if route_key == "$default":
         body = json.loads(event.get("body", "{}"))
         action = body.get("action", "")
+    else:
+        action = route_key
 
+    if action:
         if action == "session.init":
             from deskai.handlers.websocket.session_init_handler import (
                 handle_session_init,

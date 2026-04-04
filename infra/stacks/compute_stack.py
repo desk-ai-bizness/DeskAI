@@ -128,6 +128,14 @@ class ComputeStack(Stack):
         self.websocket_role.add_to_policy(
             iam.PolicyStatement(actions=["ssm:GetParameter"], resources=[ssm_websocket_arn])
         )
+        artifacts_bucket.grant_read_write(self.websocket_role)
+        secrets_key.grant_decrypt(self.websocket_role)
+        self.websocket_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
+                resources=secrets_arns,
+            )
+        )
         self.websocket_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["events:PutEvents"],

@@ -40,6 +40,25 @@ class HandleCreatePatientTest(unittest.TestCase):
         self.assertEqual(body["patient_id"], "pat-001")
         self.assertEqual(body["name"], "Joao Silva")
 
+    def test_handle_create_patient_empty_name_returns_400(self) -> None:
+        from deskai.handlers.http.patient_handler import (
+            handle_create_patient,
+        )
+
+        event = make_apigw_event(
+            path="/v1/patients",
+            method="POST",
+            body={
+                "name": "",
+                "date_of_birth": "1990-05-15",
+            },
+        )
+        resp = handle_create_patient(event, self.container)
+
+        self.assertEqual(resp["statusCode"], 400)
+        body = json.loads(resp["body"])
+        self.assertEqual(body["error"]["code"], "validation_error")
+
     def test_handle_create_patient_missing_fields(self) -> None:
         from deskai.handlers.http.patient_handler import (
             handle_create_patient,
@@ -84,6 +103,25 @@ class HandleListPatientsTest(unittest.TestCase):
         self.assertEqual(resp["statusCode"], 200)
         body = json.loads(resp["body"])
         self.assertEqual(len(body["patients"]), 2)
+
+
+    def test_handle_list_patients_empty_list_returns_200(self) -> None:
+        from deskai.handlers.http.patient_handler import (
+            handle_list_patients,
+        )
+
+        self.container.list_patients.execute.return_value = []
+
+        event = make_apigw_event(
+            path="/v1/patients",
+            method="GET",
+            query_string_parameters={"search": "Nonexistent"},
+        )
+        resp = handle_list_patients(event, self.container)
+
+        self.assertEqual(resp["statusCode"], 200)
+        body = json.loads(resp["body"])
+        self.assertEqual(len(body["patients"]), 0)
 
 
 if __name__ == "__main__":

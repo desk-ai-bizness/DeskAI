@@ -257,3 +257,177 @@ class TestCanReconnect(unittest.TestCase):
             state=SessionState.ENDED,
         )
         assert SessionService.can_reconnect(s) is False
+
+
+class TestValidateTransitionValid(unittest.TestCase):
+    """All valid transitions must not raise."""
+
+    def test_connecting_to_active(self):
+        SessionService.validate_transition(SessionState.CONNECTING, SessionState.ACTIVE)
+
+    def test_connecting_to_disconnected(self):
+        SessionService.validate_transition(SessionState.CONNECTING, SessionState.DISCONNECTED)
+
+    def test_active_to_recording(self):
+        SessionService.validate_transition(SessionState.ACTIVE, SessionState.RECORDING)
+
+    def test_active_to_stopping(self):
+        SessionService.validate_transition(SessionState.ACTIVE, SessionState.STOPPING)
+
+    def test_active_to_disconnected(self):
+        SessionService.validate_transition(SessionState.ACTIVE, SessionState.DISCONNECTED)
+
+    def test_recording_to_stopping(self):
+        SessionService.validate_transition(SessionState.RECORDING, SessionState.STOPPING)
+
+    def test_recording_to_disconnected(self):
+        SessionService.validate_transition(SessionState.RECORDING, SessionState.DISCONNECTED)
+
+    def test_stopping_to_ended(self):
+        SessionService.validate_transition(SessionState.STOPPING, SessionState.ENDED)
+
+    def test_disconnected_to_active(self):
+        SessionService.validate_transition(SessionState.DISCONNECTED, SessionState.ACTIVE)
+
+    def test_disconnected_to_ended(self):
+        SessionService.validate_transition(SessionState.DISCONNECTED, SessionState.ENDED)
+
+
+class TestValidateTransitionInvalid(unittest.TestCase):
+    """All invalid transitions must raise InvalidSessionStateError."""
+
+    # CONNECTING: cannot go to RECORDING, STOPPING, ENDED
+    def test_connecting_to_recording_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.CONNECTING, SessionState.RECORDING)
+
+    def test_connecting_to_stopping_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.CONNECTING, SessionState.STOPPING)
+
+    def test_connecting_to_ended_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.CONNECTING, SessionState.ENDED)
+
+    # ACTIVE: cannot go to CONNECTING
+    def test_active_to_connecting_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.ACTIVE, SessionState.CONNECTING)
+
+    # RECORDING: cannot go to ACTIVE, CONNECTING
+    def test_recording_to_active_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.RECORDING, SessionState.ACTIVE)
+
+    def test_recording_to_connecting_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.RECORDING, SessionState.CONNECTING)
+
+    # STOPPING: cannot go to ACTIVE, RECORDING, CONNECTING, DISCONNECTED
+    def test_stopping_to_active_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.STOPPING, SessionState.ACTIVE)
+
+    def test_stopping_to_recording_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.STOPPING, SessionState.RECORDING)
+
+    def test_stopping_to_connecting_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.STOPPING, SessionState.CONNECTING)
+
+    def test_stopping_to_disconnected_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.STOPPING, SessionState.DISCONNECTED)
+
+    # ENDED: terminal — cannot go anywhere (6 invalid)
+    def test_ended_to_connecting_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.ENDED, SessionState.CONNECTING)
+
+    def test_ended_to_active_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.ENDED, SessionState.ACTIVE)
+
+    def test_ended_to_recording_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.ENDED, SessionState.RECORDING)
+
+    def test_ended_to_stopping_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.ENDED, SessionState.STOPPING)
+
+    def test_ended_to_ended_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.ENDED, SessionState.ENDED)
+
+    def test_ended_to_disconnected_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.ENDED, SessionState.DISCONNECTED)
+
+    # DISCONNECTED: cannot go to RECORDING, STOPPING, CONNECTING
+    def test_disconnected_to_recording_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.DISCONNECTED, SessionState.RECORDING)
+
+    def test_disconnected_to_stopping_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.DISCONNECTED, SessionState.STOPPING)
+
+    def test_disconnected_to_connecting_raises(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_transition(SessionState.DISCONNECTED, SessionState.CONNECTING)
+
+
+class TestValidateAudioChunkComprehensive(unittest.TestCase):
+    """Comprehensive tests for validate_audio_chunk rejecting invalid states."""
+
+    def test_rejects_connecting(self):
+        with self.assertRaises(AudioChunkRejectedError):
+            SessionService.validate_audio_chunk(
+                session_state=SessionState.CONNECTING,
+                session_doctor_id="d-1",
+                requesting_doctor_id="d-1",
+            )
+
+    def test_rejects_stopping(self):
+        with self.assertRaises(AudioChunkRejectedError):
+            SessionService.validate_audio_chunk(
+                session_state=SessionState.STOPPING,
+                session_doctor_id="d-1",
+                requesting_doctor_id="d-1",
+            )
+
+    def test_rejects_disconnected(self):
+        with self.assertRaises(AudioChunkRejectedError):
+            SessionService.validate_audio_chunk(
+                session_state=SessionState.DISCONNECTED,
+                session_doctor_id="d-1",
+                requesting_doctor_id="d-1",
+            )
+
+    def test_accepts_active(self):
+        SessionService.validate_audio_chunk(
+            session_state=SessionState.ACTIVE,
+            session_doctor_id="d-1",
+            requesting_doctor_id="d-1",
+        )
+
+
+class TestValidateSessionEndComprehensive(unittest.TestCase):
+    """Comprehensive tests for validate_session_end rejecting invalid states."""
+
+    def test_rejects_connecting(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_session_end(session_state=SessionState.CONNECTING)
+
+    def test_rejects_stopping(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_session_end(session_state=SessionState.STOPPING)
+
+    def test_rejects_disconnected(self):
+        with self.assertRaises(InvalidSessionStateError):
+            SessionService.validate_session_end(session_state=SessionState.DISCONNECTED)
+
+    def test_accepts_active(self):
+        SessionService.validate_session_end(session_state=SessionState.ACTIVE)

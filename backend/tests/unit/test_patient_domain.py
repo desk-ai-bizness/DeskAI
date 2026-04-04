@@ -33,6 +33,82 @@ class PatientEntityTest(unittest.TestCase):
             p.name = "New Name"  # type: ignore[misc]
 
 
+class PatientValidationTest(unittest.TestCase):
+    """Verify Patient __post_init__ validation rejects invalid inputs."""
+
+    def test_empty_patient_id_raises_domain_validation_error(self) -> None:
+        from deskai.shared.errors import DomainValidationError
+
+        with self.assertRaises(DomainValidationError):
+            Patient(
+                patient_id="",
+                name="Maria Silva",
+                date_of_birth="1990-05-15",
+                clinic_id="clinic-1",
+                created_at="2026-03-20T10:00:00+00:00",
+            )
+
+    def test_empty_name_raises_domain_validation_error(self) -> None:
+        from deskai.shared.errors import DomainValidationError
+
+        with self.assertRaises(DomainValidationError):
+            Patient(
+                patient_id="pat-001",
+                name="",
+                date_of_birth="1990-05-15",
+                clinic_id="clinic-1",
+                created_at="2026-03-20T10:00:00+00:00",
+            )
+
+    def test_empty_date_of_birth_raises_domain_validation_error(self) -> None:
+        from deskai.shared.errors import DomainValidationError
+
+        with self.assertRaises(DomainValidationError):
+            Patient(
+                patient_id="pat-001",
+                name="Maria Silva",
+                date_of_birth="",
+                clinic_id="clinic-1",
+                created_at="2026-03-20T10:00:00+00:00",
+            )
+
+    def test_empty_clinic_id_raises_domain_validation_error(self) -> None:
+        from deskai.shared.errors import DomainValidationError
+
+        with self.assertRaises(DomainValidationError):
+            Patient(
+                patient_id="pat-001",
+                name="Maria Silva",
+                date_of_birth="1990-05-15",
+                clinic_id="",
+                created_at="2026-03-20T10:00:00+00:00",
+            )
+
+    def test_empty_created_at_raises_domain_validation_error(self) -> None:
+        from deskai.shared.errors import DomainValidationError
+
+        with self.assertRaises(DomainValidationError):
+            Patient(
+                patient_id="pat-001",
+                name="Maria Silva",
+                date_of_birth="1990-05-15",
+                clinic_id="clinic-1",
+                created_at="",
+            )
+
+    def test_whitespace_only_patient_id_raises_domain_validation_error(self) -> None:
+        from deskai.shared.errors import DomainValidationError
+
+        with self.assertRaises(DomainValidationError):
+            Patient(
+                patient_id="   ",
+                name="Maria Silva",
+                date_of_birth="1990-05-15",
+                clinic_id="clinic-1",
+                created_at="2026-03-20T10:00:00+00:00",
+            )
+
+
 class PatientExceptionsTest(unittest.TestCase):
     def test_patient_not_found_error_is_deskai_error(self) -> None:
         from deskai.shared.errors import DeskAIError

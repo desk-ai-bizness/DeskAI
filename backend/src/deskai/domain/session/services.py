@@ -16,6 +16,17 @@ class SessionService:
     """Pure domain service for session validation logic."""
 
     @staticmethod
+    def validate_transition(current_state: SessionState, target_state: SessionState) -> None:
+        """Validate that a session state transition is allowed."""
+        from deskai.domain.session.entities import VALID_SESSION_TRANSITIONS
+
+        allowed = VALID_SESSION_TRANSITIONS.get(current_state, set())
+        if target_state not in allowed:
+            raise InvalidSessionStateError(
+                f"Cannot transition from '{current_state}' to '{target_state}'"
+            )
+
+    @staticmethod
     def validate_session_start(
         consultation_status: ConsultationStatus,
         consultation_doctor_id: str,

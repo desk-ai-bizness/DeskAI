@@ -54,15 +54,15 @@ class DynamoDBDoctorRepository(DynamoDBBaseRepository, DoctorRepository):
 
     def find_created_at(self, doctor_id: str) -> str | None:
         response = self._safe_query(
-            KeyConditionExpression="PK = :pk AND SK = :sk",
+            KeyConditionExpression=f"{F.PK} = :pk AND {F.SK} = :sk",
             ExpressionAttributeValues={
                 ":pk": f"DOCTOR#{doctor_id}",
                 ":sk": "PROFILE",
             },
-            ProjectionExpression="created_at",
+            ProjectionExpression=F.CREATED_AT,
             Limit=1,
         )
         items = response.get("Items", [])
         if not items:
             return None
-        return items[0].get("created_at")
+        return items[0].get(F.CREATED_AT)

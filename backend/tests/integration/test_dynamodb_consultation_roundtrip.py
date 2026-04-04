@@ -1,9 +1,13 @@
 """Integration test: consultation DynamoDB round-trip with moto."""
 
+import os
 import unittest
 
 import boto3
 from moto import mock_aws
+
+# moto intercepts AWS calls but boto3 still needs a region configured.
+os.environ.setdefault("AWS_DEFAULT_REGION", "us-east-1")
 
 from deskai.adapters.persistence.dynamodb_consultation_repository import (
     DynamoDBConsultationRepository,

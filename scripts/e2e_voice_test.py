@@ -268,8 +268,8 @@ def check_result(token: str, consultation_id: str) -> bool:
     """
     print("\n[7/7] Checking consultation result...")
 
-    # Poll for status change (processing can take a few seconds)
-    for attempt in range(6):
+    # Poll for status change (pipeline runs multiple LLM calls, can take ~60-90s)
+    for attempt in range(12):
         resp = requests.get(
             f"{API_BASE}/v1/consultations/{consultation_id}",
             headers={"Authorization": f"Bearer {token}"},
@@ -317,12 +317,12 @@ def check_result(token: str, consultation_id: str) -> bool:
             return False
 
         if current_status == "in_processing":
-            print("  Still processing... waiting 5s")
-            time.sleep(5)
+            print("  Still processing... waiting 10s")
+            time.sleep(10)
             continue
 
         # Status is started/recording — session didn't end properly
-        if attempt < 5:
+        if attempt < 11:
             print(f"  Status still '{current_status}', waiting 3s...")
             time.sleep(3)
 

@@ -137,6 +137,13 @@ class SecurityStack(Stack):
                         f"arn:aws:ssm:{self.region}:{self.account}:parameter/{config.resource_prefix}/*"
                     ],
                 ),
+                iam.PolicyStatement(
+                    sid="AllowLambdaInvoke",
+                    actions=["lambda:InvokeFunction"],
+                    resources=[
+                        f"arn:aws:lambda:{self.region}:{self.account}:function:{config.resource_prefix}-*"
+                    ],
+                ),
             ],
         )
 

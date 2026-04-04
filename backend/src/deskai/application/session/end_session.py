@@ -16,7 +16,10 @@ from deskai.ports.audit_repository import AuditRepository
 from deskai.ports.consultation_repository import ConsultationRepository
 from deskai.ports.session_repository import SessionRepository
 from deskai.shared.identifiers import new_uuid
+from deskai.shared.logging import get_logger, log_context
 from deskai.shared.time import utc_now_iso
+
+logger = get_logger()
 
 _POST_SESSION_STATUSES = frozenset(
     {
@@ -42,6 +45,13 @@ class EndSessionUseCase:
         doctor_id: str,
         clinic_id: str,
     ) -> Session:
+        logger.info(
+            "session_end_requested",
+            extra=log_context(
+                consultation_id=consultation_id, doctor_id=doctor_id, clinic_id=clinic_id,
+            ),
+        )
+
         consultation = self.consultation_repo.find_by_id(consultation_id, clinic_id)
         if consultation is None:
             raise ConsultationNotFoundError(
@@ -59,6 +69,12 @@ class EndSessionUseCase:
                 consultation_id
             )
             if existing is not None:
+                logger.info(
+                    "session_end_idempotent",
+                    extra=log_context(
+                        consultation_id=consultation_id, session_id=existing.session_id,
+                    ),
+                )
                 return existing
 
         session = self.session_repo.find_active_by_consultation_id(consultation_id)
@@ -82,6 +98,15 @@ class EndSessionUseCase:
         )
 
         self.session_repo.update(session)
+
+        logger.info(
+            "session_ended",
+            extra=log_context(
+                session_id=session.session_id,
+                consultation_id=consultation_id,
+                duration_seconds=duration,
+            ),
+        )
 
         consultation = replace(
             consultation,

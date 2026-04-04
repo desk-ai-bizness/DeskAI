@@ -7,7 +7,10 @@ from deskai.domain.patient.entities import Patient
 from deskai.domain.patient.exceptions import PatientValidationError
 from deskai.ports.patient_repository import PatientRepository
 from deskai.shared.identifiers import new_uuid
+from deskai.shared.logging import get_logger, log_context
 from deskai.shared.time import utc_now_iso
+
+logger = get_logger()
 
 
 @dataclass(frozen=True)
@@ -35,4 +38,8 @@ class CreatePatientUseCase:
             created_at=utc_now_iso(),
         )
         self.patient_repo.save(patient)
+        logger.info(
+            "patient_created",
+            extra=log_context(patient_id=patient.patient_id, clinic_id=auth_context.clinic_id),
+        )
         return patient

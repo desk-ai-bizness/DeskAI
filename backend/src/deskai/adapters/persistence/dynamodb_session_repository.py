@@ -4,7 +4,7 @@ from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
 from deskai.adapters.persistence.schema import SessionFields as F
 from deskai.domain.session.entities import Session, SessionState
 from deskai.ports.session_repository import SessionRepository
-from deskai.shared.logging import get_logger
+from deskai.shared.logging import get_logger, log_context
 
 logger = get_logger()
 
@@ -23,6 +23,14 @@ class DynamoDBSessionRepository(DynamoDBBaseRepository, SessionRepository):
 
     def save(self, session: Session) -> None:
         self._safe_put_item(Item=self._to_item(session))
+        logger.info(
+            "dynamodb_session_saved",
+            extra=log_context(
+                session_id=session.session_id,
+                consultation_id=session.consultation_id,
+                state=str(session.state),
+            ),
+        )
 
     def find_by_id(self, session_id: str) -> Session | None:
         response = self._safe_get_item(
@@ -30,7 +38,13 @@ class DynamoDBSessionRepository(DynamoDBBaseRepository, SessionRepository):
         )
         item = response.get("Item")
         if item is None:
+            logger.debug(
+                "dynamodb_session_not_found", extra=log_context(session_id=session_id),
+            )
             return None
+        logger.debug(
+            "dynamodb_session_found", extra=log_context(session_id=session_id),
+        )
         return self._to_entity(item)
 
     def find_active_by_consultation_id(
@@ -44,17 +58,27 @@ class DynamoDBSessionRepository(DynamoDBBaseRepository, SessionRepository):
             },
         )
         items = response.get("Items", [])
+        found = bool(items)
+        logger.debug(
+            "dynamodb_active_session_lookup",
+            extra=log_context(consultation_id=consultation_id, found=found),
+        )
         if not items:
             return None
         return self._to_entity(items[0])
 
     def update(self, session: Session) -> None:
         self._safe_put_item(Item=self._to_item(session))
+        logger.debug(
+            "dynamodb_session_updated",
+            extra=log_context(session_id=session.session_id, state=str(session.state)),
+        )
 
     def delete(self, session_id: str) -> None:
         self._safe_delete_item(
             Key={F.PK: f"SESSION#{session_id}", F.SK: "METADATA"},
         )
+        logger.info("dynamodb_session_deleted", extra=log_context(session_id=session_id))
 
     @staticmethod
     def _to_item(session: Session) -> dict:

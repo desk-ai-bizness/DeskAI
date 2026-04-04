@@ -5,7 +5,7 @@ import json
 import boto3
 from botocore.exceptions import ClientError
 
-from deskai.shared.logging import get_logger
+from deskai.shared.logging import get_logger, log_context
 
 logger = get_logger()
 
@@ -25,15 +25,20 @@ class S3Client:
             Body=json.dumps(data, ensure_ascii=False),
             ContentType="application/json",
         )
+        logger.debug("s3_put_json", extra=log_context(bucket=self._bucket, key=key))
 
     def get_json(self, key: str) -> dict | None:
         """Return the deserialized JSON at *key*, or ``None`` if missing."""
         try:
             response = self._s3.get_object(Bucket=self._bucket, Key=key)
             body = response["Body"].read()
+            logger.debug("s3_get_json", extra=log_context(bucket=self._bucket, key=key, found=True))
             return json.loads(body)
         except ClientError as exc:
             if exc.response["Error"]["Code"] == "NoSuchKey":
+                logger.debug(
+                    "s3_get_json", extra=log_context(bucket=self._bucket, key=key, found=False),
+                )
                 return None
             raise
 
@@ -45,13 +50,24 @@ class S3Client:
             Body=data,
             ContentType=content_type,
         )
+        logger.debug(
+            "s3_put_bytes",
+            extra=log_context(
+                bucket=self._bucket, key=key, content_type=content_type, size_bytes=len(data),
+            ),
+        )
 
     def exists(self, key: str) -> bool:
         """Return ``True`` if *key* exists in the bucket."""
         try:
             self._s3.head_object(Bucket=self._bucket, Key=key)
-            return True
+            result = True
         except ClientError as exc:
             if exc.response["Error"]["Code"] in ("404", "NoSuchKey"):
-                return False
-            raise
+                result = False
+            else:
+                raise
+        logger.debug(
+            "s3_exists_check", extra=log_context(bucket=self._bucket, key=key, exists=result),
+        )
+        return result

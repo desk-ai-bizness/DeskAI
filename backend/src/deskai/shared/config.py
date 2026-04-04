@@ -56,9 +56,33 @@ def _require_env_vars(environment: str) -> None:
     missing = sorted(var for var in _PROD_REQUIRED_VARS if not getenv(var))
     if missing:
         raise ConfigurationError(
-            f"Missing required environment variables for '{environment}': "
-            + ", ".join(missing)
+            f"Missing required environment variables for '{environment}': " + ", ".join(missing)
         )
+
+
+def _resolve_websocket_url() -> str:
+    """Resolve the WebSocket URL from env var or SSM parameter.
+
+    The CDK passes ``DESKAI_WEBSOCKET_URL_PARAM`` (an SSM parameter name)
+    to avoid cross-stack references.  We read the actual URL from SSM at
+    startup so that ``Settings.websocket_url`` always holds the real URL.
+    """
+    direct = getenv("DESKAI_WEBSOCKET_URL", "")
+    if direct:
+        return direct
+
+    param_name = getenv("DESKAI_WEBSOCKET_URL_PARAM", "")
+    if param_name:
+        try:
+            import boto3
+
+            ssm = boto3.client("ssm")
+            response = ssm.get_parameter(Name=param_name)
+            return response["Parameter"]["Value"]
+        except Exception:
+            pass
+
+    return "wss://localhost:3001"
 
 
 def load_settings() -> Settings:
@@ -84,8 +108,6 @@ def load_settings() -> Settings:
         ),
         cognito_user_pool_id=getenv("DESKAI_COGNITO_USER_POOL_ID", ""),
         cognito_client_id=getenv("DESKAI_COGNITO_CLIENT_ID", ""),
-        websocket_url=getenv("DESKAI_WEBSOCKET_URL", "wss://localhost:3001"),
-        max_session_duration_minutes=int(
-            getenv("DESKAI_MAX_SESSION_DURATION_MINUTES", "60")
-        ),
+        websocket_url=_resolve_websocket_url(),
+        max_session_duration_minutes=int(getenv("DESKAI_MAX_SESSION_DURATION_MINUTES", "60")),
     )

@@ -12,7 +12,7 @@ from deskai.shared.errors import (
     RepositoryError,
     ThrottleError,
 )
-from deskai.shared.logging import get_logger
+from deskai.shared.logging import get_logger, log_context
 
 logger = get_logger()
 
@@ -112,30 +112,47 @@ class DynamoDBBaseRepository:
                 if code in _THROTTLE_CODES:
                     delay = _BASE_BACKOFF_SECONDS * (2 ** attempt)
                     logger.warning(
-                        "DynamoDB throttle on %s (attempt %d/%d), "
-                        "retrying in %.2fs",
-                        operation,
-                        attempt + 1,
-                        _MAX_RETRIES,
-                        delay,
+                        "dynamodb_throttle_retry",
+                        extra=log_context(
+                            operation=operation,
+                            attempt=attempt + 1,
+                            max_retries=_MAX_RETRIES,
+                            delay_seconds=round(delay, 2),
+                        ),
                     )
                     time.sleep(delay)
                     continue
 
+                logger.error(
+                    "dynamodb_client_error",
+                    extra=log_context(operation=operation, error_code=code),
+                )
                 raise RepositoryError(
                     f"DynamoDB error on {operation}: {code}"
                 ) from exc
 
             except EndpointConnectionError as exc:
+                logger.error(
+                    "dynamodb_connection_error",
+                    extra=log_context(operation=operation),
+                )
                 raise ConnectionError(
                     f"Cannot reach DynamoDB for {operation}"
                 ) from exc
 
             except ReadTimeoutError as exc:
+                logger.error(
+                    "dynamodb_timeout",
+                    extra=log_context(operation=operation),
+                )
                 raise ConnectionError(
                     f"DynamoDB read timeout on {operation}"
                 ) from exc
 
+        logger.error(
+            "dynamodb_throttle_exhausted",
+            extra=log_context(operation=operation, retries=_MAX_RETRIES),
+        )
         raise ThrottleError(
             f"DynamoDB throttle on {operation} after {_MAX_RETRIES} retries"
         ) from last_error

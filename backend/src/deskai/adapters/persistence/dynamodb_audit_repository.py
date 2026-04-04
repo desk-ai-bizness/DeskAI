@@ -6,7 +6,7 @@ from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
 from deskai.adapters.persistence.schema import AuditFields as F
 from deskai.domain.audit.entities import AuditAction, AuditEvent
 from deskai.ports.audit_repository import AuditRepository
-from deskai.shared.logging import get_logger
+from deskai.shared.logging import get_logger, log_context
 
 logger = get_logger()
 
@@ -36,6 +36,15 @@ class DynamoDBAuditRepository(DynamoDBBaseRepository, AuditRepository):
             Item=item,
             ConditionExpression="attribute_not_exists(PK) AND attribute_not_exists(SK)",
         )
+        logger.info(
+            "dynamodb_audit_event_appended",
+            extra=log_context(
+                event_id=event.event_id,
+                consultation_id=event.consultation_id,
+                event_type=str(event.event_type),
+                actor_id=event.actor_id,
+            ),
+        )
 
     def find_by_consultation(
         self, consultation_id: str
@@ -48,6 +57,10 @@ class DynamoDBAuditRepository(DynamoDBBaseRepository, AuditRepository):
                 ":pk": f"CONSULTATION#{consultation_id}",
                 ":sk_prefix": "AUDIT#",
             },
+        )
+        logger.debug(
+            "dynamodb_audit_events_queried",
+            extra=log_context(consultation_id=consultation_id, count=len(items)),
         )
         return [self._to_entity(item) for item in items]
 

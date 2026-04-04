@@ -4,6 +4,9 @@ from dataclasses import dataclass
 
 from deskai.domain.patient.entities import Patient
 from deskai.ports.patient_repository import PatientRepository
+from deskai.shared.logging import get_logger, log_context
+
+logger = get_logger()
 
 
 @dataclass(frozen=True)
@@ -17,4 +20,11 @@ class ListPatientsUseCase:
         clinic_id: str,
         search_term: str = "",
     ) -> list[Patient]:
-        return self.patient_repo.find_by_clinic(clinic_id, search_term)
+        result = self.patient_repo.find_by_clinic(clinic_id, search_term)
+        logger.debug(
+            "patients_listed",
+            extra=log_context(
+                clinic_id=clinic_id, count=len(result), search_term=search_term or None,
+            ),
+        )
+        return result

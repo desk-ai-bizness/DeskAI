@@ -6,7 +6,7 @@ from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
 from deskai.adapters.persistence.schema import ConsultationFields as F
 from deskai.domain.consultation.entities import Consultation, ConsultationStatus
 from deskai.ports.consultation_repository import ConsultationRepository
-from deskai.shared.logging import get_logger
+from deskai.shared.logging import get_logger, log_context
 
 logger = get_logger()
 
@@ -60,6 +60,14 @@ class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationReposit
                 item[key] = value
 
         self._safe_put_item(Item=item)
+        logger.info(
+            "dynamodb_consultation_saved",
+            extra=log_context(
+                consultation_id=consultation.consultation_id,
+                clinic_id=consultation.clinic_id,
+                status=str(consultation.status),
+            ),
+        )
 
     def find_by_id(
         self, consultation_id: str, clinic_id: str
@@ -72,7 +80,15 @@ class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationReposit
         )
         item = response.get("Item")
         if item is None:
+            logger.debug(
+                "dynamodb_consultation_not_found",
+                extra=log_context(consultation_id=consultation_id, clinic_id=clinic_id),
+            )
             return None
+        logger.debug(
+            "dynamodb_consultation_found",
+            extra=log_context(consultation_id=consultation_id, clinic_id=clinic_id),
+        )
         return self._to_entity(item)
 
     def find_by_doctor_and_date_range(
@@ -90,7 +106,14 @@ class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationReposit
                 ":sk_end": f"CONSULTATION#{end_date}\uffff",
             },
         )
-        return [self._to_entity(item) for item in response.get("Items", [])]
+        results = [self._to_entity(item) for item in response.get("Items", [])]
+        logger.debug(
+            "dynamodb_consultations_queried",
+            extra=log_context(
+                doctor_id=doctor_id, start_date=start_date, end_date=end_date, count=len(results),
+            ),
+        )
+        return results
 
     def update_status(
         self,
@@ -121,6 +144,12 @@ class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationReposit
             UpdateExpression="SET " + ", ".join(update_parts),
             ExpressionAttributeValues=attr_values,
             ExpressionAttributeNames=attr_names,
+        )
+        logger.info(
+            "dynamodb_consultation_status_updated",
+            extra=log_context(
+                consultation_id=consultation_id, new_status=str(new_status), clinic_id=clinic_id,
+            ),
         )
 
     @staticmethod

@@ -1,9 +1,10 @@
 """WebSocket session.stop handler — end session and trigger finalization."""
 
 import json
-import logging
 
-logger = logging.getLogger(__name__)
+from deskai.shared.logging import get_logger, log_context
+
+logger = get_logger()
 
 
 def handle_session_stop(
@@ -18,6 +19,11 @@ def handle_session_stop(
     body = json.loads(event.get("body", "{}"))
     data = body.get("data", {})
     consultation_id = data.get("consultation_id", "")
+
+    logger.info(
+        "ws_session_stop_requested",
+        extra=log_context(connection_id=connection_id, consultation_id=consultation_id),
+    )
 
     connection = connection_repo.find_by_connection_id(connection_id)
     if connection is None:
@@ -49,7 +55,14 @@ def handle_session_stop(
             )
         except Exception:
             logger.exception(
-                "Finalization failed for session %s", session.session_id
+                "ws_session_stop_finalization_failed",
+                extra=log_context(
+                    session_id=session.session_id, consultation_id=consultation_id,
+                ),
             )
 
+    logger.info(
+        "ws_session_stop_completed",
+        extra=log_context(session_id=session.session_id, consultation_id=consultation_id),
+    )
     return {"statusCode": 200}

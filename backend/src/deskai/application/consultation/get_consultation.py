@@ -9,6 +9,9 @@ from deskai.domain.consultation.exceptions import (
     ConsultationOwnershipError,
 )
 from deskai.ports.consultation_repository import ConsultationRepository
+from deskai.shared.logging import get_logger, log_context
+
+logger = get_logger()
 
 
 @dataclass(frozen=True)
@@ -20,6 +23,10 @@ class GetConsultationUseCase:
     def execute(
         self, auth_context: AuthContext, consultation_id: str, clinic_id: str
     ) -> Consultation:
+        logger.debug(
+            "consultation_get_requested",
+            extra=log_context(consultation_id=consultation_id, clinic_id=clinic_id),
+        )
         consultation = self.consultation_repo.find_by_id(consultation_id, clinic_id)
         if not consultation:
             raise ConsultationNotFoundError(

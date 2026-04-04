@@ -218,7 +218,7 @@ class StackSynthesisTest(unittest.TestCase):
                         Match.object_like({"IndexName": "gsi_doctor_date"}),
                         Match.object_like({"IndexName": "gsi_status"}),
                         Match.object_like({"IndexName": "gsi_patient"}),
-                        Match.object_like({"IndexName": "consultation-session-index"}),
+                        Match.object_like({"IndexName": "gsi_consultation_session"}),
                     ]
                 ),
             },
@@ -571,11 +571,11 @@ class StackSynthesisTest(unittest.TestCase):
                     [
                         Match.object_like(
                             {
-                                "IndexName": "consultation-session-index",
+                                "IndexName": "gsi_consultation_session",
                                 "KeySchema": Match.array_with(
                                     [
-                                        {"AttributeName": "consultation_id", "KeyType": "HASH"},
-                                        {"AttributeName": "created_at", "KeyType": "RANGE"},
+                                        {"AttributeName": "GSI4PK", "KeyType": "HASH"},
+                                        {"AttributeName": "GSI4SK", "KeyType": "RANGE"},
                                     ]
                                 ),
                                 "Projection": {"ProjectionType": "ALL"},

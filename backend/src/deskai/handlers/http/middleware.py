@@ -27,9 +27,17 @@ from deskai.domain.consultation.exceptions import (
     ConsultationOwnershipError,
     InvalidStatusTransitionError,
 )
+from deskai.domain.export.exceptions import ExportGenerationError
 from deskai.domain.patient.exceptions import (
     PatientNotFoundError,
     PatientValidationError,
+)
+from deskai.domain.review.exceptions import (
+    ArtifactsIncompleteError,
+    ExportNotAllowedError,
+    FinalizationNotAllowedError,
+    ReviewNotAvailableError,
+    ReviewNotEditableError,
 )
 from deskai.domain.session.exceptions import (
     InvalidSessionStateError,
@@ -57,6 +65,12 @@ _EXCEPTION_MAP: dict[type[Exception], tuple[int, str]] = {
     InvalidSessionStateError: (409, "conflict"),
     SessionNotActiveError: (404, "not_found"),
     SessionOwnershipError: (403, "forbidden"),
+    ReviewNotAvailableError: (409, "conflict"),
+    ReviewNotEditableError: (409, "conflict"),
+    FinalizationNotAllowedError: (409, "conflict"),
+    ExportNotAllowedError: (409, "conflict"),
+    ArtifactsIncompleteError: (409, "conflict"),
+    ExportGenerationError: (500, "internal_error"),
 }
 
 

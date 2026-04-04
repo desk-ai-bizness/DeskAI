@@ -1,8 +1,8 @@
 """Port interface for consultation export generation."""
 
 from abc import ABC, abstractmethod
+from typing import Any
 
-from deskai.domain.consultation.entities import Consultation
 from deskai.domain.export.value_objects import ExportFormat, ExportResult
 
 
@@ -11,6 +11,12 @@ class ExportGenerator(ABC):
 
     @abstractmethod
     def generate(
-        self, consultation: Consultation, fmt: ExportFormat
+        self,
+        consultation_id: str,
+        fmt: ExportFormat,
+        metadata: dict[str, Any],
+        medical_history: dict[str, Any],
+        summary: dict[str, Any],
+        accepted_insights: list[dict[str, Any]],
     ) -> ExportResult:
-        """Produce an export artifact for the given consultation."""
+        """Produce an export artifact from finalized consultation content."""

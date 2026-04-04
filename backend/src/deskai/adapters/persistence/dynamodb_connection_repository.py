@@ -1,6 +1,7 @@
 """DynamoDB adapter for WebSocket connection persistence."""
 
 from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
+from deskai.adapters.persistence.schema import ConnectionFields as F
 from deskai.domain.session.value_objects import ConnectionInfo
 from deskai.ports.connection_repository import ConnectionRepository
 from deskai.shared.logging import get_logger
@@ -19,13 +20,13 @@ class DynamoDBConnectionRepository(DynamoDBBaseRepository, ConnectionRepository)
     def save(self, connection: ConnectionInfo) -> None:
         self._safe_put_item(
             Item={
-                "PK": f"CONNECTION#{connection.connection_id}",
-                "SK": "METADATA",
-                "connection_id": connection.connection_id,
-                "session_id": connection.session_id,
-                "doctor_id": connection.doctor_id,
-                "clinic_id": connection.clinic_id,
-                "connected_at": connection.connected_at,
+                F.PK: f"CONNECTION#{connection.connection_id}",
+                F.SK: "METADATA",
+                F.CONNECTION_ID: connection.connection_id,
+                F.SESSION_ID: connection.session_id,
+                F.DOCTOR_ID: connection.doctor_id,
+                F.CLINIC_ID: connection.clinic_id,
+                F.CONNECTED_AT: connection.connected_at,
             }
         )
 
@@ -33,7 +34,7 @@ class DynamoDBConnectionRepository(DynamoDBBaseRepository, ConnectionRepository)
         self, connection_id: str
     ) -> ConnectionInfo | None:
         response = self._safe_get_item(
-            Key={"PK": f"CONNECTION#{connection_id}", "SK": "METADATA"},
+            Key={F.PK: f"CONNECTION#{connection_id}", F.SK: "METADATA"},
         )
         item = response.get("Item")
         if item is None:
@@ -42,15 +43,15 @@ class DynamoDBConnectionRepository(DynamoDBBaseRepository, ConnectionRepository)
 
     def remove(self, connection_id: str) -> None:
         self._safe_delete_item(
-            Key={"PK": f"CONNECTION#{connection_id}", "SK": "METADATA"},
+            Key={F.PK: f"CONNECTION#{connection_id}", F.SK: "METADATA"},
         )
 
     @staticmethod
     def _to_entity(item: dict) -> ConnectionInfo:
         return ConnectionInfo(
-            connection_id=item["connection_id"],
-            session_id=item["session_id"],
-            doctor_id=item["doctor_id"],
-            clinic_id=item["clinic_id"],
-            connected_at=item["connected_at"],
+            connection_id=item[F.CONNECTION_ID],
+            session_id=item[F.SESSION_ID],
+            doctor_id=item[F.DOCTOR_ID],
+            clinic_id=item[F.CLINIC_ID],
+            connected_at=item[F.CONNECTED_AT],
         )

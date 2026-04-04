@@ -74,6 +74,51 @@ class DynamoDBAuditRepositoryTest(unittest.TestCase):
             {"old_status": "started", "new_status": "recording"},
         )
 
+    def test_append_includes_condition_expression_to_prevent_overwrite(
+        self, mock_boto3: MagicMock
+    ) -> None:
+        """Append must include ConditionExpression for append-only enforcement."""
+        repo = self._make_repo(mock_boto3)
+        event = AuditEvent(
+            event_id="evt-001",
+            consultation_id="cons-001",
+            event_type=AuditAction.CONSULTATION_CREATED,
+            actor_id="doc-01",
+            timestamp="2026-04-02T10:00:00Z",
+        )
+
+        repo.append(event)
+
+        call_kwargs = self.mock_table.put_item.call_args[1]
+        self.assertEqual(
+            call_kwargs["ConditionExpression"],
+            "attribute_not_exists(PK) AND attribute_not_exists(SK)",
+        )
+
+    def test_append_duplicate_raises_conflict_error(
+        self, mock_boto3: MagicMock
+    ) -> None:
+        """Appending the same event twice must fail (append-only enforcement)."""
+        from botocore.exceptions import ClientError
+
+        from deskai.shared.errors import ConflictError
+
+        repo = self._make_repo(mock_boto3)
+        self.mock_table.put_item.side_effect = ClientError(
+            {"Error": {"Code": "ConditionalCheckFailedException", "Message": "exists"}},
+            "PutItem",
+        )
+        event = AuditEvent(
+            event_id="evt-001",
+            consultation_id="cons-001",
+            event_type=AuditAction.CONSULTATION_CREATED,
+            actor_id="doc-01",
+            timestamp="2026-04-02T10:00:00Z",
+        )
+
+        with self.assertRaises(ConflictError):
+            repo.append(event)
+
     # ---- find_by_consultation ----
 
     def test_find_by_consultation_queries_with_begins_with(

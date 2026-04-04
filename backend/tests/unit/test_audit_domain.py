@@ -66,5 +66,69 @@ class AuditEventEntityTest(unittest.TestCase):
             event.actor_id = "doc-2"  # type: ignore[misc]
 
 
+class AuditEventValidationTest(unittest.TestCase):
+    """Verify AuditEvent __post_init__ validation rejects invalid inputs."""
+
+    def test_empty_event_id_raises_domain_validation_error(self) -> None:
+        from deskai.shared.errors import DomainValidationError
+
+        with self.assertRaises(DomainValidationError):
+            AuditEvent(
+                event_id="",
+                consultation_id="c-100",
+                event_type=AuditAction.CONSULTATION_CREATED,
+                actor_id="doc-1",
+                timestamp="2026-04-01T10:00:00+00:00",
+            )
+
+    def test_empty_consultation_id_raises_domain_validation_error(self) -> None:
+        from deskai.shared.errors import DomainValidationError
+
+        with self.assertRaises(DomainValidationError):
+            AuditEvent(
+                event_id="evt-001",
+                consultation_id="",
+                event_type=AuditAction.CONSULTATION_CREATED,
+                actor_id="doc-1",
+                timestamp="2026-04-01T10:00:00+00:00",
+            )
+
+    def test_empty_actor_id_raises_domain_validation_error(self) -> None:
+        from deskai.shared.errors import DomainValidationError
+
+        with self.assertRaises(DomainValidationError):
+            AuditEvent(
+                event_id="evt-001",
+                consultation_id="c-100",
+                event_type=AuditAction.CONSULTATION_CREATED,
+                actor_id="",
+                timestamp="2026-04-01T10:00:00+00:00",
+            )
+
+    def test_empty_timestamp_raises_domain_validation_error(self) -> None:
+        from deskai.shared.errors import DomainValidationError
+
+        with self.assertRaises(DomainValidationError):
+            AuditEvent(
+                event_id="evt-001",
+                consultation_id="c-100",
+                event_type=AuditAction.CONSULTATION_CREATED,
+                actor_id="doc-1",
+                timestamp="",
+            )
+
+    def test_invalid_event_type_raises_domain_validation_error(self) -> None:
+        from deskai.shared.errors import DomainValidationError
+
+        with self.assertRaises(DomainValidationError):
+            AuditEvent(
+                event_id="evt-001",
+                consultation_id="c-100",
+                event_type="not_a_valid_action",  # type: ignore[arg-type]
+                actor_id="doc-1",
+                timestamp="2026-04-01T10:00:00+00:00",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

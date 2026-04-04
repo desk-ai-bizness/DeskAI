@@ -16,12 +16,23 @@ class BuildConsultationViewTest(unittest.TestCase):
         view = build_consultation_view(consultation)
 
         self.assertEqual(view["consultation_id"], "cons-001")
-        self.assertEqual(view["patient_id"], "pat-001")
+        self.assertEqual(view["patient"], {"patient_id": "pat-001", "name": ""})
+        self.assertNotIn("patient_id", view)
         self.assertEqual(view["doctor_id"], "doc-001")
         self.assertEqual(view["clinic_id"], "clinic-001")
         self.assertEqual(view["specialty"], "general_practice")
         self.assertEqual(view["status"], "started")
         self.assertEqual(view["scheduled_date"], "2026-04-01")
+
+    def test_build_consultation_view_with_patient_name(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_view,
+        )
+
+        consultation = make_sample_consultation()
+        view = build_consultation_view(consultation, patient_name="Joao Silva")
+
+        self.assertEqual(view["patient"], {"patient_id": "pat-001", "name": "Joao Silva"})
 
     def test_build_consultation_list_view(self) -> None:
         from deskai.bff.views.consultation_view import (
@@ -37,6 +48,19 @@ class BuildConsultationViewTest(unittest.TestCase):
         self.assertEqual(view["total_count"], 2)
         self.assertEqual(len(view["consultations"]), 2)
         self.assertEqual(view["consultations"][0]["consultation_id"], "c1")
+        self.assertEqual(view["page"], 1)
+        self.assertEqual(view["page_size"], 20)
+
+    def test_build_consultation_list_view_custom_pagination(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_list_view,
+        )
+
+        consultations = [make_sample_consultation(consultation_id="c1")]
+        view = build_consultation_list_view(consultations, page=3, page_size=10)
+
+        self.assertEqual(view["page"], 3)
+        self.assertEqual(view["page_size"], 10)
 
     def test_build_consultation_detail_view(self) -> None:
         from deskai.bff.views.consultation_view import (
@@ -55,6 +79,7 @@ class BuildConsultationViewTest(unittest.TestCase):
 
         self.assertEqual(view["consultation_id"], "cons-001")
         self.assertIn("session", view)
+        self.assertIsNone(view["session"]["session_id"])
         self.assertEqual(
             view["session"]["started_at"], "2026-04-01T10:30:00+00:00"
         )
@@ -67,6 +92,41 @@ class BuildConsultationViewTest(unittest.TestCase):
         )
         self.assertEqual(view["finalized_at"], "2026-04-01T12:00:00+00:00")
         self.assertEqual(view["finalized_by"], "doc-001")
+        # STARTED status should not have a draft
+        self.assertFalse(view["has_draft"])
+
+    def test_detail_view_has_draft_true_when_draft_generated(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_detail_view,
+        )
+
+        consultation = make_sample_consultation(
+            status=ConsultationStatus.DRAFT_GENERATED,
+        )
+        view = build_consultation_detail_view(consultation)
+        self.assertTrue(view["has_draft"])
+
+    def test_detail_view_has_draft_true_when_finalized(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_detail_view,
+        )
+
+        consultation = make_sample_consultation(
+            status=ConsultationStatus.FINALIZED,
+        )
+        view = build_consultation_detail_view(consultation)
+        self.assertTrue(view["has_draft"])
+
+    def test_detail_view_has_draft_false_when_recording(self) -> None:
+        from deskai.bff.views.consultation_view import (
+            build_consultation_detail_view,
+        )
+
+        consultation = make_sample_consultation(
+            status=ConsultationStatus.RECORDING,
+        )
+        view = build_consultation_detail_view(consultation)
+        self.assertFalse(view["has_draft"])
 
     def test_build_patient_view(self) -> None:
         from deskai.bff.views.consultation_view import (

@@ -1,15 +1,20 @@
 """BFF view builders for consultation and patient responses."""
 
 from deskai.bff.action_availability import compute_actions, compute_warnings
-from deskai.domain.consultation.entities import Consultation
+from deskai.domain.consultation.entities import Consultation, ConsultationStatus
 from deskai.domain.patient.entities import Patient
 
 
-def build_consultation_view(consultation: Consultation) -> dict:
+def build_consultation_view(
+    consultation: Consultation, patient_name: str = ""
+) -> dict:
     """Assemble the standard consultation view contract."""
     return {
         "consultation_id": consultation.consultation_id,
-        "patient_id": consultation.patient_id,
+        "patient": {
+            "patient_id": consultation.patient_id,
+            "name": patient_name,
+        },
         "doctor_id": consultation.doctor_id,
         "clinic_id": consultation.clinic_id,
         "specialty": consultation.specialty,
@@ -20,11 +25,17 @@ def build_consultation_view(consultation: Consultation) -> dict:
     }
 
 
-def build_consultation_list_view(consultations: list[Consultation]) -> dict:
-    """Assemble a list view with total count."""
+def build_consultation_list_view(
+    consultations: list[Consultation],
+    page: int = 1,
+    page_size: int = 20,
+) -> dict:
+    """Assemble a list view with total count and pagination."""
     return {
         "consultations": [build_consultation_view(c) for c in consultations],
         "total_count": len(consultations),
+        "page": page,
+        "page_size": page_size,
     }
 
 
@@ -33,6 +44,7 @@ def build_consultation_detail_view(consultation: Consultation) -> dict:
     base = build_consultation_view(consultation)
     base.update({
         "session": {
+            "session_id": None,
             "started_at": consultation.session_started_at,
             "ended_at": consultation.session_ended_at,
             "duration_seconds": None,
@@ -42,6 +54,11 @@ def build_consultation_detail_view(consultation: Consultation) -> dict:
             "completed_at": consultation.processing_completed_at,
             "error_details": consultation.error_details,
         },
+        "has_draft": consultation.status in (
+            ConsultationStatus.DRAFT_GENERATED,
+            ConsultationStatus.UNDER_PHYSICIAN_REVIEW,
+            ConsultationStatus.FINALIZED,
+        ),
         "finalized_at": consultation.finalized_at,
         "finalized_by": consultation.finalized_by,
         "actions": compute_actions(consultation.status),

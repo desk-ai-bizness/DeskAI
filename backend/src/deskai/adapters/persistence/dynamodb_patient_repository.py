@@ -1,6 +1,7 @@
 """DynamoDB adapter for patient persistence."""
 
 from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
+from deskai.adapters.persistence.schema import PatientFields as F
 from deskai.domain.patient.entities import Patient
 from deskai.ports.patient_repository import PatientRepository
 from deskai.shared.logging import get_logger
@@ -19,13 +20,13 @@ class DynamoDBPatientRepository(DynamoDBBaseRepository, PatientRepository):
     def save(self, patient: Patient) -> None:
         self._safe_put_item(
             Item={
-                "PK": f"CLINIC#{patient.clinic_id}",
-                "SK": f"PATIENT#{patient.patient_id}",
-                "patient_id": patient.patient_id,
-                "name": patient.name,
-                "date_of_birth": patient.date_of_birth,
-                "clinic_id": patient.clinic_id,
-                "created_at": patient.created_at,
+                F.PK: f"CLINIC#{patient.clinic_id}",
+                F.SK: f"PATIENT#{patient.patient_id}",
+                F.PATIENT_ID: patient.patient_id,
+                F.NAME: patient.name,
+                F.DATE_OF_BIRTH: patient.date_of_birth,
+                F.CLINIC_ID: patient.clinic_id,
+                F.CREATED_AT: patient.created_at,
             }
         )
 
@@ -34,8 +35,8 @@ class DynamoDBPatientRepository(DynamoDBBaseRepository, PatientRepository):
     ) -> Patient | None:
         response = self._safe_get_item(
             Key={
-                "PK": f"CLINIC#{clinic_id}",
-                "SK": f"PATIENT#{patient_id}",
+                F.PK: f"CLINIC#{clinic_id}",
+                F.SK: f"PATIENT#{patient_id}",
             },
         )
         item = response.get("Item")
@@ -66,9 +67,9 @@ class DynamoDBPatientRepository(DynamoDBBaseRepository, PatientRepository):
     @staticmethod
     def _to_entity(item: dict) -> Patient:
         return Patient(
-            patient_id=item["patient_id"],
-            name=item["name"],
-            date_of_birth=item["date_of_birth"],
-            clinic_id=item["clinic_id"],
-            created_at=item["created_at"],
+            patient_id=item[F.PATIENT_ID],
+            name=item[F.NAME],
+            date_of_birth=item[F.DATE_OF_BIRTH],
+            clinic_id=item[F.CLINIC_ID],
+            created_at=item[F.CREATED_AT],
         )

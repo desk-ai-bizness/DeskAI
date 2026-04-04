@@ -63,7 +63,15 @@ def handle_list_consultations(
         start_date=params.get("from", ""),
         end_date=params.get("to", ""),
     )
-    view = build_consultation_list_view(consultations)
+
+    status_filter = params.get("status")
+    if status_filter:
+        consultations = [c for c in consultations if c.status.value == status_filter]
+
+    page = int(params.get("page", 1))
+    page_size = int(params.get("page_size", 20))
+
+    view = build_consultation_list_view(consultations, page=page, page_size=page_size)
     return json_response(200, view)
 
 

@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 
 from deskai.adapters.persistence.base_repository import DynamoDBBaseRepository
+from deskai.adapters.persistence.schema import ConsultationFields as F
 from deskai.domain.consultation.entities import Consultation, ConsultationStatus
 from deskai.ports.consultation_repository import ConsultationRepository
 from deskai.shared.logging import get_logger
@@ -23,40 +24,40 @@ class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationReposit
     """
 
     def save(self, consultation: Consultation) -> None:
-        item = {
-            "PK": f"CLINIC#{consultation.clinic_id}",
-            "SK": f"CONSULTATION#{consultation.consultation_id}",
-            "GSI1PK": f"DOCTOR#{consultation.doctor_id}",
-            "GSI1SK": (
+        item: dict[str, object] = {
+            F.PK: f"CLINIC#{consultation.clinic_id}",
+            F.SK: f"CONSULTATION#{consultation.consultation_id}",
+            F.GSI1PK: f"DOCTOR#{consultation.doctor_id}",
+            F.GSI1SK: (
                 f"CONSULTATION#{consultation.scheduled_date}"
                 f"#{consultation.consultation_id}"
             ),
-            "consultation_id": consultation.consultation_id,
-            "clinic_id": consultation.clinic_id,
-            "doctor_id": consultation.doctor_id,
-            "patient_id": consultation.patient_id,
-            "specialty": consultation.specialty,
-            "status": str(consultation.status),
-            "scheduled_date": consultation.scheduled_date,
-            "notes": consultation.notes,
-            "created_at": consultation.created_at,
-            "updated_at": consultation.updated_at,
+            F.CONSULTATION_ID: consultation.consultation_id,
+            F.CLINIC_ID: consultation.clinic_id,
+            F.DOCTOR_ID: consultation.doctor_id,
+            F.PATIENT_ID: consultation.patient_id,
+            F.SPECIALTY: consultation.specialty,
+            F.STATUS: str(consultation.status),
+            F.SCHEDULED_DATE: consultation.scheduled_date,
+            F.NOTES: consultation.notes,
+            F.CREATED_AT: consultation.created_at,
+            F.UPDATED_AT: consultation.updated_at,
         }
 
         optional_fields = (
-            "session_started_at",
-            "session_ended_at",
-            "processing_started_at",
-            "processing_completed_at",
-            "review_opened_at",
-            "finalized_at",
-            "finalized_by",
-            "error_details",
+            (F.SESSION_STARTED_AT, "session_started_at"),
+            (F.SESSION_ENDED_AT, "session_ended_at"),
+            (F.PROCESSING_STARTED_AT, "processing_started_at"),
+            (F.PROCESSING_COMPLETED_AT, "processing_completed_at"),
+            (F.REVIEW_OPENED_AT, "review_opened_at"),
+            (F.FINALIZED_AT, "finalized_at"),
+            (F.FINALIZED_BY, "finalized_by"),
+            (F.ERROR_DETAILS, "error_details"),
         )
-        for field in optional_fields:
-            value = getattr(consultation, field)
+        for key, attr in optional_fields:
+            value = getattr(consultation, attr)
             if value is not None:
-                item[field] = value
+                item[key] = value
 
         self._safe_put_item(Item=item)
 
@@ -65,8 +66,8 @@ class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationReposit
     ) -> Consultation | None:
         response = self._safe_get_item(
             Key={
-                "PK": f"CLINIC#{clinic_id}",
-                "SK": f"CONSULTATION#{consultation_id}",
+                F.PK: f"CLINIC#{clinic_id}",
+                F.SK: f"CONSULTATION#{consultation_id}",
             },
         )
         item = response.get("Item")
@@ -100,12 +101,12 @@ class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationReposit
         clinic_id = kwargs.pop("clinic_id", "")
         now = datetime.now(tz=UTC).isoformat()
 
-        update_parts = ["#st = :status", "updated_at = :updated_at"]
+        update_parts = ["#st = :status", f"{F.UPDATED_AT} = :updated_at"]
         attr_values: dict[str, object] = {
             ":status": str(new_status),
             ":updated_at": now,
         }
-        attr_names = {"#st": "status"}
+        attr_names = {"#st": F.STATUS}
 
         for key, value in kwargs.items():
             placeholder = f":{key}"
@@ -114,8 +115,8 @@ class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationReposit
 
         self._safe_update_item(
             Key={
-                "PK": f"CLINIC#{clinic_id}",
-                "SK": f"CONSULTATION#{consultation_id}",
+                F.PK: f"CLINIC#{clinic_id}",
+                F.SK: f"CONSULTATION#{consultation_id}",
             },
             UpdateExpression="SET " + ", ".join(update_parts),
             ExpressionAttributeValues=attr_values,
@@ -125,22 +126,22 @@ class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationReposit
     @staticmethod
     def _to_entity(item: dict) -> Consultation:
         return Consultation(
-            consultation_id=item["consultation_id"],
-            clinic_id=item["clinic_id"],
-            doctor_id=item["doctor_id"],
-            patient_id=item["patient_id"],
-            specialty=item["specialty"],
-            status=ConsultationStatus(item["status"]),
-            scheduled_date=item.get("scheduled_date", ""),
-            notes=item.get("notes", ""),
-            created_at=item.get("created_at", ""),
-            updated_at=item.get("updated_at", ""),
-            session_started_at=item.get("session_started_at"),
-            session_ended_at=item.get("session_ended_at"),
-            processing_started_at=item.get("processing_started_at"),
-            processing_completed_at=item.get("processing_completed_at"),
-            review_opened_at=item.get("review_opened_at"),
-            finalized_at=item.get("finalized_at"),
-            finalized_by=item.get("finalized_by"),
-            error_details=item.get("error_details"),
+            consultation_id=item[F.CONSULTATION_ID],
+            clinic_id=item[F.CLINIC_ID],
+            doctor_id=item[F.DOCTOR_ID],
+            patient_id=item[F.PATIENT_ID],
+            specialty=item[F.SPECIALTY],
+            status=ConsultationStatus(item[F.STATUS]),
+            scheduled_date=item.get(F.SCHEDULED_DATE, ""),
+            notes=item.get(F.NOTES, ""),
+            created_at=item.get(F.CREATED_AT, ""),
+            updated_at=item.get(F.UPDATED_AT, ""),
+            session_started_at=item.get(F.SESSION_STARTED_AT),
+            session_ended_at=item.get(F.SESSION_ENDED_AT),
+            processing_started_at=item.get(F.PROCESSING_STARTED_AT),
+            processing_completed_at=item.get(F.PROCESSING_COMPLETED_AT),
+            review_opened_at=item.get(F.REVIEW_OPENED_AT),
+            finalized_at=item.get(F.FINALIZED_AT),
+            finalized_by=item.get(F.FINALIZED_BY),
+            error_details=item.get(F.ERROR_DETAILS),
         )

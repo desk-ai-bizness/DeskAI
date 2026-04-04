@@ -4,6 +4,7 @@ import json
 import unittest
 from unittest.mock import MagicMock
 
+from deskai.domain.consultation.entities import ConsultationStatus
 from deskai.domain.consultation.exceptions import (
     ConsultationNotFoundError,
     ConsultationOwnershipError,
@@ -45,6 +46,43 @@ class HandleCreateConsultationTest(unittest.TestCase):
         body = json.loads(resp["body"])
         self.assertEqual(body["consultation_id"], "cons-001")
         self.assertEqual(body["status"], "started")
+        self.assertEqual(body["patient"]["patient_id"], "pat-001")
+        self.assertNotIn("patient_id", body)
+
+    def test_handle_create_consultation_missing_body_returns_400(self) -> None:
+        from deskai.handlers.http.consultation_handler import (
+            handle_create_consultation,
+        )
+
+        event = make_apigw_event(
+            path="/v1/consultations",
+            method="POST",
+        )
+        # No "body" key at all in the event
+        resp = handle_create_consultation(event, self.container)
+
+        self.assertEqual(resp["statusCode"], 400)
+        body = json.loads(resp["body"])
+        self.assertEqual(body["error"]["code"], "validation_error")
+
+    def test_handle_create_consultation_empty_patient_id_returns_400(self) -> None:
+        from deskai.handlers.http.consultation_handler import (
+            handle_create_consultation,
+        )
+
+        event = make_apigw_event(
+            path="/v1/consultations",
+            method="POST",
+            body={
+                "patient_id": "",
+                "scheduled_date": "2026-04-01",
+            },
+        )
+        resp = handle_create_consultation(event, self.container)
+
+        self.assertEqual(resp["statusCode"], 400)
+        body = json.loads(resp["body"])
+        self.assertEqual(body["error"]["code"], "validation_error")
 
     def test_handle_create_consultation_missing_fields(self) -> None:
         from deskai.handlers.http.consultation_handler import (
@@ -91,6 +129,64 @@ class HandleListConsultationsTest(unittest.TestCase):
         body = json.loads(resp["body"])
         self.assertEqual(body["total_count"], 2)
         self.assertEqual(len(body["consultations"]), 2)
+        self.assertEqual(body["page"], 1)
+        self.assertEqual(body["page_size"], 20)
+
+    def test_handle_list_consultations_with_pagination(self) -> None:
+        from deskai.handlers.http.consultation_handler import (
+            handle_list_consultations,
+        )
+
+        self.container.list_consultations.execute.return_value = [
+            make_sample_consultation(consultation_id="c1"),
+        ]
+
+        event = make_apigw_event(
+            path="/v1/consultations",
+            method="GET",
+            query_string_parameters={
+                "from": "2026-04-01",
+                "to": "2026-04-30",
+                "page": "2",
+                "page_size": "10",
+            },
+        )
+        resp = handle_list_consultations(event, self.container)
+
+        body = json.loads(resp["body"])
+        self.assertEqual(body["page"], 2)
+        self.assertEqual(body["page_size"], 10)
+
+    def test_handle_list_consultations_status_filter(self) -> None:
+        from deskai.handlers.http.consultation_handler import (
+            handle_list_consultations,
+        )
+
+        consultations = [
+            make_sample_consultation(
+                consultation_id="c1", status=ConsultationStatus.STARTED
+            ),
+            make_sample_consultation(
+                consultation_id="c2", status=ConsultationStatus.FINALIZED
+            ),
+            make_sample_consultation(
+                consultation_id="c3", status=ConsultationStatus.STARTED
+            ),
+        ]
+        self.container.list_consultations.execute.return_value = consultations
+
+        event = make_apigw_event(
+            path="/v1/consultations",
+            method="GET",
+            query_string_parameters={"status": "started"},
+        )
+        resp = handle_list_consultations(event, self.container)
+
+        body = json.loads(resp["body"])
+        self.assertEqual(body["total_count"], 2)
+        self.assertEqual(len(body["consultations"]), 2)
+        for c in body["consultations"]:
+            self.assertEqual(c["status"], "started")
 
 
 class HandleGetConsultationTest(unittest.TestCase):
@@ -118,7 +214,11 @@ class HandleGetConsultationTest(unittest.TestCase):
         body = json.loads(resp["body"])
         self.assertEqual(body["consultation_id"], "cons-001")
         self.assertIn("session", body)
+        self.assertIn("session_id", body["session"])
         self.assertIn("processing", body)
+        self.assertIn("has_draft", body)
+        self.assertEqual(body["patient"]["patient_id"], "pat-001")
+        self.assertNotIn("patient_id", body)
 
     def test_handle_get_consultation_not_found(self) -> None:
         from deskai.handlers.http.consultation_handler import (
@@ -159,6 +259,23 @@ class HandleGetConsultationTest(unittest.TestCase):
         self.assertEqual(resp["statusCode"], 403)
         body = json.loads(resp["body"])
         self.assertEqual(body["error"]["code"], "forbidden")
+
+    def test_handle_get_consultation_none_path_parameters_returns_400(self) -> None:
+        from deskai.handlers.http.consultation_handler import (
+            handle_get_consultation,
+        )
+
+        event = make_apigw_event(
+            path="/v1/consultations/cons-001",
+            method="GET",
+        )
+        # Explicitly set pathParameters to None
+        event["pathParameters"] = None
+        resp = handle_get_consultation(event, self.container)
+
+        self.assertEqual(resp["statusCode"], 400)
+        body = json.loads(resp["body"])
+        self.assertEqual(body["error"]["code"], "validation_error")
 
     def test_handle_get_consultation_missing_id(self) -> None:
         from deskai.handlers.http.consultation_handler import (

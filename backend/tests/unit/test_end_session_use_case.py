@@ -24,6 +24,7 @@ class EndSessionUseCaseTest(unittest.TestCase):
         self.consultation_repo = MagicMock()
         self.session_repo = MagicMock()
         self.audit_repo = MagicMock()
+        self.event_publisher = MagicMock()
 
         from deskai.application.session.end_session import EndSessionUseCase
 
@@ -31,6 +32,7 @@ class EndSessionUseCaseTest(unittest.TestCase):
             consultation_repo=self.consultation_repo,
             session_repo=self.session_repo,
             audit_repo=self.audit_repo,
+            event_publisher=self.event_publisher,
         )
 
     def _make_active_session(
@@ -72,6 +74,10 @@ class EndSessionUseCaseTest(unittest.TestCase):
         self.assertEqual(saved_consultation.status, ConsultationStatus.IN_PROCESSING)
         self.assertEqual(saved_consultation.session_ended_at, "2026-04-02T10:00:00+00:00")
         self.assertEqual(saved_consultation.processing_started_at, "2026-04-02T10:00:00+00:00")
+        self.event_publisher.publish.assert_called_once_with(
+            "consultation.session.ended",
+            {"consultation_id": "cons-001", "clinic_id": "clinic-001"},
+        )
 
     def test_end_session_consultation_not_found(self) -> None:
         self.consultation_repo.find_by_id.return_value = None
@@ -121,6 +127,7 @@ class EndSessionUseCaseTest(unittest.TestCase):
         self.assertEqual(result.session_id, "sess-001")
         self.session_repo.update.assert_not_called()
         self.consultation_repo.save.assert_not_called()
+        self.event_publisher.publish.assert_not_called()
 
     def test_end_session_no_active_session(self) -> None:
         consultation = make_sample_consultation(status=ConsultationStatus.RECORDING)
@@ -186,9 +193,7 @@ class EndSessionUseCaseTest(unittest.TestCase):
         consultation = make_sample_consultation(status=ConsultationStatus.RECORDING)
         self.consultation_repo.find_by_id.return_value = consultation
 
-        active_session = self._make_active_session(
-            started_at="2026-04-02T09:45:00+00:00"
-        )
+        active_session = self._make_active_session(started_at="2026-04-02T09:45:00+00:00")
         self.session_repo.find_active_by_consultation_id.return_value = active_session
 
         result = self.use_case.execute(
@@ -198,6 +203,62 @@ class EndSessionUseCaseTest(unittest.TestCase):
         )
 
         self.assertEqual(result.duration_seconds, 900)
+
+    @patch(f"{_MOD}.new_uuid", side_effect=["evt-uuid-1"])
+    @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-02T10:00:00+00:00")
+    def test_end_session_publishes_event_with_correct_payload(
+        self, _mock_time: MagicMock, _mock_uuid: MagicMock
+    ) -> None:
+        consultation = make_sample_consultation(status=ConsultationStatus.RECORDING)
+        self.consultation_repo.find_by_id.return_value = consultation
+        active_session = self._make_active_session()
+        self.session_repo.find_active_by_consultation_id.return_value = active_session
+
+        self.use_case.execute(
+            consultation_id="cons-001",
+            doctor_id="doc-001",
+            clinic_id="clinic-001",
+        )
+
+        self.event_publisher.publish.assert_called_once_with(
+            "consultation.session.ended",
+            {"consultation_id": "cons-001", "clinic_id": "clinic-001"},
+        )
+
+    @patch(f"{_MOD}.new_uuid", side_effect=["evt-uuid-1"])
+    @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-02T10:00:00+00:00")
+    def test_end_session_publishes_event_after_save(
+        self, _mock_time: MagicMock, _mock_uuid: MagicMock
+    ) -> None:
+        """Event must be published after consultation is persisted."""
+        consultation = make_sample_consultation(status=ConsultationStatus.RECORDING)
+        self.consultation_repo.find_by_id.return_value = consultation
+        active_session = self._make_active_session()
+        self.session_repo.find_active_by_consultation_id.return_value = active_session
+
+        call_order: list[str] = []
+        self.consultation_repo.save.side_effect = lambda _: call_order.append("save")
+        self.event_publisher.publish.side_effect = lambda *_: call_order.append("publish")
+
+        self.use_case.execute(
+            consultation_id="cons-001",
+            doctor_id="doc-001",
+            clinic_id="clinic-001",
+        )
+
+        self.assertEqual(call_order, ["save", "publish"])
+
+    def test_end_session_does_not_publish_on_error(self) -> None:
+        self.consultation_repo.find_by_id.return_value = None
+
+        with self.assertRaises(ConsultationNotFoundError):
+            self.use_case.execute(
+                consultation_id="cons-missing",
+                doctor_id="doc-001",
+                clinic_id="clinic-001",
+            )
+
+        self.event_publisher.publish.assert_not_called()
 
 
 if __name__ == "__main__":

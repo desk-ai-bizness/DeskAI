@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 
 from deskai.adapters.auth.cognito_provider import CognitoAuthProvider
-from deskai.adapters.events.stub_publisher import StubEventPublisher
 from deskai.adapters.export.pdf_generator import PdfExportGenerator
 from deskai.adapters.llm.lazy_provider import LazyLLMProvider
 from deskai.adapters.persistence.dynamodb_audit_repository import (
@@ -212,11 +211,12 @@ def build_container() -> Container:
     transcript_repo = S3TranscriptRepository(s3_client=s3_client)
     artifact_repo = S3ArtifactRepository(s3_client=s3_client)
 
+    from deskai.adapters.events.eventbridge_publisher import EventBridgePublisher
     from deskai.adapters.storage.s3_storage_provider import (
         S3StorageProvider,
     )
 
-    event_publisher = StubEventPublisher()
+    event_publisher = EventBridgePublisher(event_bus_name=settings.event_bus_name)
     export_generator = PdfExportGenerator()
     storage_provider = S3StorageProvider(s3_client=s3_client)
 
@@ -301,6 +301,7 @@ def build_container() -> Container:
             consultation_repo=consultation_repo,
             session_repo=session_repo,
             audit_repo=audit_repo,
+            event_publisher=event_publisher,
         ),
         process_audio_chunk=ProcessAudioChunkUseCase(
             session_repo=session_repo,

@@ -36,6 +36,7 @@ class Settings:
     cognito_user_pool_id: str
     cognito_client_id: str
     websocket_url: str
+    event_bus_name: str
     max_session_duration_minutes: int
 
 
@@ -109,5 +110,6 @@ def load_settings() -> Settings:
         cognito_user_pool_id=getenv("DESKAI_COGNITO_USER_POOL_ID", ""),
         cognito_client_id=getenv("DESKAI_COGNITO_CLIENT_ID", ""),
         websocket_url=_resolve_websocket_url(),
+        event_bus_name=getenv("DESKAI_EVENT_BUS_NAME", "deskai-dev-event-bus"),
         max_session_duration_minutes=int(getenv("DESKAI_MAX_SESSION_DURATION_MINUTES", "60")),
     )

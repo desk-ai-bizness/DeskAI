@@ -123,6 +123,20 @@ class SecurityStack(Stack):
                         f"arn:aws:cognito-idp:{self.region}:{self.account}:userpool/{config.resource_prefix}-*"
                     ],
                 ),
+                iam.PolicyStatement(
+                    sid="AllowWebSocketManageConnections",
+                    actions=["execute-api:ManageConnections"],
+                    resources=[
+                        f"arn:aws:execute-api:{self.region}:{self.account}:*/*/@connections/*"
+                    ],
+                ),
+                iam.PolicyStatement(
+                    sid="AllowSSMParameterRead",
+                    actions=["ssm:GetParameter"],
+                    resources=[
+                        f"arn:aws:ssm:{self.region}:{self.account}:parameter/{config.resource_prefix}/*"
+                    ],
+                ),
             ],
         )
 

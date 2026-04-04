@@ -140,12 +140,13 @@ def build_container() -> Container:
             "environment variables are required."
         )
 
+    doctor_repo = DynamoDBDoctorRepository(
+        table_name=settings.dynamodb_table,
+    )
     auth_provider = CognitoAuthProvider(
         user_pool_id=settings.cognito_user_pool_id,
         client_id=settings.cognito_client_id,
-    )
-    doctor_repo = DynamoDBDoctorRepository(
-        table_name=settings.dynamodb_table,
+        doctor_repo=doctor_repo,
     )
     consultation_repo = DynamoDBConsultationRepository(
         table_name=settings.dynamodb_table,

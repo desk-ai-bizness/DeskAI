@@ -1,6 +1,7 @@
 """Unit tests for auth domain entities."""
 
 import unittest
+from datetime import UTC, datetime
 
 from deskai.domain.auth.entities import DoctorProfile
 from deskai.domain.auth.value_objects import PlanType
@@ -16,7 +17,7 @@ class DoctorProfileTest(unittest.TestCase):
             clinic_id="c1",
             clinic_name="Clinic One",
             plan_type=PlanType.FREE_TRIAL,
-            created_at="2026-01-01T00:00:00+00:00",
+            created_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         with self.assertRaises(AttributeError):
             p.name = "Dr. Other"
@@ -30,7 +31,7 @@ class DoctorProfileTest(unittest.TestCase):
             clinic_id="c1",
             clinic_name="Clinic One",
             plan_type=PlanType.PLUS,
-            created_at="2026-01-01T00:00:00+00:00",
+            created_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         self.assertEqual(p.plan_type, PlanType.PLUS)
         self.assertEqual(p.clinic_name, "Clinic One")

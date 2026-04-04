@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from datetime import datetime
 
 from deskai.domain.auth.value_objects import PlanType
 from deskai.shared.errors import DomainValidationError
@@ -20,7 +21,7 @@ class DoctorProfile:
     clinic_id: str
     clinic_name: str
     plan_type: PlanType
-    created_at: str
+    created_at: datetime
 
     def __post_init__(self) -> None:
         if not self.doctor_id or not self.doctor_id.strip():
@@ -39,5 +40,5 @@ class DoctorProfile:
             raise DomainValidationError(
                 f"plan_type must be a PlanType, got {type(self.plan_type).__name__}"
             )
-        if not self.created_at or not self.created_at.strip():
-            raise DomainValidationError("created_at must be a non-empty string")
+        if not isinstance(self.created_at, datetime):
+            raise DomainValidationError("created_at must be a datetime instance")

@@ -2,6 +2,7 @@
 
 import unittest
 from dataclasses import FrozenInstanceError
+from datetime import UTC, datetime
 
 # --- Audit domain ---
 from deskai.domain.audit.entities import AuditAction, AuditEvent
@@ -247,15 +248,21 @@ class TestConnectionInfoValidation(unittest.TestCase):
     def test_empty_connection_id(self):
         with self.assertRaises(DomainValidationError):
             ConnectionInfo(
-                connection_id="", session_id="s", doctor_id="d",
-                clinic_id="c", connected_at="t",
+                connection_id="",
+                session_id="s",
+                doctor_id="d",
+                clinic_id="c",
+                connected_at="t",
             )
 
     def test_empty_connected_at(self):
         with self.assertRaises(DomainValidationError):
             ConnectionInfo(
-                connection_id="c", session_id="s", doctor_id="d",
-                clinic_id="c", connected_at="",
+                connection_id="c",
+                session_id="s",
+                doctor_id="d",
+                clinic_id="c",
+                connected_at="",
             )
 
 
@@ -267,44 +274,62 @@ class TestConnectionInfoValidation(unittest.TestCase):
 class TestSpeakerSegmentValidation(unittest.TestCase):
     def test_valid_creation(self):
         seg = SpeakerSegment(
-            speaker="Dr", text="hello",
-            start_time=0.0, end_time=1.0, confidence=0.9,
+            speaker="Dr",
+            text="hello",
+            start_time=0.0,
+            end_time=1.0,
+            confidence=0.9,
         )
         self.assertEqual(seg.speaker, "Dr")
 
     def test_empty_speaker(self):
         with self.assertRaises(DomainValidationError):
             SpeakerSegment(
-                speaker="", text="hello",
-                start_time=0.0, end_time=1.0, confidence=0.9,
+                speaker="",
+                text="hello",
+                start_time=0.0,
+                end_time=1.0,
+                confidence=0.9,
             )
 
     def test_negative_start_time(self):
         with self.assertRaises(DomainValidationError):
             SpeakerSegment(
-                speaker="Dr", text="hello",
-                start_time=-1.0, end_time=1.0, confidence=0.9,
+                speaker="Dr",
+                text="hello",
+                start_time=-1.0,
+                end_time=1.0,
+                confidence=0.9,
             )
 
     def test_end_before_start(self):
         with self.assertRaises(DomainValidationError):
             SpeakerSegment(
-                speaker="Dr", text="hello",
-                start_time=2.0, end_time=1.0, confidence=0.9,
+                speaker="Dr",
+                text="hello",
+                start_time=2.0,
+                end_time=1.0,
+                confidence=0.9,
             )
 
     def test_confidence_above_1(self):
         with self.assertRaises(DomainValidationError):
             SpeakerSegment(
-                speaker="Dr", text="hello",
-                start_time=0.0, end_time=1.0, confidence=1.1,
+                speaker="Dr",
+                text="hello",
+                start_time=0.0,
+                end_time=1.0,
+                confidence=1.1,
             )
 
     def test_confidence_below_0(self):
         with self.assertRaises(DomainValidationError):
             SpeakerSegment(
-                speaker="Dr", text="hello",
-                start_time=0.0, end_time=1.0, confidence=-0.1,
+                speaker="Dr",
+                text="hello",
+                start_time=0.0,
+                end_time=1.0,
+                confidence=-0.1,
             )
 
 
@@ -325,8 +350,11 @@ class TestPartialTranscriptValidation(unittest.TestCase):
     def test_confidence_out_of_range(self):
         with self.assertRaises(DomainValidationError):
             PartialTranscript(
-                text="hi", speaker="Dr", is_final=False,
-                timestamp="t", confidence=2.0,
+                text="hi",
+                speaker="Dr",
+                is_final=False,
+                timestamp="t",
+                confidence=2.0,
             )
 
 
@@ -358,22 +386,33 @@ class TestFinalTranscriptValidation(unittest.TestCase):
     def test_empty_session_id(self):
         with self.assertRaises(DomainValidationError):
             FinalTranscript(
-                session_id="", text="hello", speaker_segments=[],
-                language="pt-BR", provider_name="aws",
+                session_id="",
+                text="hello",
+                speaker_segments=[],
+                language="pt-BR",
+                provider_name="aws",
             )
 
     def test_negative_duration(self):
         with self.assertRaises(DomainValidationError):
             FinalTranscript(
-                session_id="s", text="hello", speaker_segments=[],
-                language="pt-BR", provider_name="aws", duration_seconds=-1.0,
+                session_id="s",
+                text="hello",
+                speaker_segments=[],
+                language="pt-BR",
+                provider_name="aws",
+                duration_seconds=-1.0,
             )
 
     def test_confidence_out_of_range(self):
         with self.assertRaises(DomainValidationError):
             FinalTranscript(
-                session_id="s", text="hello", speaker_segments=[],
-                language="pt-BR", provider_name="aws", confidence=1.5,
+                session_id="s",
+                text="hello",
+                speaker_segments=[],
+                language="pt-BR",
+                provider_name="aws",
+                confidence=1.5,
             )
 
 
@@ -455,7 +494,7 @@ class TestDoctorProfileValidation(unittest.TestCase):
             clinic_id="cl-1",
             clinic_name="Clinic One",
             plan_type=PlanType.FREE_TRIAL,
-            created_at="2026-01-01T00:00:00+00:00",
+            created_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         defaults.update(overrides)
         return DoctorProfile(**defaults)
@@ -515,8 +554,10 @@ class TestAuthContextValidation(unittest.TestCase):
     def test_empty_doctor_id(self):
         with self.assertRaises(DomainValidationError):
             AuthContext(
-                doctor_id="", email="doc@clinic.com",
-                clinic_id="cl-1", plan_type=PlanType.PLUS,
+                doctor_id="",
+                email="doc@clinic.com",
+                clinic_id="cl-1",
+                plan_type=PlanType.PLUS,
             )
 
     def test_invalid_email(self):

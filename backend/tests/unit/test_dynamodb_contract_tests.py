@@ -17,6 +17,7 @@ return types.
 
 import json
 import unittest
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
@@ -72,7 +73,10 @@ class TestDoctorProfileContract(unittest.TestCase):
         self.assertEqual(profile.clinic_id, "clinic-xyz")
         self.assertEqual(profile.clinic_name, "Clinica Central")
         self.assertEqual(profile.plan_type.value, "plus")
-        self.assertEqual(profile.created_at, "2026-01-10T09:00:00+00:00")
+        self.assertEqual(
+            profile.created_at,
+            datetime(2026, 1, 10, 9, 0, 0, tzinfo=UTC),
+        )
 
     @patch("deskai.adapters.persistence.base_repository.boto3")
     def test_legacy_name_fallback(self, mock_boto3):

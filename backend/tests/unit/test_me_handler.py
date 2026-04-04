@@ -2,6 +2,7 @@
 
 import json
 import unittest
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 from deskai.domain.auth.entities import DoctorProfile
@@ -16,13 +17,7 @@ from deskai.handlers.http.me_handler import handle_get_me
 
 
 def _me_event(sub: str = "sub-1") -> dict:
-    return {
-        "requestContext": {
-            "authorizer": {
-                "jwt": {"claims": {"sub": sub}}
-            }
-        }
-    }
+    return {"requestContext": {"authorizer": {"jwt": {"claims": {"sub": sub}}}}}
 
 
 class HandleGetMeTest(unittest.TestCase):
@@ -38,7 +33,7 @@ class HandleGetMeTest(unittest.TestCase):
             clinic_id="c1",
             clinic_name="Clinic",
             plan_type=PlanType.PLUS,
-            created_at="2026-01-01T00:00:00+00:00",
+            created_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         entitlements = Entitlements(
             can_create_consultation=True,
@@ -49,12 +44,8 @@ class HandleGetMeTest(unittest.TestCase):
             trial_expired=False,
             trial_days_remaining=None,
         )
-        self.container.get_current_user.execute.return_value = (
-            profile
-        )
-        self.container.check_entitlements.execute.return_value = (
-            entitlements
-        )
+        self.container.get_current_user.execute.return_value = profile
+        self.container.check_entitlements.execute.return_value = entitlements
 
         resp = handle_get_me(_me_event("sub-1"), self.container)
 
@@ -62,13 +53,11 @@ class HandleGetMeTest(unittest.TestCase):
         body = json.loads(resp["body"])
         self.assertEqual(body["user"]["doctor_id"], "d1")
         self.assertEqual(body["user"]["plan_type"], "plus")
-        self.assertTrue(
-            body["entitlements"]["can_create_consultation"]
-        )
+        self.assertTrue(body["entitlements"]["can_create_consultation"])
 
     def test_handle_get_me_user_not_found(self) -> None:
-        self.container.get_current_user.execute.side_effect = (
-            DoctorProfileNotFoundError("not found")
+        self.container.get_current_user.execute.side_effect = DoctorProfileNotFoundError(
+            "not found"
         )
 
         resp = handle_get_me(_me_event("sub-1"), self.container)
@@ -78,11 +67,7 @@ class HandleGetMeTest(unittest.TestCase):
         self.assertEqual(body["error"]["code"], "forbidden")
 
     def test_handle_get_me_missing_sub(self) -> None:
-        event = {
-            "requestContext": {
-                "authorizer": {"jwt": {"claims": {}}}
-            }
-        }
+        event = {"requestContext": {"authorizer": {"jwt": {"claims": {}}}}}
         resp = handle_get_me(event, self.container)
 
         self.assertEqual(resp["statusCode"], 401)

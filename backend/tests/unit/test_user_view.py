@@ -1,6 +1,7 @@
 """Unit tests for the BFF user profile view builder."""
 
 import unittest
+from datetime import UTC, datetime
 
 from deskai.bff.views.user_view import build_user_profile_view
 from deskai.domain.auth.entities import DoctorProfile
@@ -20,7 +21,7 @@ class UserViewTest(unittest.TestCase):
             clinic_id="c1",
             clinic_name="Clinic One",
             plan_type=PlanType.PLUS,
-            created_at="2026-01-01T00:00:00+00:00",
+            created_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         entitlements = Entitlements(
             can_create_consultation=True,
@@ -31,26 +32,18 @@ class UserViewTest(unittest.TestCase):
             trial_expired=False,
             trial_days_remaining=None,
         )
-        view = build_user_profile_view(
-            profile, entitlements
-        )
+        view = build_user_profile_view(profile, entitlements)
 
         self.assertIn("user", view)
         self.assertIn("entitlements", view)
         self.assertEqual(view["user"]["doctor_id"], "d1")
-        self.assertEqual(
-            view["user"]["plan_type"], "plus"
-        )
-        self.assertEqual(
-            view["user"]["clinic_name"], "Clinic One"
-        )
+        self.assertEqual(view["user"]["plan_type"], "plus")
+        self.assertEqual(view["user"]["clinic_name"], "Clinic One")
         self.assertEqual(
             view["entitlements"]["consultations_remaining"],
             42,
         )
-        self.assertIsNone(
-            view["entitlements"]["trial_days_remaining"]
-        )
+        self.assertIsNone(view["entitlements"]["trial_days_remaining"])
 
     def test_plan_type_serialized_as_string(self) -> None:
         profile = DoctorProfile(
@@ -61,7 +54,7 @@ class UserViewTest(unittest.TestCase):
             clinic_id="c1",
             clinic_name="Clinic",
             plan_type=PlanType.FREE_TRIAL,
-            created_at="2026-01-01T00:00:00+00:00",
+            created_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         entitlements = Entitlements(
             can_create_consultation=True,
@@ -72,16 +65,9 @@ class UserViewTest(unittest.TestCase):
             trial_expired=False,
             trial_days_remaining=14,
         )
-        view = build_user_profile_view(
-            profile, entitlements
-        )
-        self.assertEqual(
-            view["user"]["plan_type"], "free_trial"
-        )
-        self.assertIsInstance(
-            view["user"]["plan_type"], str
-        )
-
+        view = build_user_profile_view(profile, entitlements)
+        self.assertEqual(view["user"]["plan_type"], "free_trial")
+        self.assertIsInstance(view["user"]["plan_type"], str)
 
     def test_view_includes_feature_flags(self) -> None:
         profile = DoctorProfile(
@@ -92,7 +78,7 @@ class UserViewTest(unittest.TestCase):
             clinic_id="c1",
             clinic_name="Clinic",
             plan_type=PlanType.PLUS,
-            created_at="2026-01-01T00:00:00+00:00",
+            created_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         entitlements = Entitlements(
             can_create_consultation=True,
@@ -103,9 +89,7 @@ class UserViewTest(unittest.TestCase):
             trial_expired=False,
             trial_days_remaining=None,
         )
-        view = build_user_profile_view(
-            profile, entitlements
-        )
+        view = build_user_profile_view(profile, entitlements)
         self.assertIn("feature_flags", view)
         self.assertIsInstance(view["feature_flags"], dict)
 
@@ -118,7 +102,7 @@ class UserViewTest(unittest.TestCase):
             clinic_id="c1",
             clinic_name="Clinic",
             plan_type=PlanType.PRO,
-            created_at="2026-01-01T00:00:00+00:00",
+            created_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
         entitlements = Entitlements(
             can_create_consultation=True,
@@ -129,9 +113,7 @@ class UserViewTest(unittest.TestCase):
             trial_expired=False,
             trial_days_remaining=None,
         )
-        view = build_user_profile_view(
-            profile, entitlements
-        )
+        view = build_user_profile_view(profile, entitlements)
         flags = view["feature_flags"]
         self.assertIn("export_enabled", flags)
         self.assertIn("insights_enabled", flags)

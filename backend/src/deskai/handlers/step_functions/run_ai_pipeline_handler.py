@@ -11,8 +11,10 @@ logger = logging.getLogger(__name__)
 
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     """Execute the AI pipeline for a single consultation."""
-    consultation_id = event.get("consultation_id", "")
-    clinic_id = event.get("clinic_id", "")
+    # EventBridge wraps the payload in "detail"; direct invocations don't.
+    detail = event.get("detail", event)
+    consultation_id = detail.get("consultation_id", "")
+    clinic_id = detail.get("clinic_id", "")
 
     if not consultation_id or not clinic_id:
         return {

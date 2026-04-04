@@ -96,6 +96,9 @@ from deskai.ports.transcript_repository import TranscriptRepository
 from deskai.ports.transcription_provider import TranscriptionProvider
 from deskai.ports.ui_config_assembler import UiConfigAssembler
 from deskai.shared.config import Settings, load_settings
+from deskai.shared.logging import get_logger, log_context
+
+logger = get_logger()
 
 
 @dataclass(frozen=True)
@@ -143,6 +146,8 @@ class Container:
 
 def build_container() -> Container:
     """Create the dependency container with all wiring."""
+    import time
+
     from deskai.adapters.storage.s3_artifact_repository import (
         S3ArtifactRepository,
     )
@@ -154,9 +159,13 @@ def build_container() -> Container:
         LazyTranscriptionProvider,
     )
 
+    start = time.monotonic()
+    logger.info("container_build_started")
+
     settings = load_settings()
 
     if not settings.cognito_user_pool_id or not settings.cognito_client_id:
+        logger.error("container_build_failed", extra=log_context(reason="missing_cognito_config"))
         raise RuntimeError(
             "DESKAI_COGNITO_USER_POOL_ID and DESKAI_COGNITO_CLIENT_ID "
             "environment variables are required."
@@ -223,6 +232,12 @@ def build_container() -> Container:
 
     llm_provider = LazyLLMProvider(_build_llm_provider)
     ui_config_assembler = BffUiConfigAssembler()
+
+    duration_ms = int((time.monotonic() - start) * 1000)
+    logger.info(
+        "container_build_completed",
+        extra=log_context(duration_ms=duration_ms, table=settings.dynamodb_table),
+    )
 
     return Container(
         settings=settings,

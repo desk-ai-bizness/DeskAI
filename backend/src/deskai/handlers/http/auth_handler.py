@@ -11,6 +11,9 @@ from deskai.handlers.http.middleware import (
     no_content_response,
     parse_json_body,
 )
+from deskai.shared.logging import get_logger
+
+logger = get_logger()
 
 if TYPE_CHECKING:
     from deskai.container import Container
@@ -33,6 +36,7 @@ def handle_login(
         )
 
     tokens = container.authenticate.execute(email, password)
+    logger.info("auth_login_success")
     return json_response(200, {
         "access_token": tokens.access_token,
         "refresh_token": tokens.refresh_token,
@@ -56,6 +60,7 @@ def handle_logout(
         )
 
     container.sign_out.execute(token)
+    logger.info("auth_logout_success")
     return no_content_response()
 
 
@@ -75,6 +80,7 @@ def handle_forgot_password(
         )
 
     container.forgot_password.execute(email)
+    logger.info("auth_forgot_password_requested")
     return json_response(200, {
         "message": (
             "Se o email estiver cadastrado, voce recebera"
@@ -104,6 +110,7 @@ def handle_confirm_forgot_password(
     container.confirm_forgot_password.execute(
         email, code, new_password
     )
+    logger.info("auth_password_reset_confirmed")
     return json_response(
         200, {"message": "Senha alterada com sucesso."}
     )

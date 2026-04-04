@@ -4,7 +4,10 @@ from dataclasses import replace
 
 from deskai.domain.session.entities import SessionState
 from deskai.domain.session.services import SessionService
+from deskai.shared.logging import get_logger, log_context
 from deskai.shared.time import utc_now_iso
+
+logger = get_logger()
 
 
 def handle_disconnect(event: dict, connection_repo, session_repo) -> dict:
@@ -13,6 +16,10 @@ def handle_disconnect(event: dict, connection_repo, session_repo) -> dict:
 
     connection = connection_repo.find_by_connection_id(connection_id)
     if connection is None:
+        logger.debug(
+            "ws_disconnect_unknown_connection",
+            extra=log_context(connection_id=connection_id),
+        )
         return {"statusCode": 200}
 
     if connection.session_id:
@@ -25,7 +32,19 @@ def handle_disconnect(event: dict, connection_repo, session_repo) -> dict:
                 grace_period_expires_at=SessionService.compute_grace_period_expiry(now),
             )
             session_repo.update(session)
+            logger.info(
+                "ws_disconnect_grace_period_started",
+                extra=log_context(
+                    connection_id=connection_id,
+                    session_id=connection.session_id,
+                    grace_period_expires_at=session.grace_period_expires_at,
+                ),
+            )
 
     connection_repo.remove(connection_id)
+    logger.info(
+        "ws_disconnect_completed",
+        extra=log_context(connection_id=connection_id),
+    )
 
     return {"statusCode": 200}

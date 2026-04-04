@@ -1,6 +1,7 @@
 """Shared testing fixtures and helpers for backend tests."""
 
 import json
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -54,7 +55,7 @@ def make_mock_dynamodb_resource() -> MagicMock:
 # Domain fixtures
 # ---------------------------------------------------------------------------
 
-SAMPLE_CREATED_AT = "2026-01-15T10:00:00+00:00"
+SAMPLE_CREATED_AT = datetime(2026, 1, 15, 10, 0, 0, tzinfo=UTC)
 
 
 def make_sample_doctor_profile(
@@ -66,7 +67,7 @@ def make_sample_doctor_profile(
     clinic_id: str = "clinic-001",
     clinic_name: str = "Test Clinic",
     plan_type: PlanType = PlanType.PLUS,
-    created_at: str = SAMPLE_CREATED_AT,
+    created_at: datetime = SAMPLE_CREATED_AT,
 ) -> DoctorProfile:
     """Build a DoctorProfile with sensible defaults."""
     return DoctorProfile(

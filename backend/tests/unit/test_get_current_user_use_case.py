@@ -1,6 +1,7 @@
 """Unit tests for the get current user use case."""
 
 import unittest
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 from deskai.application.auth.get_current_user import (
@@ -29,11 +30,9 @@ class GetCurrentUserUseCaseTest(unittest.TestCase):
             clinic_id="c1",
             clinic_name="Clinic",
             plan_type=PlanType.PLUS,
-            created_at="2026-01-01T00:00:00+00:00",
+            created_at=datetime(2026, 1, 1, tzinfo=UTC),
         )
-        self.mock_repo.find_by_identity_provider_id.return_value = (
-            profile
-        )
+        self.mock_repo.find_by_identity_provider_id.return_value = profile
         result = self.use_case.execute("sub-1")
         self.assertEqual(result, profile)
 

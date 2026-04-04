@@ -38,7 +38,7 @@ class DynamoDBDoctorRepository(DynamoDBBaseRepository, DoctorRepository):
             clinic_id=item[F.CLINIC_ID],
             clinic_name=item.get(F.CLINIC_NAME, ""),
             plan_type=PlanType(item[F.PLAN_TYPE]),
-            created_at=item[F.CREATED_AT],
+            created_at=datetime.fromisoformat(item[F.CREATED_AT]),
         )
 
     def count_consultations_this_month(self, doctor_id: str) -> int:
@@ -61,7 +61,7 @@ class DynamoDBDoctorRepository(DynamoDBBaseRepository, DoctorRepository):
         )
         return count
 
-    def find_created_at(self, doctor_id: str) -> str | None:
+    def find_created_at(self, doctor_id: str) -> datetime | None:
         response = self._safe_query(
             KeyConditionExpression=f"{F.PK} = :pk AND {F.SK} = :sk",
             ExpressionAttributeValues={
@@ -74,4 +74,5 @@ class DynamoDBDoctorRepository(DynamoDBBaseRepository, DoctorRepository):
         items = response.get("Items", [])
         if not items:
             return None
-        return items[0].get(F.CREATED_AT)
+        raw = items[0].get(F.CREATED_AT)
+        return datetime.fromisoformat(raw) if raw else None

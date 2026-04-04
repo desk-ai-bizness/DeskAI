@@ -11,9 +11,9 @@ from deskai.domain.auth.entities import DoctorProfile
 from deskai.domain.auth.value_objects import PlanType
 
 
-def _recent_iso() -> str:
-    """Return an ISO timestamp from 1 day ago — always within trial window."""
-    return (datetime.now(tz=UTC) - timedelta(days=1)).isoformat()
+def _recent_datetime() -> datetime:
+    """Return a datetime from 1 day ago — always within trial window."""
+    return datetime.now(tz=UTC) - timedelta(days=1)
 
 
 class CheckEntitlementsUseCaseTest(unittest.TestCase):
@@ -23,9 +23,7 @@ class CheckEntitlementsUseCaseTest(unittest.TestCase):
             doctor_repo=self.mock_repo,
         )
 
-    def _make_profile(
-        self, plan: PlanType = PlanType.FREE_TRIAL
-    ) -> DoctorProfile:
+    def _make_profile(self, plan: PlanType = PlanType.FREE_TRIAL) -> DoctorProfile:
         return DoctorProfile(
             doctor_id="d1",
             identity_provider_id="sub-1",
@@ -34,29 +32,24 @@ class CheckEntitlementsUseCaseTest(unittest.TestCase):
             clinic_id="c1",
             clinic_name="Clinic",
             plan_type=plan,
-            created_at=_recent_iso(),
+            created_at=_recent_datetime(),
         )
 
     def test_free_trial_with_remaining(self) -> None:
-        self.mock_repo.count_consultations_this_month \
-            .return_value = 5
+        self.mock_repo.count_consultations_this_month.return_value = 5
         e = self.use_case.execute(self._make_profile())
         self.assertTrue(e.can_create_consultation)
         self.assertEqual(e.consultations_remaining, 5)
 
     def test_free_trial_at_limit(self) -> None:
-        self.mock_repo.count_consultations_this_month \
-            .return_value = 10
+        self.mock_repo.count_consultations_this_month.return_value = 10
         e = self.use_case.execute(self._make_profile())
         self.assertFalse(e.can_create_consultation)
         self.assertEqual(e.consultations_remaining, 0)
 
     def test_pro_unlimited(self) -> None:
-        self.mock_repo.count_consultations_this_month \
-            .return_value = 999
-        e = self.use_case.execute(
-            self._make_profile(PlanType.PRO)
-        )
+        self.mock_repo.count_consultations_this_month.return_value = 999
+        e = self.use_case.execute(self._make_profile(PlanType.PRO))
         self.assertTrue(e.can_create_consultation)
         self.assertEqual(e.consultations_remaining, -1)
 

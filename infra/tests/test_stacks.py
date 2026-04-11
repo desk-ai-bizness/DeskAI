@@ -541,7 +541,8 @@ class StackSynthesisTest(unittest.TestCase):
         roles = template.find_resources("AWS::IAM::Role")
         websocket_role_logical_id = None
         for logical_id, role in roles.items():
-            if role.get("Properties", {}).get("RoleName") == f"{DEV_CONFIG.resource_prefix}-ws-role":
+            name = role.get("Properties", {}).get("RoleName")
+            if name == f"{DEV_CONFIG.resource_prefix}-ws-role":
                 websocket_role_logical_id = logical_id
                 break
         self.assertIsNotNone(websocket_role_logical_id, "WebSocket role not found")
@@ -580,7 +581,8 @@ class StackSynthesisTest(unittest.TestCase):
         roles = template.find_resources("AWS::IAM::Role")
         websocket_role_logical_id = None
         for logical_id, role in roles.items():
-            if role.get("Properties", {}).get("RoleName") == f"{DEV_CONFIG.resource_prefix}-ws-role":
+            name = role.get("Properties", {}).get("RoleName")
+            if name == f"{DEV_CONFIG.resource_prefix}-ws-role":
                 websocket_role_logical_id = logical_id
                 break
         self.assertIsNotNone(websocket_role_logical_id, "WebSocket role not found")

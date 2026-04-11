@@ -9,8 +9,8 @@ from deskai.domain.auth.value_objects import PlanType
 from tests.conftest import make_sample_auth_context, make_sample_patient
 
 _MOD = "deskai.application.consultation.create_consultation"
+_SERVICES_MOD = "deskai.domain.auth.services"
 
-ACTIVE_TRIAL_CREATED_AT = datetime(2026, 3, 25, tzinfo=UTC)
 EXPIRED_TRIAL_CREATED_AT = datetime(2025, 1, 1, tzinfo=UTC)
 
 
@@ -34,10 +34,16 @@ class CreateConsultationEntitlementTest(unittest.TestCase):
 
     @patch(f"{_MOD}.new_uuid", return_value="cons-ent-1")
     @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
-    def test_free_trial_at_limit_raises(self, _t, _u) -> None:
+    @patch(f"{_SERVICES_MOD}.datetime")
+    def test_free_trial_at_limit_raises(self, mock_dt, _t, _u) -> None:
+        frozen_now = datetime(2026, 4, 1, 10, 0, 0, tzinfo=UTC)
+        mock_dt.now.return_value = frozen_now
+        mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw)
+        trial_start = datetime(2026, 3, 25, tzinfo=UTC)
+
         auth = make_sample_auth_context(plan_type=PlanType.FREE_TRIAL)
         self.doctor_repo.count_consultations_this_month.return_value = 10
-        self.doctor_repo.find_created_at.return_value = ACTIVE_TRIAL_CREATED_AT
+        self.doctor_repo.find_created_at.return_value = trial_start
 
         with self.assertRaises(PlanLimitExceededError):
             self.use_case.execute(
@@ -64,10 +70,16 @@ class CreateConsultationEntitlementTest(unittest.TestCase):
 
     @patch(f"{_MOD}.new_uuid", return_value="cons-ent-3")
     @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-01T10:00:00+00:00")
-    def test_free_trial_under_limit_succeeds(self, _t, _u) -> None:
+    @patch(f"{_SERVICES_MOD}.datetime")
+    def test_free_trial_under_limit_succeeds(self, mock_dt, _t, _u) -> None:
+        frozen_now = datetime(2026, 4, 1, 10, 0, 0, tzinfo=UTC)
+        mock_dt.now.return_value = frozen_now
+        mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw)
+        trial_start = datetime(2026, 3, 25, tzinfo=UTC)
+
         auth = make_sample_auth_context(plan_type=PlanType.FREE_TRIAL)
         self.doctor_repo.count_consultations_this_month.return_value = 5
-        self.doctor_repo.find_created_at.return_value = ACTIVE_TRIAL_CREATED_AT
+        self.doctor_repo.find_created_at.return_value = trial_start
         self.patient_repo.find_by_id.return_value = make_sample_patient()
 
         result = self.use_case.execute(

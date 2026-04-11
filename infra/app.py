@@ -80,6 +80,7 @@ def main() -> None:
         secrets_key=security.secrets_key,
         elevenlabs_secret=security.elevenlabs_secret,
         claude_secret=security.claude_secret,
+        gemini_secret=security.gemini_secret,
         user_pool_id=auth.user_pool.user_pool_id,
         user_pool_client_id=auth.user_pool_client.user_pool_client_id,
         user_pool_arn=auth.user_pool.user_pool_arn,

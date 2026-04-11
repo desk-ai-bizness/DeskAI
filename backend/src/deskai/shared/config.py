@@ -32,6 +32,8 @@ class Settings:
     ui_config_key: str
     elevenlabs_secret_name: str
     claude_secret_name: str
+    gemini_secret_name: str
+    llm_provider: str
     cognito_secret_name: str
     cognito_user_pool_id: str
     cognito_client_id: str
@@ -103,6 +105,8 @@ def load_settings() -> Settings:
         ui_config_key=getenv("DESKAI_UI_CONFIG_KEY", DEFAULT_UI_CONFIG_KEY),
         elevenlabs_secret_name=getenv("DESKAI_ELEVENLABS_SECRET_NAME", "deskai/dev/elevenlabs"),
         claude_secret_name=getenv("DESKAI_CLAUDE_SECRET_NAME", "deskai/dev/claude"),
+        gemini_secret_name=getenv("DESKAI_GEMINI_SECRET_NAME", "deskai/dev/gemini"),
+        llm_provider=getenv("DESKAI_LLM_PROVIDER", "gemini"),
         cognito_secret_name=getenv(
             "DESKAI_COGNITO_CLIENT_SECRET_NAME",
             "deskai/dev/cognito",

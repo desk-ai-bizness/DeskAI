@@ -167,3 +167,16 @@ class SecurityStack(Stack):
                 exclude_punctuation=True,
             ),
         )
+
+        self.gemini_secret = secretsmanager.Secret(
+            self,
+            "GeminiSecret",
+            secret_name=config.gemini_secret_name,
+            encryption_key=self.secrets_key,
+            description="Google Gemini API credentials for LLM generation.",
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template='{"api_key": ""}',
+                generate_string_key="placeholder",
+                exclude_punctuation=True,
+            ),
+        )

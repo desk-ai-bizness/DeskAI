@@ -282,7 +282,9 @@ class FetchFinalTranscriptTest(unittest.TestCase):
         self.assertEqual(uploaded_bytes[8:12], b"WAVE")
 
     @patch("deskai.adapters.transcription.elevenlabs_provider.httpx")
-    def test_fetch_final_transcript_keeps_ogg_payload_when_detected(self, mock_httpx: MagicMock) -> None:
+    def test_fetch_final_transcript_keeps_ogg_payload_when_detected(
+        self, mock_httpx: MagicMock
+    ) -> None:
         config = _make_config()
         provider = ElevenLabsScribeProvider(config)
         provider.start_realtime_session(session_id="sess-031c", language="pt")

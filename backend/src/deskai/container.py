@@ -221,12 +221,20 @@ def build_container() -> Container:
     storage_provider = S3StorageProvider(s3_client=s3_client)
 
     def _build_llm_provider():
-        from deskai.adapters.llm.claude_provider import ClaudeLLMProvider
         from deskai.adapters.secrets.secrets_manager import (
             SecretsManagerClient,
         )
 
         secrets = SecretsManagerClient()
+
+        if settings.llm_provider == "gemini":
+            from deskai.adapters.llm.gemini_provider import GeminiLLMProvider
+
+            secret = secrets.get_secret(settings.gemini_secret_name)
+            return GeminiLLMProvider(api_key=secret["api_key"])
+
+        from deskai.adapters.llm.claude_provider import ClaudeLLMProvider
+
         secret = secrets.get_secret(settings.claude_secret_name)
         return ClaudeLLMProvider(api_key=secret["api_key"])
 

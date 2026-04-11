@@ -13,6 +13,7 @@ PROD_CONFIG = EnvironmentConfig(
     ),
     elevenlabs_secret_name="deskai/prod/elevenlabs",
     claude_secret_name="deskai/prod/claude",
+    gemini_secret_name="deskai/prod/gemini",
     acm_certificate_arn="",
     website_domain_names=("deskai.com.br", "www.deskai.com.br"),
     app_domain_names=("app.deskai.com.br",),

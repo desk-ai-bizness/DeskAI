@@ -31,6 +31,7 @@ class ComputeStack(Stack):
         secrets_key: kms.IKey,
         elevenlabs_secret: secretsmanager.ISecret,
         claude_secret: secretsmanager.ISecret,
+        gemini_secret: secretsmanager.ISecret,
         user_pool_id: str,
         user_pool_client_id: str,
         user_pool_arn: str,
@@ -46,6 +47,8 @@ class ComputeStack(Stack):
             "DESKAI_ARTIFACTS_BUCKET": artifacts_bucket.bucket_name,
             "DESKAI_ELEVENLABS_SECRET_NAME": config.elevenlabs_secret_name,
             "DESKAI_CLAUDE_SECRET_NAME": claude_secret.secret_name,
+            "DESKAI_GEMINI_SECRET_NAME": gemini_secret.secret_name,
+            "DESKAI_LLM_PROVIDER": "gemini",
             "DESKAI_COGNITO_USER_POOL_ID": user_pool_id,
             "DESKAI_COGNITO_CLIENT_ID": user_pool_client_id,
             "DESKAI_WEBSOCKET_URL_PARAM": f"/{config.resource_prefix}/websocket-url",
@@ -56,6 +59,7 @@ class ComputeStack(Stack):
         secrets_arns = [
             f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{config.elevenlabs_secret_name}-??????",
             f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{config.claude_secret_name}-??????",
+            f"arn:aws:secretsmanager:{self.region}:{self.account}:secret:{config.gemini_secret_name}-??????",
         ]
         ssm_websocket_arn = (
             f"arn:aws:ssm:{self.region}:{self.account}"
@@ -108,11 +112,12 @@ class ComputeStack(Stack):
             )
         )
 
-        # --- WebSocket role: DynamoDB r/w, ManageConnections, KMS, SSM ---
+        # --- WebSocket role: DynamoDB r/w, S3 r/w, ManageConnections, KMS, SSM ---
         self.websocket_role = self._create_role(
             "WebsocketRole", f"{config.resource_prefix}-ws-role", permissions_boundary
         )
         consultation_table.grant_read_write_data(self.websocket_role)
+        artifacts_bucket.grant_read_write(self.websocket_role)
         secrets_key.grant_decrypt(self.websocket_role)
         self.websocket_role.add_to_policy(
             iam.PolicyStatement(
@@ -210,6 +215,7 @@ class ComputeStack(Stack):
             asset_path=asset_path,
             role=self.websocket_role,
             reserved_concurrent_executions=ws_concurrency,
+            memory_size=512,
         )
         self.pipeline_handler = self._create_function(
             function_id="PipelineHandler",

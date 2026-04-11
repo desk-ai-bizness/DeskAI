@@ -87,6 +87,7 @@ class StackSynthesisTest(unittest.TestCase):
             secrets_key=security.secrets_key,
             elevenlabs_secret=security.elevenlabs_secret,
             claude_secret=security.claude_secret,
+            gemini_secret=security.gemini_secret,
             user_pool_id=auth.user_pool.user_pool_id,
             user_pool_client_id=auth.user_pool_client.user_pool_client_id,
             user_pool_arn=auth.user_pool.user_pool_arn,
@@ -158,7 +159,7 @@ class StackSynthesisTest(unittest.TestCase):
         f = self._create_foundation()
         template = Template.from_stack(f.security)
         template.resource_count_is("AWS::KMS::Key", 2)
-        template.resource_count_is("AWS::SecretsManager::Secret", 2)
+        template.resource_count_is("AWS::SecretsManager::Secret", 3)
 
     def test_security_stack_enables_kms_key_rotation(self) -> None:
         f = self._create_foundation()
@@ -570,6 +571,37 @@ class StackSynthesisTest(unittest.TestCase):
         self.assertTrue(
             has_secrets_key_decrypt,
             "WebSocket role must decrypt values encrypted by SecretsKey.",
+        )
+
+    def test_compute_stack_websocket_role_can_write_artifacts(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+
+        roles = template.find_resources("AWS::IAM::Role")
+        websocket_role_logical_id = None
+        for logical_id, role in roles.items():
+            if role.get("Properties", {}).get("RoleName") == f"{DEV_CONFIG.resource_prefix}-ws-role":
+                websocket_role_logical_id = logical_id
+                break
+        self.assertIsNotNone(websocket_role_logical_id, "WebSocket role not found")
+
+        policies = template.find_resources("AWS::IAM::Policy")
+        has_s3_write = False
+        for policy in policies.values():
+            role_refs = policy.get("Properties", {}).get("Roles", [])
+            if {"Ref": websocket_role_logical_id} not in role_refs:
+                continue
+            statements = policy.get("Properties", {}).get("PolicyDocument", {}).get("Statement", [])
+            for statement in statements:
+                actions = statement.get("Action", [])
+                if isinstance(actions, str):
+                    actions = [actions]
+                if "s3:PutObject" in actions or "s3:PutObject*" in actions:
+                    has_s3_write = True
+
+        self.assertTrue(
+            has_s3_write,
+            "WebSocket role must have s3:PutObject to save transcripts to the artifacts bucket.",
         )
 
     # --- Orchestration ---

@@ -10,4 +10,5 @@ DEV_CONFIG = EnvironmentConfig(
     deployed_website_origins=("https://dev.deskai.com.br",),
     elevenlabs_secret_name="deskai/dev/elevenlabs",
     claude_secret_name="deskai/dev/claude",
+    gemini_secret_name="deskai/dev/gemini",
 )

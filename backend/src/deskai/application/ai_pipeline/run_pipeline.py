@@ -2,6 +2,7 @@
 
 import json
 import logging
+import time
 from dataclasses import dataclass, replace
 
 from deskai.domain.ai_pipeline.entities import PipelineResult, PipelineStatus
@@ -50,6 +51,8 @@ class RunPipelineUseCase:
     transcript_repo: TranscriptRepository
     patient_repo: PatientRepository
     audit_repo: AuditRepository
+    transcript_lookup_attempts: int = 20
+    transcript_lookup_interval_seconds: float = 3.0
 
     def execute(self, consultation_id: str, clinic_id: str) -> PipelineResult:
         started_at = utc_now_iso()
@@ -66,7 +69,9 @@ class RunPipelineUseCase:
             )
 
         # 2. Load normalized transcript
-        normalized = self.transcript_repo.get_normalized_transcript(clinic_id, consultation_id)
+        normalized = self._load_normalized_transcript_with_retry(
+            clinic_id=clinic_id, consultation_id=consultation_id
+        )
         if normalized is None:
             self._mark_failed(consultation, "Transcript not found")
             raise PipelineStepError(
@@ -214,6 +219,40 @@ class RunPipelineUseCase:
             completed_at=completed_at,
             error_message="Insights generation failed",
         )
+
+    def _load_normalized_transcript_with_retry(
+        self, clinic_id: str, consultation_id: str
+    ):
+        attempts = max(1, self.transcript_lookup_attempts)
+        interval = max(0.0, self.transcript_lookup_interval_seconds)
+
+        for attempt in range(1, attempts + 1):
+            normalized = self.transcript_repo.get_normalized_transcript(
+                clinic_id, consultation_id
+            )
+            if normalized is not None:
+                if attempt > 1:
+                    logger.info(
+                        "transcript_found_after_retry",
+                        extra={
+                            "consultation_id": consultation_id,
+                            "attempt": attempt,
+                        },
+                    )
+                return normalized
+
+            if attempt < attempts:
+                logger.info(
+                    "transcript_not_available_yet",
+                    extra={
+                        "consultation_id": consultation_id,
+                        "attempt": attempt,
+                        "max_attempts": attempts,
+                    },
+                )
+                time.sleep(interval)
+
+        return None
 
     # --- Private methods ---
 

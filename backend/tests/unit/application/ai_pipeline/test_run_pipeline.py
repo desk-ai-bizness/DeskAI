@@ -43,6 +43,8 @@ def _build_use_case(
     transcript_repo=None,
     patient_repo=None,
     audit_repo=None,
+    transcript_lookup_attempts=20,
+    transcript_lookup_interval_seconds=3.0,
 ):
     """Build a RunPipelineUseCase with optional mock overrides."""
     from deskai.application.ai_pipeline.run_pipeline import RunPipelineUseCase
@@ -54,6 +56,8 @@ def _build_use_case(
         transcript_repo=transcript_repo or MagicMock(),
         patient_repo=patient_repo or MagicMock(),
         audit_repo=audit_repo or MagicMock(),
+        transcript_lookup_attempts=transcript_lookup_attempts,
+        transcript_lookup_interval_seconds=transcript_lookup_interval_seconds,
     )
 
 
@@ -299,6 +303,8 @@ class TestRunPipelinePrerequisiteFailures(unittest.TestCase):
         uc = _build_use_case(
             consultation_repo=consultation_repo,
             transcript_repo=transcript_repo,
+            transcript_lookup_attempts=1,
+            transcript_lookup_interval_seconds=0.0,
         )
 
         with self.assertRaises(PipelineStepError):
@@ -306,6 +312,45 @@ class TestRunPipelinePrerequisiteFailures(unittest.TestCase):
 
         saved = consultation_repo.save.call_args[0][0]
         self.assertEqual(saved.status, ConsultationStatus.PROCESSING_FAILED)
+
+    @_patch_time_and_id
+    def test_transcript_retry_succeeds_when_artifact_arrives_late(
+        self, mock_time, mock_uuid
+    ) -> None:
+        consultation = make_sample_consultation(
+            status=ConsultationStatus.IN_PROCESSING,
+        )
+        consultation_repo = MagicMock()
+        consultation_repo.find_by_id.return_value = consultation
+        transcript_repo = MagicMock()
+        transcript_repo.get_normalized_transcript.side_effect = [
+            None,
+            None,
+            MagicMock(transcript_text="Doutor: oi. Paciente: dor de garganta."),
+        ]
+        patient_repo = MagicMock()
+        patient_repo.find_by_id.return_value = make_sample_patient()
+        llm = _make_llm_provider_mock(
+            anamnesis_output=make_sample_anamnesis_output(),
+            summary_output=make_sample_summary_output(),
+            insights_output=make_sample_insights_output(),
+        )
+
+        uc = _build_use_case(
+            llm_provider=llm,
+            consultation_repo=consultation_repo,
+            transcript_repo=transcript_repo,
+            patient_repo=patient_repo,
+            transcript_lookup_attempts=3,
+            transcript_lookup_interval_seconds=0.01,
+        )
+
+        with patch(f"{_MODULE}.time.sleep", return_value=None) as sleep_mock:
+            result = uc.execute(consultation_id="cons-001", clinic_id="clinic-001")
+
+        self.assertEqual(result.status, PipelineStatus.COMPLETED)
+        self.assertEqual(transcript_repo.get_normalized_transcript.call_count, 3)
+        self.assertEqual(sleep_mock.call_count, 2)
 
 
 class TestRunPipelineAnamnesisFailure(unittest.TestCase):

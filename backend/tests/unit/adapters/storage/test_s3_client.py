@@ -32,6 +32,7 @@ class S3ClientTest(unittest.TestCase):
             Key="some/key.json",
             Body=json.dumps(data, ensure_ascii=False),
             ContentType="application/json",
+            ServerSideEncryption="aws:kms",
         )
 
     def test_put_json_handles_unicode(self) -> None:
@@ -99,6 +100,7 @@ class S3ClientTest(unittest.TestCase):
             Key="audio/chunk.webm",
             Body=data,
             ContentType="audio/webm",
+            ServerSideEncryption="aws:kms",
         )
 
     def test_put_bytes_propagates_client_error(self) -> None:

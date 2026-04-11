@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 from deskai.shared.logging import get_logger, log_context
 
 logger = get_logger()
+_SSE_MODE = "aws:kms"
 
 
 class S3Client:
@@ -24,6 +25,7 @@ class S3Client:
             Key=key,
             Body=json.dumps(data, ensure_ascii=False),
             ContentType="application/json",
+            ServerSideEncryption=_SSE_MODE,
         )
         logger.debug("s3_put_json", extra=log_context(bucket=self._bucket, key=key))
 
@@ -50,6 +52,7 @@ class S3Client:
             Key=key,
             Body=data,
             ContentType=content_type,
+            ServerSideEncryption=_SSE_MODE,
         )
         logger.debug(
             "s3_put_bytes",

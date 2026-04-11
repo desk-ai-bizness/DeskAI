@@ -255,6 +255,59 @@ class FetchFinalTranscriptTest(unittest.TestCase):
         self.assertIn("files", call_kwargs[1])
 
     @patch("deskai.adapters.transcription.elevenlabs_provider.httpx")
+    def test_fetch_final_transcript_wraps_raw_pcm_into_wav(self, mock_httpx: MagicMock) -> None:
+        config = _make_config()
+        provider = ElevenLabsScribeProvider(config)
+        provider.start_realtime_session(session_id="sess-031b", language="pt")
+        provider.send_audio_chunk("sess-031b", b"\x01\x02\x03\x04")
+        provider.finish_realtime_session("sess-031b")
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "language_code": "pt",
+            "text": "ok",
+            "words": [],
+        }
+        mock_response.raise_for_status = MagicMock()
+        mock_httpx.post.return_value = mock_response
+
+        provider.fetch_final_transcript("sess-031b")
+
+        call_kwargs = mock_httpx.post.call_args[1]
+        filename, uploaded_bytes, content_type = call_kwargs["files"]["file"]
+        self.assertEqual(filename, "audio.wav")
+        self.assertEqual(content_type, "audio/wav")
+        self.assertTrue(uploaded_bytes.startswith(b"RIFF"))
+        self.assertEqual(uploaded_bytes[8:12], b"WAVE")
+
+    @patch("deskai.adapters.transcription.elevenlabs_provider.httpx")
+    def test_fetch_final_transcript_keeps_ogg_payload_when_detected(self, mock_httpx: MagicMock) -> None:
+        config = _make_config()
+        provider = ElevenLabsScribeProvider(config)
+        provider.start_realtime_session(session_id="sess-031c", language="pt")
+        provider.send_audio_chunk("sess-031c", b"OggS\x00\x01\x02\x03")
+        provider.finish_realtime_session("sess-031c")
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "language_code": "pt",
+            "text": "ok",
+            "words": [],
+        }
+        mock_response.raise_for_status = MagicMock()
+        mock_httpx.post.return_value = mock_response
+
+        provider.fetch_final_transcript("sess-031c")
+
+        call_kwargs = mock_httpx.post.call_args[1]
+        filename, uploaded_bytes, content_type = call_kwargs["files"]["file"]
+        self.assertEqual(filename, "audio.ogg")
+        self.assertEqual(content_type, "audio/ogg")
+        self.assertEqual(uploaded_bytes, b"OggS\x00\x01\x02\x03")
+
+    @patch("deskai.adapters.transcription.elevenlabs_provider.httpx")
     def test_fetch_final_transcript_includes_auth_header(self, mock_httpx: MagicMock) -> None:
         config = _make_config(api_key="my-secret-key")
         provider = ElevenLabsScribeProvider(config)

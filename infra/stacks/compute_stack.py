@@ -113,6 +113,7 @@ class ComputeStack(Stack):
             "WebsocketRole", f"{config.resource_prefix}-ws-role", permissions_boundary
         )
         consultation_table.grant_read_write_data(self.websocket_role)
+        secrets_key.grant_decrypt(self.websocket_role)
         self.websocket_role.add_to_policy(
             iam.PolicyStatement(
                 actions=["kms:Encrypt", "kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"],
@@ -127,6 +128,12 @@ class ComputeStack(Stack):
         )
         self.websocket_role.add_to_policy(
             iam.PolicyStatement(actions=["ssm:GetParameter"], resources=[ssm_websocket_arn])
+        )
+        self.websocket_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
+                resources=secrets_arns,
+            )
         )
         self.websocket_role.add_to_policy(
             iam.PolicyStatement(
@@ -211,6 +218,8 @@ class ComputeStack(Stack):
             asset_path=asset_path,
             role=self.pipeline_role,
             reserved_concurrent_executions=pipeline_concurrency,
+            timeout_seconds=300,
+            memory_size=1024,
         )
         self.export_handler = self._create_function(
             function_id="ExportHandler",
@@ -263,6 +272,8 @@ class ComputeStack(Stack):
         asset_path: Path,
         role: iam.IRole,
         reserved_concurrent_executions: int | None,
+        timeout_seconds: int = 30,
+        memory_size: int = 256,
     ) -> lambda_.Function:
         return lambda_.Function(
             self,
@@ -272,8 +283,8 @@ class ComputeStack(Stack):
             handler=handler,
             code=lambda_.Code.from_asset(str(asset_path)),
             role=role,
-            timeout=Duration.seconds(30),
-            memory_size=256,
+            timeout=Duration.seconds(timeout_seconds),
+            memory_size=memory_size,
             environment=self._shared_environment,
             reserved_concurrent_executions=reserved_concurrent_executions,
         )

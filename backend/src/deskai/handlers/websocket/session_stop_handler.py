@@ -12,6 +12,7 @@ def handle_session_stop(
     connection_repo,
     end_session_use_case,
     apigw,
+    transcription_provider=None,
     finalize_transcript_use_case=None,
 ) -> dict:
     """End a session via WebSocket and optionally trigger finalization."""
@@ -34,6 +35,18 @@ def handle_session_stop(
         doctor_id=connection.doctor_id,
         clinic_id=connection.clinic_id,
     )
+
+    if transcription_provider is not None:
+        try:
+            transcription_provider.finish_realtime_session(session.session_id)
+        except Exception:
+            logger.exception(
+                "ws_session_stop_provider_finish_failed",
+                extra=log_context(
+                    session_id=session.session_id,
+                    consultation_id=consultation_id,
+                ),
+            )
 
     apigw.send_to_connection(
         connection_id=connection_id,

@@ -82,6 +82,7 @@ class SecurityStack(Stack):
                         "states:SendTaskSuccess",
                         "states:SendTaskFailure",
                         "states:DescribeExecution",
+                        "lambda:InvokeFunction",
                     ],
                     resources=[
                         f"arn:aws:dynamodb:{self.region}:{self.account}:table/{config.resource_prefix}-*",
@@ -92,6 +93,7 @@ class SecurityStack(Stack):
                         f"arn:aws:events:{self.region}:{self.account}:event-bus/{config.resource_prefix}-*",
                         f"arn:aws:states:{self.region}:{self.account}:stateMachine:{config.resource_prefix}-*",
                         f"arn:aws:states:{self.region}:{self.account}:execution:{config.resource_prefix}-*:*",
+                        f"arn:aws:lambda:{self.region}:{self.account}:function:{config.resource_prefix}-*",
                     ],
                 ),
                 iam.PolicyStatement(

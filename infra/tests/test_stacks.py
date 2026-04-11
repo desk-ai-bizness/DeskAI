@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import unittest
 from pathlib import Path
 from typing import NamedTuple
@@ -186,6 +187,36 @@ class StackSynthesisTest(unittest.TestCase):
                 f"Secret {logical_id} must use generate_secret_string",
             )
 
+    def test_security_permissions_boundary_allows_lambda_invoke(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.security)
+        policies = template.find_resources("AWS::IAM::ManagedPolicy")
+
+        found = False
+        for policy in policies.values():
+            statements = policy.get("Properties", {}).get("PolicyDocument", {}).get("Statement", [])
+            for statement in statements:
+                if statement.get("Sid") != "AllowPrefixedDataAccess":
+                    continue
+                actions = statement.get("Action", [])
+                if isinstance(actions, str):
+                    actions = [actions]
+                resources_blob = json.dumps(statement.get("Resource", []))
+                if (
+                    "lambda:InvokeFunction" in actions
+                    and "arn:aws:lambda:" in resources_blob
+                    and ":function:deskai-dev-" in resources_blob
+                ):
+                    found = True
+                    break
+            if found:
+                break
+
+        self.assertTrue(
+            found,
+            "Permissions boundary must allow lambda:InvokeFunction for deskai-prefixed functions.",
+        )
+
     # --- Storage ---
 
     def test_storage_stack_has_recovery_and_encryption_baselines(self) -> None:
@@ -334,6 +365,22 @@ class StackSynthesisTest(unittest.TestCase):
             "AWS::Lambda::Function",
             {"Runtime": "python3.12"},
         )
+
+    def test_compute_stack_pipeline_has_extended_timeout_and_memory(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+        functions = template.find_resources("AWS::Lambda::Function")
+
+        pipeline_props = None
+        for resource in functions.values():
+            props = resource.get("Properties", {})
+            if props.get("Handler") == "pipeline.handler":
+                pipeline_props = props
+                break
+
+        self.assertIsNotNone(pipeline_props, "Pipeline Lambda function not found")
+        self.assertEqual(pipeline_props.get("Timeout"), 300)
+        self.assertEqual(pipeline_props.get("MemorySize"), 1024)
 
     def test_compute_stack_has_four_separate_iam_roles(self) -> None:
         f = self._create_foundation()
@@ -484,6 +531,45 @@ class StackSynthesisTest(unittest.TestCase):
                     )
                 }
             },
+        )
+
+    def test_compute_stack_websocket_role_can_read_secrets(self) -> None:
+        f = self._create_foundation()
+        template = Template.from_stack(f.compute)
+
+        roles = template.find_resources("AWS::IAM::Role")
+        websocket_role_logical_id = None
+        for logical_id, role in roles.items():
+            if role.get("Properties", {}).get("RoleName") == f"{DEV_CONFIG.resource_prefix}-ws-role":
+                websocket_role_logical_id = logical_id
+                break
+        self.assertIsNotNone(websocket_role_logical_id, "WebSocket role not found")
+
+        policies = template.find_resources("AWS::IAM::Policy")
+        has_secret_read = False
+        has_secrets_key_decrypt = False
+
+        for policy in policies.values():
+            role_refs = policy.get("Properties", {}).get("Roles", [])
+            if {"Ref": websocket_role_logical_id} not in role_refs:
+                continue
+
+            statements = policy.get("Properties", {}).get("PolicyDocument", {}).get("Statement", [])
+            for statement in statements:
+                actions = statement.get("Action", [])
+                if isinstance(actions, str):
+                    actions = [actions]
+                resources_blob = json.dumps(statement.get("Resource", []))
+
+                if "secretsmanager:GetSecretValue" in actions:
+                    has_secret_read = True
+                if "kms:Decrypt" in actions and "SecretsKey" in resources_blob:
+                    has_secrets_key_decrypt = True
+
+        self.assertTrue(has_secret_read, "WebSocket role must read transcription provider secrets.")
+        self.assertTrue(
+            has_secrets_key_decrypt,
+            "WebSocket role must decrypt values encrypted by SecretsKey.",
         )
 
     # --- Orchestration ---

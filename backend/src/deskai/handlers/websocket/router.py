@@ -132,7 +132,11 @@ def handler(event: dict, context) -> dict:
 
             c = _get_container()
             return handle_session_init(
-                event, c.connection_repo, c.session_repo, _build_apigw(event)
+                event,
+                c.connection_repo,
+                c.session_repo,
+                _build_apigw(event),
+                c.transcription_provider,
             )
 
         if action == "audio.chunk":
@@ -160,6 +164,7 @@ def handler(event: dict, context) -> dict:
                 c.connection_repo,
                 c.end_session,
                 _build_apigw(event),
+                c.transcription_provider,
                 c.finalize_transcript,
             )
 

@@ -2,6 +2,7 @@
 
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
 
 
 class PipelineHandlerTest(unittest.TestCase):
@@ -24,34 +25,28 @@ class PipelineHandlerTest(unittest.TestCase):
 
         return handler
 
-    def test_returns_consultation_id_from_event(self) -> None:
+    @patch("deskai.handlers.step_functions.run_ai_pipeline_handler.handler")
+    def test_delegates_to_backend_pipeline_handler(self, mock_handler) -> None:
         handler = self._import_handler()
         ctx = SimpleNamespace(aws_request_id="req-001")
-        result = handler({"consultation_id": "cons-42"}, ctx)
+        event = {"consultation_id": "cons-42", "clinic_id": "clinic-1"}
+        mock_handler.return_value = {"consultation_id": "cons-42", "status": "completed"}
+
+        result = handler(event, ctx)
 
         self.assertEqual(result["consultation_id"], "cons-42")
-        self.assertEqual(result["status"], "processing-placeholder-complete")
+        self.assertEqual(result["status"], "completed")
+        mock_handler.assert_called_once_with(event, ctx)
 
-    def test_defaults_consultation_id_to_unknown(self) -> None:
+    @patch("deskai.handlers.step_functions.run_ai_pipeline_handler.handler")
+    def test_propagates_exceptions_from_backend_handler(self, mock_handler) -> None:
         handler = self._import_handler()
-        ctx = SimpleNamespace(aws_request_id="req-002")
-        result = handler({}, ctx)
+        ctx = object()
+        event = {"consultation_id": "cons-42", "clinic_id": "clinic-1"}
+        mock_handler.side_effect = RuntimeError("boom")
 
-        self.assertEqual(result["consultation_id"], "unknown")
-
-    def test_returns_request_id_from_context(self) -> None:
-        handler = self._import_handler()
-        ctx = SimpleNamespace(aws_request_id="req-xyz")
-        result = handler({"consultation_id": "c1"}, ctx)
-
-        self.assertEqual(result["request_id"], "req-xyz")
-
-    def test_request_id_defaults_when_context_missing_attr(self) -> None:
-        handler = self._import_handler()
-        ctx = object()  # no aws_request_id attribute
-        result = handler({}, ctx)
-
-        self.assertEqual(result["request_id"], "unknown")
+        with self.assertRaises(RuntimeError):
+            handler(event, ctx)
 
 
 if __name__ == "__main__":

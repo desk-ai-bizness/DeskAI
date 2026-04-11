@@ -1,4 +1,4 @@
-"""Placeholder processing handler invoked by the Step Functions foundation flow."""
+"""Pipeline Lambda entry point for Step Functions processing."""
 
 from __future__ import annotations
 
@@ -6,12 +6,9 @@ from typing import Any
 
 
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
-    """Return deterministic metadata without persisting sensitive payloads."""
+    """Delegate to the backend AI pipeline handler."""
+    from deskai.handlers.step_functions.run_ai_pipeline_handler import (
+        handler as run_ai_pipeline_handler,
+    )
 
-    request_id = getattr(context, "aws_request_id", "unknown")
-    consultation_id = event.get("consultation_id", "unknown")
-    return {
-        "request_id": request_id,
-        "consultation_id": consultation_id,
-        "status": "processing-placeholder-complete",
-    }
+    return run_ai_pipeline_handler(event, context)

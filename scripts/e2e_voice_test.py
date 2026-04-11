@@ -7,7 +7,9 @@ Usage: python3 scripts/e2e_voice_test.py
 """
 
 import base64
+import argparse
 import json
+import os
 import queue
 import sys
 import threading
@@ -29,6 +31,15 @@ SAMPLE_RATE = 16000  # 16kHz mono, optimal for speech recognition
 CHANNELS = 1
 CHUNK_DURATION_MS = 250  # Send audio every 250ms
 CHUNK_SAMPLES = int(SAMPLE_RATE * CHUNK_DURATION_MS / 1000)
+DEFAULT_MAX_POLL_ATTEMPTS = int(os.getenv("DESKAI_E2E_MAX_POLL_ATTEMPTS", "60"))
+DEFAULT_POLL_INTERVAL_SECONDS = float(os.getenv("DESKAI_E2E_POLL_INTERVAL_SECONDS", "5"))
+DEFAULT_INITIAL_WAIT_SECONDS = int(os.getenv("DESKAI_E2E_INITIAL_WAIT_SECONDS", "10"))
+DEFAULT_RECORDING_SECONDS = int(os.getenv("DESKAI_E2E_RECORDING_SECONDS", "15"))
+DEFAULT_EMAIL = os.getenv("DESKAI_E2E_EMAIL", "gabrielmssantiago@gmail.com")
+DEFAULT_PATIENT_ID = os.getenv(
+    "DESKAI_E2E_PATIENT_ID",
+    "e582d101-90ac-464a-8f5e-c2f8d9076c45",
+)
 
 # ─── Step 1: Authenticate ────────────────────────────────────────────────────
 
@@ -261,7 +272,12 @@ def end_session(token: str, consultation_id: str):
 # ─── Step 6: Check consultation status and transcript ────────────────────────
 
 
-def check_result(token: str, consultation_id: str) -> bool:
+def check_result(
+    token: str,
+    consultation_id: str,
+    max_poll_attempts: int,
+    poll_interval_seconds: float,
+) -> bool:
     """Check the consultation status and see if transcript was generated.
 
     Returns True if processing completed successfully, False otherwise.
@@ -269,7 +285,7 @@ def check_result(token: str, consultation_id: str) -> bool:
     print("\n[7/7] Checking consultation result...")
 
     # Poll for status change (processing can take a few seconds)
-    for attempt in range(6):
+    for attempt in range(max_poll_attempts):
         resp = requests.get(
             f"{API_BASE}/v1/consultations/{consultation_id}",
             headers={"Authorization": f"Bearer {token}"},
@@ -317,12 +333,12 @@ def check_result(token: str, consultation_id: str) -> bool:
             return False
 
         if current_status == "in_processing":
-            print("  Still processing... waiting 5s")
-            time.sleep(5)
+            print(f"  Still processing... waiting {poll_interval_seconds:.1f}s")
+            time.sleep(poll_interval_seconds)
             continue
 
         # Status is started/recording — session didn't end properly
-        if attempt < 5:
+        if attempt < max_poll_attempts - 1:
             print(f"  Status still '{current_status}', waiting 3s...")
             time.sleep(3)
 
@@ -334,6 +350,28 @@ def check_result(token: str, consultation_id: str) -> bool:
 
 
 def main():
+    parser = argparse.ArgumentParser(description="DeskAI end-to-end voice test")
+    parser.add_argument("--email", default=DEFAULT_EMAIL)
+    parser.add_argument("--patient-id", default=DEFAULT_PATIENT_ID)
+    parser.add_argument("--recording-seconds", type=int, default=DEFAULT_RECORDING_SECONDS)
+    parser.add_argument("--initial-wait-seconds", type=int, default=DEFAULT_INITIAL_WAIT_SECONDS)
+    parser.add_argument("--max-poll-attempts", type=int, default=DEFAULT_MAX_POLL_ATTEMPTS)
+    parser.add_argument("--poll-interval-seconds", type=float, default=DEFAULT_POLL_INTERVAL_SECONDS)
+    args = parser.parse_args()
+
+    if args.max_poll_attempts < 1:
+        print("ERROR: --max-poll-attempts must be >= 1")
+        sys.exit(2)
+    if args.poll_interval_seconds <= 0:
+        print("ERROR: --poll-interval-seconds must be > 0")
+        sys.exit(2)
+    if args.initial_wait_seconds < 0:
+        print("ERROR: --initial-wait-seconds must be >= 0")
+        sys.exit(2)
+    if args.recording_seconds <= 0:
+        print("ERROR: --recording-seconds must be > 0")
+        sys.exit(2)
+
     print("=" * 60)
     print("  DeskAI E2E Voice-to-Text Test")
     print("=" * 60)
@@ -341,7 +379,7 @@ def main():
     # Get password
     import getpass
 
-    email = "danielportotoni@gmail.com"
+    email = args.email
     password = getpass.getpass(f"Password for {email}: ")
 
     # Step 1: Auth
@@ -349,7 +387,7 @@ def main():
     access_token = tokens["access_token"]
 
     # Step 2: Create consultation (use existing patient)
-    patient_id = "e582d101-90ac-464a-8f5e-c2f8d9076c45"
+    patient_id = args.patient_id
     consultation = create_consultation(access_token, patient_id)
     consultation_id = consultation["consultation_id"]
 
@@ -368,16 +406,21 @@ def main():
         access_token,
         consultation_id,
         session_id,
-        duration_seconds=15,
+        duration_seconds=args.recording_seconds,
     )
 
     # Step 5: End session via HTTP
     end_session(access_token, consultation_id)
 
     # Step 6: Wait and check result
-    print("\n  Waiting 10s for processing pipeline...")
-    time.sleep(10)
-    success = check_result(access_token, consultation_id)
+    print(f"\n  Waiting {args.initial_wait_seconds}s for processing pipeline...")
+    time.sleep(args.initial_wait_seconds)
+    success = check_result(
+        access_token,
+        consultation_id,
+        max_poll_attempts=args.max_poll_attempts,
+        poll_interval_seconds=args.poll_interval_seconds,
+    )
 
     print("\n" + "=" * 60)
     if success:

@@ -1,5 +1,7 @@
 """ElevenLabs Scribe v2 Realtime transcription adapter."""
 
+import io
+import wave
 from typing import Any
 
 import httpx
@@ -23,6 +25,9 @@ logger = get_logger()
 _STATE_READY = "ready"
 _STATE_STREAMING = "streaming"
 _STATE_CLOSED = "closed"
+_PCM_FALLBACK_SAMPLE_RATE = 16000
+_PCM_FALLBACK_CHANNELS = 1
+_PCM_SAMPLE_WIDTH_BYTES = 2
 
 
 class _SessionEntry:
@@ -162,9 +167,16 @@ class ElevenLabsScribeProvider(TranscriptionProvider):
             raise ProviderUnavailableError(f"Cannot connect to ElevenLabs: {exc}") from exc
         except httpx.HTTPStatusError as exc:
             status = exc.response.status_code
+            response_excerpt = exc.response.text[:300].strip()
             if status >= 500:
-                raise ProviderUnavailableError(f"ElevenLabs server error ({status})") from exc
-            raise ProviderSessionError(f"ElevenLabs API error ({status})") from exc
+                message = f"ElevenLabs server error ({status})"
+                if response_excerpt:
+                    message = f"{message}: {response_excerpt}"
+                raise ProviderUnavailableError(message) from exc
+            message = f"ElevenLabs API error ({status})"
+            if response_excerpt:
+                message = f"{message}: {response_excerpt}"
+            raise ProviderSessionError(message) from exc
 
     @retry(
         retry=retry_if_exception_type((httpx.TimeoutException, httpx.ConnectError)),
@@ -174,16 +186,19 @@ class ElevenLabsScribeProvider(TranscriptionProvider):
     )
     def _post_with_retry(self, entry: _SessionEntry) -> dict[str, Any]:
         """Perform the actual HTTP POST with retry."""
-        audio_bytes = bytes(entry.audio_buffer)
+        original_audio = bytes(entry.audio_buffer)
+        filename, audio_bytes, content_type = self._prepare_audio_payload(
+            original_audio, entry.session_id
+        )
 
         response = httpx.post(
             f"{self._config.http_endpoint}",
             headers={"xi-api-key": self._config.api_key},
             files={
                 "file": (
-                    "audio.wav",
+                    filename,
                     audio_bytes,
-                    "audio/wav",
+                    content_type,
                 ),
             },
             data={
@@ -194,3 +209,53 @@ class ElevenLabsScribeProvider(TranscriptionProvider):
         )
         response.raise_for_status()
         return response.json()
+
+    def _prepare_audio_payload(
+        self, audio_bytes: bytes, session_id: str
+    ) -> tuple[str, bytes, str]:
+        """Prepare a supported audio file payload for ElevenLabs.
+
+        If bytes already look like a known container (wav/ogg/mp3/flac/webm/mp4),
+        keep them as-is. Otherwise, assume raw PCM16 mono and wrap as WAV.
+        """
+        if self._looks_like_wav(audio_bytes):
+            return "audio.wav", audio_bytes, "audio/wav"
+        if audio_bytes.startswith(b"OggS"):
+            return "audio.ogg", audio_bytes, "audio/ogg"
+        if audio_bytes.startswith(b"fLaC"):
+            return "audio.flac", audio_bytes, "audio/flac"
+        if audio_bytes.startswith(b"\x1a\x45\xdf\xa3"):
+            return "audio.webm", audio_bytes, "audio/webm"
+        if audio_bytes.startswith(b"ID3") or audio_bytes.startswith(b"\xff\xfb"):
+            return "audio.mp3", audio_bytes, "audio/mpeg"
+        if len(audio_bytes) > 8 and audio_bytes[4:8] == b"ftyp":
+            return "audio.mp4", audio_bytes, "audio/mp4"
+
+        wrapped = self._wrap_pcm16_as_wav(audio_bytes)
+        logger.info(
+            "elevenlabs_audio_wrapped_as_wav",
+            extra={
+                "session_id": session_id,
+                "input_bytes": len(audio_bytes),
+                "output_bytes": len(wrapped),
+            },
+        )
+        return "audio.wav", wrapped, "audio/wav"
+
+    @staticmethod
+    def _looks_like_wav(audio_bytes: bytes) -> bool:
+        return (
+            len(audio_bytes) >= 12
+            and audio_bytes[:4] == b"RIFF"
+            and audio_bytes[8:12] == b"WAVE"
+        )
+
+    @staticmethod
+    def _wrap_pcm16_as_wav(audio_bytes: bytes) -> bytes:
+        buffer = io.BytesIO()
+        with wave.open(buffer, "wb") as wav_file:
+            wav_file.setnchannels(_PCM_FALLBACK_CHANNELS)
+            wav_file.setsampwidth(_PCM_SAMPLE_WIDTH_BYTES)
+            wav_file.setframerate(_PCM_FALLBACK_SAMPLE_RATE)
+            wav_file.writeframes(audio_bytes)
+        return buffer.getvalue()

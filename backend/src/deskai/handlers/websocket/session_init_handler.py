@@ -10,7 +10,13 @@ from deskai.shared.time import utc_now_iso
 logger = get_logger()
 
 
-def handle_session_init(event: dict, connection_repo, session_repo, apigw) -> dict:
+def handle_session_init(
+    event: dict,
+    connection_repo,
+    session_repo,
+    apigw,
+    transcription_provider=None,
+) -> dict:
     """Bind a WebSocket connection to a consultation session."""
     connection_id = event["requestContext"]["connectionId"]
     body = json.loads(event.get("body", "{}"))
@@ -40,6 +46,20 @@ def handle_session_init(event: dict, connection_repo, session_repo, apigw) -> di
             extra=log_context(connection_id=connection_id, session_id=session_id),
         )
         return {"statusCode": 403, "body": "Session ownership mismatch"}
+
+    if transcription_provider is not None:
+        try:
+            transcription_provider.start_realtime_session(
+                session_id=session.session_id,
+                language="pt",
+            )
+        except Exception as exc:
+            if "already exists" not in str(exc).lower():
+                logger.exception(
+                    "ws_transcription_session_start_failed",
+                    extra=log_context(connection_id=connection_id, session_id=session_id),
+                )
+                return {"statusCode": 503, "body": "Transcription provider unavailable"}
 
     session = replace(
         session,

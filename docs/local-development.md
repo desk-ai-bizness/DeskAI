@@ -21,7 +21,7 @@ cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
-pip install -e .[dev]
+pip install -e '.[dev]'
 make lint
 make test
 ```
@@ -33,7 +33,7 @@ cd infra
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
-pip install -e .[dev]
+pip install -e '.[dev]'
 npm install
 export DESKAI_ENV=dev
 make test

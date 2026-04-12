@@ -61,6 +61,10 @@ def handle_session_init(
                 )
                 return {"statusCode": 503, "body": "Transcription provider unavailable"}
 
+    # Bind session_id to the connection so audio.chunk can find the session.
+    connection = replace(connection, session_id=session.session_id)
+    connection_repo.save(connection)
+
     session = replace(
         session,
         connection_id=connection_id,

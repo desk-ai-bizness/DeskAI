@@ -126,8 +126,10 @@ class S3TranscriptRepositoryTest(unittest.TestCase):
     # ---- get_normalized_transcript ----
 
     def test_get_normalized_transcript_returns_data(self) -> None:
-        expected = {"segments": [{"speaker": "patient", "text": "bem"}]}
-        self.mock_s3_client.get_json.return_value = expected
+        from dataclasses import asdict
+
+        stored = asdict(_make_normalized(consultation_id="cons-001"))
+        self.mock_s3_client.get_json.return_value = stored
 
         result = self.repo.get_normalized_transcript(
             clinic_id="clinic-01",
@@ -136,7 +138,9 @@ class S3TranscriptRepositoryTest(unittest.TestCase):
 
         expected_key = "clinics/clinic-01/consultations/cons-001/transcripts/normalized.json"
         self.mock_s3_client.get_json.assert_called_once_with(expected_key)
-        self.assertEqual(result, expected)
+        self.assertIsInstance(result, NormalizedTranscript)
+        self.assertEqual(result.consultation_id, "cons-001")
+        self.assertEqual(result.speaker_segments[0].speaker, "speaker_0")
 
     def test_get_normalized_transcript_returns_none_when_missing(
         self,
@@ -151,7 +155,11 @@ class S3TranscriptRepositoryTest(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_get_normalized_transcript_uses_correct_key(self) -> None:
-        self.mock_s3_client.get_json.return_value = {}
+        from dataclasses import asdict
+
+        self.mock_s3_client.get_json.return_value = asdict(
+            _make_normalized(consultation_id="cons-999")
+        )
 
         self.repo.get_normalized_transcript(
             clinic_id="clinic-77",

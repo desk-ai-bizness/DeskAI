@@ -80,6 +80,39 @@ class S3Client:
         )
         return result
 
+    def get_bytes(self, key: str) -> bytes | None:
+        """Return the raw bytes at *key*, or ``None`` if missing."""
+        try:
+            response = self._s3.get_object(Bucket=self._bucket, Key=key)
+            data = response["Body"].read()
+            logger.debug(
+                "s3_get_bytes",
+                extra=log_context(bucket=self._bucket, key=key, size_bytes=len(data)),
+            )
+            return data
+        except ClientError as exc:
+            if exc.response["Error"]["Code"] == "NoSuchKey":
+                logger.debug(
+                    "s3_get_bytes",
+                    extra=log_context(bucket=self._bucket, key=key, found=False),
+                )
+                return None
+            raise
+
+    def list_keys(self, prefix: str) -> list[str]:
+        """Return all object keys under *prefix*, sorted lexicographically."""
+        keys: list[str] = []
+        paginator = self._s3.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self._bucket, Prefix=prefix):
+            for obj in page.get("Contents", []):
+                keys.append(obj["Key"])
+        keys.sort()
+        logger.debug(
+            "s3_list_keys",
+            extra=log_context(bucket=self._bucket, prefix=prefix, count=len(keys)),
+        )
+        return keys
+
     def generate_presigned_url(self, key: str, expires_in_seconds: int = 3600) -> str:
         """Generate a time-limited download URL for the given key."""
         url = self._s3.generate_presigned_url(

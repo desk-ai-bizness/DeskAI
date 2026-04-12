@@ -553,5 +553,253 @@ class RetryOnTransientFailureTest(unittest.TestCase):
         self.assertEqual(mock_httpx.post.call_count, 3)
 
 
+class S3BackedChunkStorageTest(unittest.TestCase):
+    """Tests for S3-backed audio chunk persistence (cross-Lambda resilience)."""
+
+    def _make_provider_with_s3(self, s3_client=None):
+        config = _make_config()
+        if s3_client is None:
+            s3_client = MagicMock()
+        return ElevenLabsScribeProvider(config=config, s3_client=s3_client), s3_client
+
+    def test_send_audio_chunk_writes_to_s3(self) -> None:
+        """send_audio_chunk must persist each chunk to S3 under the session prefix."""
+        provider, s3_mock = self._make_provider_with_s3()
+        provider.start_realtime_session(session_id="sess-s3-001", language="pt")
+
+        chunk = b"\x00\x01\x02\x03"
+        provider.send_audio_chunk("sess-s3-001", chunk)
+
+        s3_mock.put_bytes.assert_called_once()
+        call_args = s3_mock.put_bytes.call_args
+        key = call_args[0][0] if call_args[0] else call_args[1]["key"]
+        self.assertIn("sess-s3-001", key)
+        self.assertIn("000000", key)
+
+    def test_send_multiple_chunks_writes_sequentially_numbered_keys(self) -> None:
+        """Each chunk gets a unique, sequentially numbered S3 key."""
+        provider, s3_mock = self._make_provider_with_s3()
+        provider.start_realtime_session(session_id="sess-s3-002", language="pt")
+
+        provider.send_audio_chunk("sess-s3-002", b"\x00\x01")
+        provider.send_audio_chunk("sess-s3-002", b"\x02\x03")
+        provider.send_audio_chunk("sess-s3-002", b"\x04\x05")
+
+        self.assertEqual(s3_mock.put_bytes.call_count, 3)
+        keys = [call[0][0] for call in s3_mock.put_bytes.call_args_list]
+        self.assertIn("000000", keys[0])
+        self.assertIn("000001", keys[1])
+        self.assertIn("000002", keys[2])
+
+    def test_finish_session_reads_chunks_from_s3_and_reports_total_bytes(self) -> None:
+        """finish_realtime_session reads all S3 chunks and reports total audio bytes."""
+        s3_mock = MagicMock()
+        s3_mock.list_keys.return_value = [
+            "audio-chunks/sess-s3-003/000000.bin",
+            "audio-chunks/sess-s3-003/000001.bin",
+        ]
+        s3_mock.get_bytes.side_effect = [b"\x00\x01", b"\x02\x03"]
+
+        provider, _ = self._make_provider_with_s3(s3_client=s3_mock)
+        provider.start_realtime_session(session_id="sess-s3-003", language="pt")
+        # Simulate chunks already written to S3 (chunk_count tracked locally)
+        provider.send_audio_chunk("sess-s3-003", b"\x00\x01")
+        provider.send_audio_chunk("sess-s3-003", b"\x02\x03")
+
+        result = provider.finish_realtime_session("sess-s3-003")
+
+        self.assertEqual(result["audio_bytes_received"], 4)
+        self.assertEqual(result["state"], "closed")
+
+    @patch("deskai.adapters.transcription.elevenlabs_provider.httpx")
+    def test_fetch_final_transcript_reassembles_chunks_from_s3(self, mock_httpx) -> None:
+        """fetch_final_transcript must reassemble S3 chunks before POSTing."""
+        import httpx
+
+        s3_mock = MagicMock()
+        # First call: finish_realtime_session reads size
+        # Second call: fetch_final_transcript reassembles
+        s3_mock.list_keys.side_effect = [
+            [
+                "audio-chunks/sess-s3-004/000000.bin",
+                "audio-chunks/sess-s3-004/000001.bin",
+            ],
+            [
+                "audio-chunks/sess-s3-004/000000.bin",
+                "audio-chunks/sess-s3-004/000001.bin",
+            ],
+        ]
+        s3_mock.get_bytes.side_effect = [
+            b"\x00\x01",
+            b"\x02\x03",  # finish reads sizes
+            b"\x00\x01",
+            b"\x02\x03",  # fetch reassembles
+        ]
+
+        provider, _ = self._make_provider_with_s3(s3_client=s3_mock)
+        provider.start_realtime_session(session_id="sess-s3-004", language="pt")
+        provider.send_audio_chunk("sess-s3-004", b"\x00\x01")
+        provider.send_audio_chunk("sess-s3-004", b"\x02\x03")
+        provider.finish_realtime_session("sess-s3-004")
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "language_code": "pt",
+            "text": "S3 reassembled",
+            "words": [],
+        }
+        mock_response.raise_for_status = MagicMock()
+        mock_httpx.post.return_value = mock_response
+        mock_httpx.TimeoutException = httpx.TimeoutException
+        mock_httpx.ConnectError = httpx.ConnectError
+        mock_httpx.HTTPStatusError = httpx.HTTPStatusError
+
+        result = provider.fetch_final_transcript("sess-s3-004")
+
+        self.assertEqual(result["text"], "S3 reassembled")
+        mock_httpx.post.assert_called_once()
+
+    def test_send_chunk_auto_creates_session_for_unknown_session(self) -> None:
+        """send_audio_chunk on a different container should auto-create session entry."""
+        provider, s3_mock = self._make_provider_with_s3()
+        # Do NOT call start_realtime_session — simulating a different Lambda container
+
+        # Should not raise ProviderSessionError — auto-creates the session
+        provider.send_audio_chunk("sess-new-container", b"\x00\x01")
+
+        s3_mock.put_bytes.assert_called_once()
+
+    def test_provider_works_without_s3_client(self) -> None:
+        """Backward compatibility: provider without s3_client uses in-memory buffer."""
+        config = _make_config()
+        provider = ElevenLabsScribeProvider(config=config)
+        provider.start_realtime_session(session_id="sess-compat", language="pt")
+        provider.send_audio_chunk("sess-compat", b"\x00\x01")
+
+        result = provider.finish_realtime_session("sess-compat")
+        self.assertEqual(result["audio_bytes_received"], 2)
+
+
+class AudioChunkHandlerErrorHandlingTest(unittest.TestCase):
+    """Tests for error handling in the audio chunk handler."""
+
+    def test_send_audio_chunk_provider_error_is_caught_and_logged(self) -> None:
+        """ProviderSessionError from send_audio_chunk should be caught, not propagate."""
+        import base64
+        import json
+        from unittest.mock import patch
+
+        from deskai.domain.session.entities import Session, SessionState
+        from deskai.domain.session.value_objects import ConnectionInfo
+        from deskai.domain.transcription.exceptions import ProviderSessionError
+        from deskai.handlers.websocket.audio_chunk_handler import handle_audio_chunk
+
+        connection = ConnectionInfo(
+            connection_id="conn-err",
+            session_id="sess-err",
+            doctor_id="doc-001",
+            clinic_id="clinic-001",
+            connected_at="2026-04-02T10:00:00+00:00",
+        )
+        session = Session(
+            session_id="sess-err",
+            consultation_id="cons-001",
+            doctor_id="doc-001",
+            clinic_id="clinic-001",
+            state=SessionState.RECORDING,
+            started_at="2026-04-02T10:00:00+00:00",
+            audio_chunks_received=0,
+        )
+
+        conn_repo = MagicMock()
+        conn_repo.find_by_connection_id.return_value = connection
+        sess_repo = MagicMock()
+        sess_repo.find_by_id.return_value = session
+        apigw = MagicMock()
+
+        provider = MagicMock()
+        provider.send_audio_chunk.side_effect = ProviderSessionError("Unknown session")
+
+        event = {
+            "requestContext": {"connectionId": "conn-err"},
+            "body": json.dumps(
+                {
+                    "action": "audio.chunk",
+                    "data": {"audio": base64.b64encode(b"\x00\x01").decode()},
+                }
+            ),
+        }
+
+        with patch(
+            "deskai.handlers.websocket.audio_chunk_handler.utc_now_iso",
+            return_value="2026-04-02T12:00:00+00:00",
+        ):
+            result = handle_audio_chunk(event, conn_repo, sess_repo, apigw, provider)
+
+        # Should return 200 (chunk processing continues), not 500
+        self.assertEqual(result["statusCode"], 200)
+
+    def test_audio_chunk_logging_uses_info_level(self) -> None:
+        """The ws_audio_chunk_processed log must use logger.info, not logger.debug."""
+        import base64
+        import json
+        from unittest.mock import patch
+
+        from deskai.domain.session.entities import Session, SessionState
+        from deskai.domain.session.value_objects import ConnectionInfo
+        from deskai.handlers.websocket.audio_chunk_handler import handle_audio_chunk
+
+        connection = ConnectionInfo(
+            connection_id="conn-log",
+            session_id="sess-log",
+            doctor_id="doc-001",
+            clinic_id="clinic-001",
+            connected_at="2026-04-02T10:00:00+00:00",
+        )
+        session = Session(
+            session_id="sess-log",
+            consultation_id="cons-001",
+            doctor_id="doc-001",
+            clinic_id="clinic-001",
+            state=SessionState.RECORDING,
+            started_at="2026-04-02T10:00:00+00:00",
+            audio_chunks_received=0,
+        )
+
+        conn_repo = MagicMock()
+        conn_repo.find_by_connection_id.return_value = connection
+        sess_repo = MagicMock()
+        sess_repo.find_by_id.return_value = session
+        apigw = MagicMock()
+
+        event = {
+            "requestContext": {"connectionId": "conn-log"},
+            "body": json.dumps(
+                {
+                    "action": "audio.chunk",
+                    "data": {"audio": base64.b64encode(b"\x00\x01").decode()},
+                }
+            ),
+        }
+
+        with (
+            patch(
+                "deskai.handlers.websocket.audio_chunk_handler.utc_now_iso",
+                return_value="2026-04-02T12:00:00+00:00",
+            ),
+            patch("deskai.handlers.websocket.audio_chunk_handler.logger") as mock_logger,
+        ):
+            handle_audio_chunk(event, conn_repo, sess_repo, apigw)
+
+        # logger.info should be called with ws_audio_chunk_processed, NOT logger.debug
+        info_messages = [call[0][0] for call in mock_logger.info.call_args_list]
+        self.assertIn("ws_audio_chunk_processed", info_messages)
+        # logger.debug should NOT have ws_audio_chunk_processed
+        if mock_logger.debug.call_args_list:
+            debug_messages = [call[0][0] for call in mock_logger.debug.call_args_list]
+            self.assertNotIn("ws_audio_chunk_processed", debug_messages)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -40,6 +40,10 @@ The technical specs intentionally leave the full testing strategy open. This tas
 - `012-build-authenticated-react-app.md`
 - `013-build-public-website-and-entry-flows.md`
 - `014-add-observability-security-privacy-and-cost-controls.md`
+- `016-apply-notter-frontend-branding.md`
+- `017-create-authenticated-app-design-system.md`
+- `018-apply-authenticated-app-facelift.md`
+- `019-add-frontend-query-cache-and-loading-states.md`
 
 ### Required Reading
 Before implementing this task, read these documents in addition to the standard reading list in `implementation-prompt.md`:

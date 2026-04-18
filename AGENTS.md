@@ -223,7 +223,7 @@ Task manager statuses:
 - `done`
 - `canceled`
 
-Current next step: `003-bootstrap-repository-and-engineering-foundation.md`
+Current next step: `017-create-authenticated-app-design-system.md`
 
 ## Change Management
 

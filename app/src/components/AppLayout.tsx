@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/use-auth';
+import { BrandLogo } from './BrandLogo';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -18,8 +19,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div>
-          <h1>DeskAI</h1>
+        <div className="app-brand">
+          <BrandLogo iconTestId="notter-app-logo-icon" />
           <p>Documentacao clinica assistida por IA</p>
         </div>
 

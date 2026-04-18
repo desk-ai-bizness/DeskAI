@@ -38,10 +38,10 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-Frontend core app complete — public website implementation pending
+Authenticated app facelift in progress — design system pending
 
 ### Overall Progress
-93% complete
+88% complete
 
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
@@ -68,9 +68,11 @@ Frontend core app complete — public website implementation pending
 - Task 012 post-completion polish completed: login page visual redesign and copy refresh for a more production-ready experience, including removal of developer-facing authentication text.
 - Task 012 post-completion polish (phase 2) completed: richer login motion system and interaction design with ambient animated background, staggered section entrances, hover depth, CTA micro-interactions, and reduced-motion fallback.
 - Task 012 post-completion polish (phase 3) completed: desktop-first side-by-side layout restored for login and expanded into reusable responsive two-column layouts across consultations, live session, and review pages.
+- Tasks 016 through 019 created: frontend-only Notter branding, authenticated app design system, page-level facelift, and query cache/loading-state improvements.
+- Task 016 completed: authenticated app visible branding now uses Notter with logo assets while internal DeskAI technical identifiers remain unchanged.
 
 ### Immediate Next Step
-Start `013-build-public-website-and-entry-flows.md`
+Start `017-create-authenticated-app-design-system.md`
 
 ## 5. Priority Queue
 
@@ -78,9 +80,12 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure |
-| 2 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | planned | Dashboards, alarms, retention, IAM tightening |
-| 3 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | planned | End-to-end validation and release packaging after remaining frontend/security work |
+| 1 | `017-create-authenticated-app-design-system.md` | Create authenticated app design system | planned | Reusable premium UI primitives needed before page-level facelift |
+| 2 | `018-apply-authenticated-app-facelift.md` | Apply authenticated app facelift | planned | Applies the design system across the physician workflow |
+| 3 | `019-add-frontend-query-cache-and-loading-states.md` | Add frontend query cache and loading states | planned | Improves request-state consistency, loading feedback, and API cache behavior |
+| 4 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure |
+| 5 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | planned | Dashboards, alarms, retention, IAM tightening |
+| 6 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | planned | End-to-end validation and release packaging after remaining frontend/security work |
 
 ## 6. Active Blockers
 
@@ -88,7 +93,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 013 implementation |
+| None | No active blockers | N/A | N/A | Begin Task 017 implementation |
 
 ## 7. Task Index
 
@@ -110,7 +115,11 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | 012 | `012-build-authenticated-react-app.md` | Build authenticated React app | Frontend | Critical | done | `005-implement-authentication-and-plan-access-control.md`, `007-build-bff-contracts-ui-config-and-feature-flags.md`, `008-implement-realtime-consultation-session-transport.md`, `011-implement-review-finalization-and-export-workflows.md` | 100 | Authenticated React app completed with login/session flows, consultation list/create, live recording UI, review/edit/finalize/export screens, backend-driven UI rendering, and frontend tests |
 | 013 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | Frontend | Medium | planned | `003-bootstrap-repository-and-engineering-foundation.md`, `004-provision-aws-foundation-with-cdk.md` | 0 | Delivers the static marketing website and login entrypoints with MVP-accurate messaging and SEO-friendly structure |
 | 014 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | Security | High | planned | `004-provision-aws-foundation-with-cdk.md`, `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md`, `011-implement-review-finalization-and-export-workflows.md` | 0 | Adds dashboards, alarms, retention controls, PHI-aware logging, IAM tightening, and budget enforcement |
-| 015 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | QA | Critical | planned | `005-implement-authentication-and-plan-access-control.md`, `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md`, `011-implement-review-finalization-and-export-workflows.md`, `012-build-authenticated-react-app.md`, `013-build-public-website-and-entry-flows.md`, `014-add-observability-security-privacy-and-cost-controls.md` | 0 | Validates the integrated MVP, closes blockers, and prepares the release, rollback, and runbook package |
+| 015 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | QA | Critical | planned | `005-implement-authentication-and-plan-access-control.md`, `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md`, `011-implement-review-finalization-and-export-workflows.md`, `012-build-authenticated-react-app.md`, `013-build-public-website-and-entry-flows.md`, `014-add-observability-security-privacy-and-cost-controls.md`, `016-apply-notter-frontend-branding.md`, `017-create-authenticated-app-design-system.md`, `018-apply-authenticated-app-facelift.md`, `019-add-frontend-query-cache-and-loading-states.md` | 0 | Validates the integrated MVP, closes blockers, and prepares the release, rollback, and runbook package |
+| 016 | `016-apply-notter-frontend-branding.md` | Apply Notter frontend branding | Frontend | High | done | `012-build-authenticated-react-app.md` | 100 | Authenticated app visible branding updated to Notter with logo assets, document title, and regression tests while preserving DeskAI technical identifiers |
+| 017 | `017-create-authenticated-app-design-system.md` | Create authenticated app design system | Frontend | High | planned | `012-build-authenticated-react-app.md`, `016-apply-notter-frontend-branding.md` | 0 | Creates reusable app UI primitives, tokens, icon usage, loaders, and documentation for consistent premium frontend styling |
+| 018 | `018-apply-authenticated-app-facelift.md` | Apply authenticated app facelift | Frontend | High | planned | `012-build-authenticated-react-app.md`, `016-apply-notter-frontend-branding.md`, `017-create-authenticated-app-design-system.md` | 0 | Applies the Notter design system across authenticated app pages and improves UI/UX without moving business rules into the frontend |
+| 019 | `019-add-frontend-query-cache-and-loading-states.md` | Add frontend query cache and loading states | Frontend | Medium | planned | `012-build-authenticated-react-app.md`, `017-create-authenticated-app-design-system.md`, `018-apply-authenticated-app-facelift.md` | 0 | Adds a query cache/request-state layer such as TanStack Query with consistent loading, mutation, invalidation, and sign-out cache clearing behavior |
 
 ## 8. Milestones
 
@@ -121,7 +130,7 @@ Track major delivery checkpoints for the MVP.
 | Project Setup | Task system ready for execution | done | Template and manager files created |
 | Infrastructure Ready | AWS baseline in place | done | Tasks 003 and 004 completed. Dev environment deployed 2026-04-02: 9 stacks live in us-east-1, health endpoint verified. Lambda packaging and env var issues from Task 005 fixed (OI-007). |
 | Backend Ready | Core API and business logic in place | done | Tasks 005 through 011 completed. All core backend endpoints implemented: auth, consultations, sessions, transcription, AI pipeline, review, finalization, export. 1115 tests passing. |
-| Frontend Ready | Core MVP interface in place | in_progress | Task 012 completed. Task 013 pending for public website and entry-flow completion. |
+| Frontend Ready | Core MVP interface in place | in_progress | Task 012 completed. Tasks 016 through 019 now cover authenticated app facelift before Task 013 public website work. |
 | MVP Ready | End-to-end usable first version | planned | Covered by Tasks 014 and 015 |
 
 ## 9. Open Issues
@@ -153,6 +162,14 @@ Track cross-task decisions, missing information, or conflicts.
 List the most recently changed tasks first.
 
 | Date | Task File | Change |
+| 2026-04-18 | `016-apply-notter-frontend-branding.md` | Completed: Notter branding and logo assets applied to login, app shell, loading shell, and document title with frontend tests and build verification |
+| 2026-04-18 | `016-apply-notter-frontend-branding.md` | Started implementation: moved to in_progress for authenticated app Notter branding and logo integration |
+| 2026-04-18 | `015-run-end-to-end-hardening-and-release-readiness.md` | Updated dependencies to include authenticated app facelift and query-cache tasks before release readiness |
+| 2026-04-18 | `@task-manager.md` | Added Tasks 016 through 019 to priority queue and task index; updated current phase, progress, next step, and frontend milestone notes |
+| 2026-04-18 | `019-add-frontend-query-cache-and-loading-states.md` | Created frontend query cache and loading-state task |
+| 2026-04-18 | `018-apply-authenticated-app-facelift.md` | Created authenticated app page-level facelift task |
+| 2026-04-18 | `017-create-authenticated-app-design-system.md` | Created authenticated app design system task |
+| 2026-04-18 | `016-apply-notter-frontend-branding.md` | Created frontend-only Notter branding task |
 | 2026-04-15 | `012-build-authenticated-react-app.md` | Post-completion polish (phase 3): fixed login desktop side-by-side composition and applied consistent responsive two-column layout patterns to consultations, live session, and review pages |
 | 2026-04-15 | `@task-manager.md` | Updated Task 012 summary and recent updates with cross-page responsive layout polish phase 3 |
 | 2026-04-15 | `012-build-authenticated-react-app.md` | Post-completion polish (phase 2): upgraded login page with modern motion/interaction design (ambient animation, staggered entrances, hover depth, animated CTA, and reduced-motion fallback) |

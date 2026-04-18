@@ -76,4 +76,22 @@ describe('LoginPage', () => {
       screen.queryByText(/Login social e SSO nao estao disponiveis/i),
     ).not.toBeInTheDocument();
   });
+
+  it('shows Notter branding with the new logo assets', () => {
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('Notter para medicos')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Entrar no Notter' })).toBeInTheDocument();
+    expect(screen.queryByText(/DeskAI/i)).not.toBeInTheDocument();
+
+    const brandLogo = screen.getByRole('img', { name: 'Notter' });
+    expect(brandLogo).toHaveAttribute('src', '/logo-text.png');
+
+    const iconLogo = screen.getByTestId('notter-login-logo-icon');
+    expect(iconLogo).toHaveAttribute('src', '/logo-icon.png');
+  });
 });

@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/use-auth';
+import { BrandLogo } from '../components/BrandLogo';
 
 interface LocationState {
   from?: {
@@ -51,7 +52,10 @@ export function LoginPage() {
 
       <div className="login-shell two-column-layout">
         <section className="login-showcase" aria-label="Visao geral do produto">
-          <p className="login-chip">DeskAI para medicos</p>
+          <div className="login-brand-lockup">
+            <BrandLogo iconTestId="notter-login-logo-icon" />
+          </div>
+          <p className="login-chip">Notter para medicos</p>
           <h1>Documentacao clinica mais clara, com revisao humana em cada etapa.</h1>
           <p className="login-lead">
             Organize consultas com apoio de IA sem perder controle sobre o conteudo final.
@@ -67,7 +71,7 @@ export function LoginPage() {
         <section className="auth-card login-card">
           <div className="login-header">
             <p className="login-eyebrow">Area autenticada</p>
-            <h2>Entrar no DeskAI</h2>
+            <h2>Entrar no Notter</h2>
             <p>Acesse sua conta para iniciar ou revisar consultas.</p>
           </div>
 

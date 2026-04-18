@@ -2,6 +2,7 @@ import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/auth-context';
 import { useAuth } from './auth/use-auth';
 import { AppLayout } from './components/AppLayout';
+import { BrandLogo } from './components/BrandLogo';
 import { RequireAuth } from './components/RequireAuth';
 import { ConsultationsPage } from './pages/ConsultationsPage';
 import { LiveConsultationPage } from './pages/LiveConsultationPage';
@@ -23,7 +24,7 @@ function AppRoutes() {
     return (
       <div className="auth-shell">
         <section className="auth-card">
-          <h1>DeskAI</h1>
+          <BrandLogo size="compact" />
           <p>Carregando configuracao da sessao...</p>
         </section>
       </div>

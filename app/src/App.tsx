@@ -26,7 +26,7 @@ function AppRoutes() {
       <div className="auth-shell">
         <Card className="auth-card">
           <BrandLogo size="compact" />
-          <Loader label="Carregando configuracao da sessao" />
+          <Loader label="Carregando configuração da sessão" />
         </Card>
       </div>
     );

@@ -40,7 +40,7 @@ describe('AppLayout', () => {
     render(
       <MemoryRouter>
         <AppLayout>
-          <p>Conteudo autenticado</p>
+          <p>Conteúdo autenticado</p>
         </AppLayout>
       </MemoryRouter>,
     );
@@ -53,7 +53,7 @@ describe('AppLayout', () => {
     );
     expect(screen.getByTestId('notter-app-logo-icon')).toHaveAttribute('src', '/logo-icon.png');
     expect(screen.queryByText(/DeskAI/i)).not.toBeInTheDocument();
-    expect(screen.getByText('Documentacao clinica assistida por IA')).toBeInTheDocument();
+    expect(screen.getByText('Documentação clínica assistida por IA')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sair' })).toHaveClass('ds-button');
     expect(screen.getByRole('link', { name: 'Consultas' })).toHaveClass('app-nav-link');
   });
@@ -64,7 +64,7 @@ describe('AppLayout', () => {
     render(
       <MemoryRouter>
         <AppLayout>
-          <p>Conteudo autenticado</p>
+          <p>Conteúdo autenticado</p>
         </AppLayout>
       </MemoryRouter>,
     );

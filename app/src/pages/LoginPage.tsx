@@ -45,7 +45,7 @@ export function LoginPage() {
       if (requestError instanceof ApiError) {
         setError(requestError.message);
       } else {
-        setError('Nao foi possivel iniciar sessao. Tente novamente.');
+        setError('Não foi possível iniciar sessão. Tente novamente.');
       }
     } finally {
       setIsSubmitting(false);
@@ -54,29 +54,27 @@ export function LoginPage() {
 
   return (
     <div className="auth-shell login-shell-wrap">
-      <div className="login-ambient" aria-hidden="true" />
-
       <div className="login-shell two-column-layout">
-        <section className="login-showcase" aria-label="Visao geral do produto">
+        <section className="login-showcase" aria-label="Visão geral do produto">
           <div className="login-brand-lockup">
-            <BrandLogo iconTestId="notter-login-logo-icon" />
+            <BrandLogo iconTestId="notter-login-logo-icon" tone="light" />
           </div>
-          <p className="login-chip">Notter para medicos</p>
-          <h1>Documentacao clinica mais clara, com revisao humana em cada etapa.</h1>
+          <p className="login-chip">Notter para médicos</p>
+          <h1>Documentação clínica mais clara, com revisão humana em cada etapa.</h1>
           <p className="login-lead">
-            Organize consultas com apoio de IA sem perder controle sobre o conteudo final.
+            Organize consultas com apoio de IA sem perder controle sobre o conteúdo final.
           </p>
 
           <ul className="login-benefits">
-            <li className="login-benefit">Transcricao da consulta para acompanhamento continuo.</li>
+            <li className="login-benefit">Transcrição da consulta para acompanhamento contínuo.</li>
             <li className="login-benefit">Rascunho estruturado para revisar e editar com rapidez.</li>
-            <li className="login-benefit">Fluxo seguro de finalizacao e exportacao para o prontuario.</li>
+            <li className="login-benefit">Fluxo seguro de finalização e exportação para o prontuário.</li>
           </ul>
         </section>
 
         <Card className="auth-card login-card">
           <div className="login-header">
-            <p className="login-eyebrow">Area autenticada</p>
+            <p className="login-eyebrow">Área autenticada</p>
             <Heading level={2}>Entrar</Heading>
             <Text tone="muted">Acesse sua conta para iniciar ou revisar consultas.</Text>
           </div>

@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw error;
         }
 
-        throw new ApiError('Nao foi possivel carregar sua sessao.', 500, 'session_load_failed');
+        throw new ApiError('Não foi possível carregar sua sessão.', 500, 'session_load_failed');
       }
     },
     [clearState, refresh],

@@ -94,7 +94,7 @@ export function ReviewPage() {
         ? consultationQuery.error.message
         : reviewQuery.error instanceof ApiError
           ? reviewQuery.error.message
-          : 'Nao foi possivel carregar os dados de revisao.'
+          : 'Não foi possível carregar os dados de revisão.'
       : null;
 
   const defaultMedicalHistoryText = useMemo(
@@ -116,8 +116,8 @@ export function ReviewPage() {
     'insights',
   ] as const;
   const sectionConfig = uiConfig?.review_screen.sections ?? {
-    transcript: { title: 'Transcricao', editable: false, visible: true },
-    medical_history: { title: 'Historia Clinica', editable: true, visible: true },
+    transcript: { title: 'Transcrição', editable: false, visible: true },
+    medical_history: { title: 'História Clínica', editable: true, visible: true },
     summary: { title: 'Resumo da Consulta', editable: true, visible: true },
     insights: { title: 'Insights', editable: true, visible: true },
   };
@@ -133,7 +133,7 @@ export function ReviewPage() {
 
   const statusLabel = useMemo(() => {
     if (!consultation) {
-      return 'indisponivel';
+      return 'indisponível';
     }
 
     return uiConfig?.status_labels?.[consultation.status] ?? consultation.status;
@@ -152,15 +152,15 @@ export function ReviewPage() {
       const payload = buildReviewUpdatePayload(medicalHistoryText, summaryText, insightActions);
       await updateReviewMutation.mutateAsync(payload);
       setReviewDraft(null);
-      setFeedback('Alteracoes salvas com sucesso.');
+      setFeedback('Alterações salvas com sucesso.');
       await Promise.all([consultationQuery.refetch(), reviewQuery.refetch()]);
     } catch (requestError) {
       if (requestError instanceof SyntaxError) {
-        setError('Historia clinica invalida. Use um JSON valido.');
+        setError('História clínica inválida. Use um JSON válido.');
       } else if (requestError instanceof ApiError) {
         setError(requestError.message);
       } else {
-        setError('Nao foi possivel salvar as alteracoes.');
+        setError('Não foi possível salvar as alterações.');
       }
     }
   }
@@ -171,7 +171,7 @@ export function ReviewPage() {
     }
 
     if (!finalizationConfirmed) {
-      setError('Confirme a finalizacao antes de continuar.');
+      setError('Confirme a finalização antes de continuar.');
       return;
     }
 
@@ -186,7 +186,7 @@ export function ReviewPage() {
       if (requestError instanceof ApiError) {
         setError(requestError.message);
       } else {
-        setError('Nao foi possivel finalizar a consulta.');
+        setError('Não foi possível finalizar a consulta.');
       }
     }
   }
@@ -202,12 +202,12 @@ export function ReviewPage() {
     try {
       const response = await exportMutation.mutateAsync();
       setExportResult(response);
-      setFeedback('Exportacao gerada com sucesso.');
+      setFeedback('Exportação gerada com sucesso.');
     } catch (requestError) {
       if (requestError instanceof ApiError) {
         setError(requestError.message);
       } else {
-        setError('Nao foi possivel gerar a exportacao.');
+        setError('Não foi possível gerar a exportação.');
       }
     }
   }
@@ -252,24 +252,24 @@ export function ReviewPage() {
     <div className="page-grid review-layout">
       <aside className="stack page-sidebar">
         <Card
-          title={uiConfig?.labels.review_title ?? 'Revisao da consulta'}
+          title={uiConfig?.labels.review_title ?? 'Revisão da consulta'}
           actions={(
             <RouterLink className="ds-link" to={`/consultations/${consultationId}/live`}>
-              Voltar para sessao ao vivo
+              Voltar para sessão ao vivo
             </RouterLink>
           )}
         >
 
-          {isLoading ? <Loader label="Carregando revisao" /> : null}
+          {isLoading ? <Loader label="Carregando revisão" /> : null}
 
           {!isLoading ? (
             <>
               <Chip tone="info">Status: {statusLabel}</Chip>
-              <Text tone="muted">{uiConfig?.labels.ai_disclaimer ?? 'Conteudo gerado por IA e sempre revisavel.'}</Text>
+              <Text tone="muted">{uiConfig?.labels.ai_disclaimer ?? 'Conteúdo gerado por IA e sempre revisável.'}</Text>
               {completenessWarning ? (
                 <Alert tone="warning">
                   {uiConfig?.labels.completeness_warning ??
-                    'Alguns campos podem estar incompletos. Revise com atencao.'}
+                    'Alguns campos podem estar incompletos. Revise com atenção.'}
                 </Alert>
               ) : null}
               {queryError ? <Alert tone="danger">{queryError}</Alert> : null}
@@ -283,7 +283,7 @@ export function ReviewPage() {
           ) : null}
         </Card>
 
-        <Card title="Finalizacao e exportacao">
+        <Card title="Finalização e exportação">
           <label className="checkbox-row" htmlFor="finalization-confirm">
             <input
               id="finalization-confirm"
@@ -291,7 +291,7 @@ export function ReviewPage() {
               checked={finalizationConfirmed}
               onChange={(event) => setFinalizationConfirmed(event.target.checked)}
             />
-            Confirmo que revisei o conteudo e desejo finalizar esta consulta.
+            Confirmo que revisei o conteúdo e desejo finalizar esta consulta.
           </label>
 
           <div className="inline-row">
@@ -311,13 +311,13 @@ export function ReviewPage() {
               disabled={!canExport}
               isLoading={exportMutation.isPending}
             >
-              {exportMutation.isPending ? 'Gerando exportacao...' : uiConfig?.labels.export_button ?? 'Exportar'}
+              {exportMutation.isPending ? 'Gerando exportação...' : uiConfig?.labels.export_button ?? 'Exportar'}
             </Button>
           </div>
 
           {exportResult ? (
             <p>
-              Exportacao pronta: <UiLink href={exportResult.export_url}>baixar PDF</UiLink>
+              Exportação pronta: <UiLink href={exportResult.export_url}>baixar PDF</UiLink>
             </p>
           ) : null}
         </Card>
@@ -335,8 +335,8 @@ export function ReviewPage() {
                 <Card key={sectionKey} title={sectionConfig.transcript.title}>
                   {transcriptRows.length === 0 ? (
                     <EmptyState
-                      title="Transcricao indisponivel"
-                      description="Transcricao indisponivel no payload atual."
+                      title="Transcrição indisponível"
+                      description="Transcrição indisponível no payload atual."
                     />
                   ) : (
                     <ul className="transcript-list">
@@ -355,7 +355,7 @@ export function ReviewPage() {
               return (
                 <Card key={sectionKey} title={sectionConfig.medical_history.title}>
                   <TextAreaField
-                    label="Conteudo da historia clinica"
+                    label="Conteúdo da história clínica"
                     value={medicalHistoryText}
                     onChange={(event) => updateMedicalHistoryText(event.target.value)}
                     rows={12}
@@ -369,7 +369,7 @@ export function ReviewPage() {
               return (
                 <Card key={sectionKey} title={sectionConfig.summary.title}>
                   <TextAreaField
-                    label="Conteudo do resumo"
+                    label="Conteúdo do resumo"
                     value={summaryText}
                     onChange={(event) => updateSummaryText(event.target.value)}
                     rows={8}
@@ -384,7 +384,7 @@ export function ReviewPage() {
                 {review.insights.length === 0 ? (
                   <EmptyState
                     title="Nenhum insight"
-                    description="Nenhum insight disponivel."
+                    description="Nenhum insight disponível."
                   />
                 ) : (
                   <ul className="insight-list">
@@ -438,11 +438,11 @@ export function ReviewPage() {
                           </div>
 
                           <TextAreaField
-                            label="Observacao do medico (opcional)"
+                            label="Observação do médico (opcional)"
                             rows={2}
                             value={note}
                             onChange={(event) => updateInsightNote(insight, event.target.value)}
-                            placeholder="Observacao do medico (opcional)"
+                            placeholder="Observação do médico (opcional)"
                             disabled={!canSave}
                           />
                         </li>
@@ -456,7 +456,7 @@ export function ReviewPage() {
 
           <div className="inline-row">
             <Button type="submit" disabled={!canSave} isLoading={updateReviewMutation.isPending}>
-              {updateReviewMutation.isPending ? 'Salvando...' : 'Salvar alteracoes'}
+              {updateReviewMutation.isPending ? 'Salvando...' : 'Salvar alterações'}
             </Button>
           </div>
         </form>

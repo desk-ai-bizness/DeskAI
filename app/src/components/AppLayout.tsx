@@ -22,14 +22,14 @@ export function AppLayout({ children }: AppLayoutProps) {
       <header className="app-header">
         <div className="app-brand">
           <BrandLogo iconTestId="notter-app-logo-icon" />
-          <p>Documentacao clinica assistida por IA</p>
+          <p>Documentação clínica assistida por IA</p>
         </div>
 
         <div className="header-actions">
           <div className="doctor-meta">
-            <strong>{profile?.user.name ?? 'Medico'}</strong>
+            <strong>{profile?.user.name ?? 'Médico'}</strong>
             <span>
-              Plano: <Chip>{profile?.user.plan_type ?? 'indisponivel'}</Chip>
+              Plano: <Chip>{profile?.user.plan_type ?? 'indisponível'}</Chip>
             </span>
           </div>
           <Button type="button" variant="secondary" onClick={handleLogout}>
@@ -38,7 +38,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </header>
 
-      <nav className="app-nav" aria-label="Navegacao principal">
+      <nav className="app-nav" aria-label="Navegação principal">
         <NavLink
           to="/consultations"
           className={({ isActive }) => (isActive ? 'app-nav-link active' : 'app-nav-link')}

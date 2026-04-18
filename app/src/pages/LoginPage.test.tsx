@@ -84,15 +84,28 @@ describe('LoginPage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Notter para medicos')).toBeInTheDocument();
+    expect(screen.getByText('Notter para médicos')).toBeInTheDocument();
+    expect(screen.queryByText('Notter para medicos')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Entrar' })).toBeInTheDocument();
     expect(screen.queryByText(/DeskAI/i)).not.toBeInTheDocument();
 
     const brandLogo = screen.getByRole('img', { name: 'Notter' });
     expect(brandLogo).toHaveAttribute('src', '/logo-text.png');
+    expect(brandLogo.closest('.brand-logo')).toHaveClass('brand-logo-light');
 
     const iconLogo = screen.getByTestId('notter-login-logo-icon');
     expect(iconLogo).toHaveAttribute('src', '/logo-icon.png');
+    expect(iconLogo.closest('.brand-logo')).toHaveClass('brand-logo-light');
+  });
+
+  it('does not render the removed login ambient background treatment', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+
+    expect(container.querySelector('.login-ambient')).not.toBeInTheDocument();
   });
 
   it('uses design-system primitives for the sign-in form', () => {

@@ -34,8 +34,8 @@ describe('ReviewPage', () => {
     useAuthMock.mockReturnValue({
       uiConfig: {
         labels: {
-          review_title: 'Revisao da consulta',
-          ai_disclaimer: 'Conteudo gerado por IA — sujeito a revisao medica.',
+          review_title: 'Revisão da consulta',
+          ai_disclaimer: 'Conteúdo gerado por IA — sujeito a revisão médica.',
           completeness_warning: 'Alguns campos podem estar incompletos. Revise antes de finalizar.',
           finalize_button: 'Finalizar',
           export_button: 'Exportar',
@@ -43,16 +43,16 @@ describe('ReviewPage', () => {
         review_screen: {
           section_order: ['transcript', 'medical_history', 'summary', 'insights'],
           sections: {
-            transcript: { title: 'Transcricao', editable: false, visible: true },
-            medical_history: { title: 'Historia Clinica', editable: true, visible: true },
+            transcript: { title: 'Transcrição', editable: false, visible: true },
+            medical_history: { title: 'História Clínica', editable: true, visible: true },
             summary: { title: 'Resumo da Consulta', editable: true, visible: true },
             insights: { title: 'Insights', editable: true, visible: true },
           },
         },
         insight_categories: {
-          documentation_gap: { label: 'Lacuna de Documentacao', icon: 'info', severity: 'low' },
-          consistency_issue: { label: 'Problema de Consistencia', icon: 'warning', severity: 'medium' },
-          clinical_attention: { label: 'Atencao Clinica', icon: 'alert', severity: 'high' },
+          documentation_gap: { label: 'Lacuna de Documentação', icon: 'info', severity: 'low' },
+          consistency_issue: { label: 'Problema de Consistência', icon: 'warning', severity: 'medium' },
+          clinical_attention: { label: 'Atenção Clínica', icon: 'alert', severity: 'high' },
         },
         status_labels: {
           started: 'Iniciada',
@@ -60,7 +60,7 @@ describe('ReviewPage', () => {
           in_processing: 'Em Processamento',
           processing_failed: 'Falha no Processamento',
           draft_generated: 'Rascunho Gerado',
-          under_physician_review: 'Em Revisao Medica',
+          under_physician_review: 'Em Revisão Médica',
           finalized: 'Finalizada',
         },
       },
@@ -121,7 +121,7 @@ describe('ReviewPage', () => {
         {
           insight_id: 'ins-1',
           category: 'documentation_gap',
-          description: 'Nao ha registro da duracao dos sintomas.',
+          description: 'Não há registro da duração dos sintomas.',
           evidence: [{ text: 'Paciente relata dor abdominal.', start_time: 2, end_time: 5 }],
           status: 'pending',
           physician_note: null,
@@ -141,12 +141,12 @@ describe('ReviewPage', () => {
       </QueryTestProvider>,
     );
 
-    expect(await screen.findByText('Conteudo gerado por IA — sujeito a revisao medica.')).toBeInTheDocument();
+    expect(await screen.findByText('Conteúdo gerado por IA — sujeito a revisão médica.')).toBeInTheDocument();
     expect(
       screen.getByText('Alguns campos podem estar incompletos. Revise antes de finalizar.'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Revisao da consulta', level: 2 }).closest('.ds-card')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Revisão da consulta', level: 2 }).closest('.ds-card')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Finalizar' })).toHaveClass('ds-button');
-    expect(screen.getByText('Transcricao indisponivel no payload atual.')).toBeInTheDocument();
+    expect(screen.getByText('Transcrição indisponível no payload atual.')).toBeInTheDocument();
   });
 });

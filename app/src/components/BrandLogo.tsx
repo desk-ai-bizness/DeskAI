@@ -1,13 +1,22 @@
 interface BrandLogoProps {
   iconTestId?: string;
   size?: 'compact' | 'default';
+  tone?: 'default' | 'light';
 }
 
-export function BrandLogo({ iconTestId, size = 'default' }: BrandLogoProps) {
-  const className = size === 'compact' ? 'brand-logo brand-logo-compact' : 'brand-logo';
+export function BrandLogo({ iconTestId, size = 'default', tone = 'default' }: BrandLogoProps) {
+  const classNames = ['brand-logo'];
+
+  if (size === 'compact') {
+    classNames.push('brand-logo-compact');
+  }
+
+  if (tone === 'light') {
+    classNames.push('brand-logo-light');
+  }
 
   return (
-    <span className={className}>
+    <span className={classNames.join(' ')}>
       <img
         src="/logo-icon.png"
         alt=""

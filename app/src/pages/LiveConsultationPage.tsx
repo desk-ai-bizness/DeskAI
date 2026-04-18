@@ -80,7 +80,7 @@ export function LiveConsultationPage() {
   const queryError = consultationQuery.error
     ? consultationQuery.error instanceof ApiError
       ? consultationQuery.error.message
-      : 'Nao foi possivel carregar os detalhes da consulta.'
+      : 'Não foi possível carregar os detalhes da consulta.'
     : null;
 
   useEffect(() => {
@@ -117,17 +117,17 @@ export function LiveConsultationPage() {
         }
 
         if (payload.event === 'session.status') {
-          setSessionMessage(String(payload.data.message ?? 'Sessao conectada.'));
+          setSessionMessage(String(payload.data.message ?? 'Sessão conectada.'));
           return;
         }
 
         if (payload.event === 'session.warning') {
-          setSessionMessage(String(payload.data.message ?? 'Aviso de sessao.'));
+          setSessionMessage(String(payload.data.message ?? 'Aviso de sessão.'));
           return;
         }
 
         if (payload.event === 'session.ended') {
-          setSessionMessage(String(payload.data.message ?? 'Sessao encerrada.'));
+          setSessionMessage(String(payload.data.message ?? 'Sessão encerrada.'));
           setConnectionState('disconnected');
           void refetchConsultation();
           return;
@@ -148,7 +148,7 @@ export function LiveConsultationPage() {
 
       socket.onerror = () => {
         setConnectionState('disconnected');
-        setSessionMessage('Conexao perdida. Use o botao de reconectar.');
+        setSessionMessage('Conexão perdida. Use o botão de reconectar.');
       };
 
       socket.onclose = () => {
@@ -161,7 +161,7 @@ export function LiveConsultationPage() {
   const requestMicrophone = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
       setMicrophoneState('denied');
-      throw new ApiError('Seu navegador nao suporta captura de audio.', 400, 'microphone_unsupported');
+      throw new ApiError('Seu navegador não suporta captura de áudio.', 400, 'microphone_unsupported');
     }
 
     try {
@@ -171,7 +171,7 @@ export function LiveConsultationPage() {
       return stream;
     } catch {
       setMicrophoneState('denied');
-      throw new ApiError('Permissao de microfone negada.', 400, 'microphone_denied');
+      throw new ApiError('Permissão de microfone negada.', 400, 'microphone_denied');
     }
   }, []);
 
@@ -219,13 +219,13 @@ export function LiveConsultationPage() {
       };
 
       recorder.start(1000);
-      setSessionMessage('Sessao de gravacao iniciada.');
+      setSessionMessage('Sessão de gravação iniciada.');
       await refetchConsultation();
     } catch (requestError) {
       if (requestError instanceof ApiError) {
         setError(requestError.message);
       } else {
-        setError('Falha ao iniciar sessao de gravacao.');
+        setError('Falha ao iniciar sessão de gravação.');
       }
     }
   }
@@ -252,12 +252,12 @@ export function LiveConsultationPage() {
       }
 
       await endSessionMutation.mutateAsync();
-      setSessionMessage('Gravacao encerrada. Processamento iniciado.');
+      setSessionMessage('Gravação encerrada. Processamento iniciado.');
     } catch (requestError) {
       if (requestError instanceof ApiError) {
         setError(requestError.message);
       } else {
-        setError('Falha ao encerrar gravacao.');
+        setError('Falha ao encerrar gravação.');
       }
     } finally {
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
@@ -271,7 +271,7 @@ export function LiveConsultationPage() {
 
   async function handleReconnect() {
     if (!sessionRef.current) {
-      setError('Nenhuma sessao ativa para reconectar.');
+      setError('Nenhuma sessão ativa para reconectar.');
       return;
     }
 
@@ -283,7 +283,7 @@ export function LiveConsultationPage() {
 
   const statusLabel = useMemo(() => {
     if (!consultation) {
-      return 'indisponivel';
+      return 'indisponível';
     }
 
     return uiConfig?.status_labels?.[consultation.status] ?? consultation.status;
@@ -292,7 +292,7 @@ export function LiveConsultationPage() {
   return (
     <div className="page-grid page-grid-equal">
       <Card
-        title={uiConfig?.labels.live_session_header ?? 'Sessao ao vivo'}
+        title={uiConfig?.labels.live_session_header ?? 'Sessão ao vivo'}
         actions={<RouterLink className="ds-link" to="/consultations">Voltar para consultas</RouterLink>}
       >
 
@@ -304,13 +304,13 @@ export function LiveConsultationPage() {
             <Chip tone={microphoneState === 'denied' ? 'danger' : microphoneState === 'granted' ? 'success' : 'neutral'}>
               Microfone:{' '}
               {microphoneState === 'unknown'
-                ? 'Nao solicitado'
+                ? 'Não solicitado'
                 : microphoneState === 'granted'
                   ? 'Permitido'
                   : 'Negado'}
             </Chip>
             <Chip tone={connectionState === 'connected' ? 'success' : connectionState === 'disconnected' ? 'warning' : 'neutral'}>
-              Conexao: {connectionState}
+              Conexão: {connectionState}
             </Chip>
           </div>
         ) : null}
@@ -342,7 +342,7 @@ export function LiveConsultationPage() {
           >
             {startSessionMutation.isPending
               ? 'Iniciando...'
-              : uiConfig?.labels.start_recording_button ?? 'Iniciar gravacao'}
+              : uiConfig?.labels.start_recording_button ?? 'Iniciar gravação'}
           </Button>
 
           <Button
@@ -354,7 +354,7 @@ export function LiveConsultationPage() {
           >
             {endSessionMutation.isPending
               ? 'Encerrando...'
-              : uiConfig?.labels.stop_recording_button ?? 'Parar gravacao'}
+              : uiConfig?.labels.stop_recording_button ?? 'Parar gravação'}
           </Button>
 
           <Button
@@ -367,16 +367,16 @@ export function LiveConsultationPage() {
           </Button>
 
           <RouterLink to={`/consultations/${consultationId}/review`} className="ds-link">
-            Ir para revisao
+            Ir para revisão
           </RouterLink>
         </div>
       </Card>
 
-      <Card title="Transcricao ao vivo">
+      <Card title="Transcrição ao vivo">
         {transcript.length === 0 ? (
           <EmptyState
-            title="Aguardando transcricao"
-            description="A transcricao parcial aparecera aqui durante a sessao."
+            title="Aguardando transcrição"
+            description="A transcrição parcial aparecerá aqui durante a sessão."
           />
         ) : (
           <ul className="transcript-list">

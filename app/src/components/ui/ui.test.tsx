@@ -23,11 +23,11 @@ describe('design-system primitives', () => {
 
     render(
       <Button isLoading onClick={onClick}>
-        Salvar revisao
+        Salvar revisão
       </Button>,
     );
 
-    const button = screen.getByRole('button', { name: 'Salvar revisao' });
+    const button = screen.getByRole('button', { name: 'Salvar revisão' });
 
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute('aria-busy', 'true');
@@ -45,12 +45,12 @@ describe('design-system primitives', () => {
           name="email"
           type="email"
           helpText="Use seu email profissional."
-          errorText="Informe um email valido."
+          errorText="Informe um email válido."
         />
         <TextAreaField
-          label="Observacoes"
+          label="Observações"
           name="notes"
-          helpText="Inclua apenas informacoes ditas na consulta."
+          helpText="Inclua apenas informações ditas na consulta."
         />
         <SelectField label="Plano" name="plan">
           <option value="plus">Plus</option>
@@ -59,40 +59,40 @@ describe('design-system primitives', () => {
     );
 
     expect(screen.getByLabelText('Email')).toHaveAccessibleDescription(
-      'Use seu email profissional. Informe um email valido.',
+      'Use seu email profissional. Informe um email válido.',
     );
-    expect(screen.getByRole('alert')).toHaveTextContent('Informe um email valido.');
-    expect(screen.getByLabelText('Observacoes')).toHaveAccessibleDescription(
-      'Inclua apenas informacoes ditas na consulta.',
+    expect(screen.getByRole('alert')).toHaveTextContent('Informe um email válido.');
+    expect(screen.getByLabelText('Observações')).toHaveAccessibleDescription(
+      'Inclua apenas informações ditas na consulta.',
     );
     expect(screen.getByLabelText('Plano')).toBeInTheDocument();
   });
 
   it('renders chips, cards, typography, links, alerts, and empty states with stable variants', () => {
     render(
-      <Card title="Resumo" eyebrow="Revisao" actions={<Button variant="ghost">Editar</Button>}>
-        <Heading level={3}>Conteudo draft</Heading>
-        <Text tone="muted">Texto sujeito a revisao medica.</Text>
+      <Card title="Resumo" eyebrow="Revisão" actions={<Button variant="ghost">Editar</Button>}>
+        <Heading level={3}>Conteúdo draft</Heading>
+        <Text tone="muted">Texto sujeito a revisão médica.</Text>
         <Chip tone="success">Finalizado</Chip>
         <Link href="/consultations">Ver consultas</Link>
-        <Alert tone="warning" title="Revisao obrigatoria">
-          Confira os trechos de evidencia antes de finalizar.
+        <Alert tone="warning" title="Revisão obrigatória">
+          Confira os trechos de evidência antes de finalizar.
         </Alert>
         <EmptyState
           title="Nenhuma consulta"
-          description="Crie uma consulta para iniciar a documentacao."
+          description="Crie uma consulta para iniciar a documentação."
           action={<Button>Nova consulta</Button>}
         />
       </Card>,
     );
 
-    expect(screen.getByText('Revisao')).toHaveClass('ds-card-eyebrow');
+    expect(screen.getByText('Revisão')).toHaveClass('ds-card-eyebrow');
     expect(screen.getByRole('heading', { name: 'Resumo', level: 2 })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Conteudo draft', level: 3 })).toBeInTheDocument();
-    expect(screen.getByText('Texto sujeito a revisao medica.')).toHaveClass('ds-text-muted');
+    expect(screen.getByRole('heading', { name: 'Conteúdo draft', level: 3 })).toBeInTheDocument();
+    expect(screen.getByText('Texto sujeito a revisão médica.')).toHaveClass('ds-text-muted');
     expect(screen.getByText('Finalizado')).toHaveClass('ds-chip-success');
     expect(screen.getByRole('link', { name: 'Ver consultas' })).toHaveClass('ds-link');
-    expect(screen.getByRole('alert')).toHaveTextContent('Revisao obrigatoria');
+    expect(screen.getByRole('alert')).toHaveTextContent('Revisão obrigatória');
     expect(screen.getByRole('heading', { name: 'Nenhuma consulta', level: 2 })).toBeInTheDocument();
   });
 

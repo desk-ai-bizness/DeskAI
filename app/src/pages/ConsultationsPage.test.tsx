@@ -36,7 +36,7 @@ describe('ConsultationsPage', () => {
           email: 'maria@example.com',
           plan_type: 'free_trial',
           clinic_id: 'clinic-1',
-          clinic_name: 'Clinica Centro',
+          clinic_name: 'Clínica Centro',
         },
         entitlements: {
           can_create_consultation: true,
@@ -75,7 +75,7 @@ describe('ConsultationsPage', () => {
       </QueryTestProvider>,
     );
 
-    expect(await screen.findByText('Nenhuma consulta encontrada para este medico.')).toBeInTheDocument();
+    expect(await screen.findByText('Nenhuma consulta encontrada para este médico.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Atualizar' })).toHaveClass('ds-button');
     expect(screen.getByRole('heading', { name: 'Consultas', level: 2 }).closest('.ds-card')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Nenhuma consulta', level: 2 })).toBeInTheDocument();
@@ -90,7 +90,7 @@ describe('ConsultationsPage', () => {
           email: 'maria@example.com',
           plan_type: 'free_trial',
           clinic_id: 'clinic-1',
-          clinic_name: 'Clinica Centro',
+          clinic_name: 'Clínica Centro',
         },
         entitlements: {
           can_create_consultation: false,
@@ -119,7 +119,7 @@ describe('ConsultationsPage', () => {
     );
 
     expect(
-      await screen.findByText('A criacao de consultas esta bloqueada para este usuario no momento.'),
+      await screen.findByText('A criação de consultas está bloqueada para este usuário no momento.'),
     ).toBeInTheDocument();
   });
 });

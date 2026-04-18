@@ -50,6 +50,17 @@ class GetLabelsTest(unittest.TestCase):
                     f"Label '{key}' must not be empty",
                 )
 
+    def test_visible_labels_use_pt_br_accents(self) -> None:
+        labels = get_labels()
+        self.assertEqual(labels["start_recording_button"], "Iniciar Gravação")
+        self.assertEqual(labels["stop_recording_button"], "Parar Gravação")
+        self.assertEqual(labels["review_title"], "Revisão da Consulta")
+        self.assertEqual(
+            labels["ai_disclaimer"],
+            "Conteúdo gerado por IA — sujeito a revisão médica.",
+        )
+        self.assertEqual(labels["live_session_header"], "Sessão ao Vivo")
+
 
 class GetStatusLabelsTest(unittest.TestCase):
     def test_returns_labels_for_all_statuses(self) -> None:
@@ -65,6 +76,13 @@ class GetStatusLabelsTest(unittest.TestCase):
                     len(value) > 0,
                     f"Status label '{key}' must not be empty",
                 )
+
+    def test_status_labels_use_pt_br_accents(self) -> None:
+        status_labels = get_status_labels()
+        self.assertEqual(
+            status_labels[ConsultationStatus.UNDER_PHYSICIAN_REVIEW.value],
+            "Em Revisão Médica",
+        )
 
 
 class GetInsightCategoriesTest(unittest.TestCase):
@@ -98,6 +116,12 @@ class GetInsightCategoriesTest(unittest.TestCase):
         for name, cat in categories.items():
             with self.subTest(category=name):
                 self.assertIn(cat["severity"], valid_severities)
+
+    def test_category_labels_use_pt_br_accents(self) -> None:
+        categories = get_insight_categories()
+        self.assertEqual(categories["documentation_gap"]["label"], "Lacuna de Documentação")
+        self.assertEqual(categories["consistency_issue"]["label"], "Problema de Consistência")
+        self.assertEqual(categories["clinical_attention"]["label"], "Atenção Clínica")
 
 
 if __name__ == "__main__":

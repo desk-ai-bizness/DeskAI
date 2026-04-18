@@ -59,7 +59,7 @@ export function ConsultationsPage() {
     consultationsQuery.error || patientsQuery.error
       ? getRequestErrorMessage(
         consultationsQuery.error ?? patientsQuery.error,
-        'Nao foi possivel carregar as consultas.',
+        'Não foi possível carregar as consultas.',
       )
       : null;
   const isLoading = consultationsQuery.isPending || patientsQuery.isPending;
@@ -72,7 +72,7 @@ export function ConsultationsPage() {
     }
 
     if (profile.entitlements.trial_expired) {
-      return 'Seu periodo de teste expirou. Voce ainda pode revisar consultas ja criadas.';
+      return 'Seu período de teste expirou. Você ainda pode revisar consultas já criadas.';
     }
 
     if (profile.user.plan_type === 'free_trial') {
@@ -153,7 +153,7 @@ export function ConsultationsPage() {
 
         <div className="stats-grid">
           <article className="stat-tile">
-            <h3>Consultas no mes</h3>
+            <h3>Consultas no mês</h3>
             <p>{profile?.entitlements.consultations_used_this_month ?? '--'}</p>
           </article>
           <article className="stat-tile">
@@ -161,7 +161,7 @@ export function ConsultationsPage() {
             <p>{profile?.entitlements.consultations_remaining ?? '--'}</p>
           </article>
           <article className="stat-tile">
-            <h3>Duracao maxima</h3>
+            <h3>Duração máxima</h3>
             <p>{profile?.entitlements.max_duration_minutes ?? '--'} min</p>
           </article>
         </div>
@@ -180,7 +180,7 @@ export function ConsultationsPage() {
 
         {!canCreateConsultation ? (
           <Alert tone="warning">
-            A criacao de consultas esta bloqueada para este usuario no momento.
+            A criação de consultas está bloqueada para este usuário no momento.
           </Alert>
         ) : (
           <form className="form-grid" onSubmit={handleCreateConsultation}>
@@ -269,7 +269,7 @@ export function ConsultationsPage() {
         {!isLoading && consultations.length === 0 ? (
           <EmptyState
             title="Nenhuma consulta"
-            description="Nenhuma consulta encontrada para este medico."
+            description="Nenhuma consulta encontrada para este médico."
           />
         ) : null}
 
@@ -289,10 +289,10 @@ export function ConsultationsPage() {
                   </div>
                   <div className="inline-row">
                     <RouterLink className="ds-link" to={`/consultations/${consultation.consultation_id}/live`}>
-                      Sessao ao vivo
+                      Sessão ao vivo
                     </RouterLink>
                     <RouterLink className="ds-link" to={`/consultations/${consultation.consultation_id}/review`}>
-                      Revisao
+                      Revisão
                     </RouterLink>
                   </div>
                 </li>

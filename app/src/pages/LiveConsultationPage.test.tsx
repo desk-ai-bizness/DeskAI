@@ -29,9 +29,9 @@ describe('LiveConsultationPage', () => {
     useAuthMock.mockReturnValue({
       uiConfig: {
         labels: {
-          live_session_header: 'Sessao ao vivo',
-          start_recording_button: 'Iniciar gravacao',
-          stop_recording_button: 'Parar gravacao',
+          live_session_header: 'Sessão ao vivo',
+          start_recording_button: 'Iniciar gravação',
+          stop_recording_button: 'Parar gravação',
         },
         status_labels: {
           started: 'Iniciada',
@@ -39,7 +39,7 @@ describe('LiveConsultationPage', () => {
           in_processing: 'Em Processamento',
           processing_failed: 'Falha no Processamento',
           draft_generated: 'Rascunho Gerado',
-          under_physician_review: 'Em Revisao Medica',
+          under_physician_review: 'Em Revisão Médica',
           finalized: 'Finalizada',
         },
       },
@@ -100,13 +100,13 @@ describe('LiveConsultationPage', () => {
       </QueryTestProvider>,
     );
 
-    const button = await screen.findByRole('button', { name: 'Iniciar gravacao' });
+    const button = await screen.findByRole('button', { name: 'Iniciar gravação' });
     expect(button).toHaveClass('ds-button');
-    expect(screen.getByRole('heading', { name: 'Sessao ao vivo', level: 2 }).closest('.ds-card')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Sessão ao vivo', level: 2 }).closest('.ds-card')).toBeInTheDocument();
 
     await userEvent.click(button);
 
-    expect(await screen.findByText('Permissao de microfone negada.')).toBeInTheDocument();
+    expect(await screen.findByText('Permissão de microfone negada.')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveClass('ds-alert');
     expect(startSessionMock).not.toHaveBeenCalled();
   });

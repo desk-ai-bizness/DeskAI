@@ -8,9 +8,9 @@ export function RequireAuth() {
 
   if (isLoading) {
     return (
-      <Card title="Carregando sessao">
-        <Loader label="Validando sessao" />
-        <Text tone="muted">Validando suas credenciais e configuracoes de interface.</Text>
+      <Card title="Carregando sessão">
+        <Loader label="Validando sessão" />
+        <Text tone="muted">Validando suas credenciais e configurações de interface.</Text>
       </Card>
     );
   }

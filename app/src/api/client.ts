@@ -122,7 +122,7 @@ export function createApiClient(config: ApiClientConfig): ApiClient {
             : undefined,
       });
     } catch {
-      throw new ApiError('Falha de conexao com o servidor.', 0, 'network_error');
+      throw new ApiError('Falha de conexão com o servidor.', 0, 'network_error');
     }
 
     const payload = await parseJsonSafe(response);

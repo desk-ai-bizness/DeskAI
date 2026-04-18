@@ -2,7 +2,7 @@
   "version": "1.0",
   "locale": "pt-BR",
   "labels": {
-    "review_title": "Revisao da Consulta",
-    "ai_disclaimer": "Conteudo gerado por IA. Sujeito a revisao medica."
+    "review_title": "Revisão da Consulta",
+    "ai_disclaimer": "Conteúdo gerado por IA. Sujeito a revisão médica."
   }
 }

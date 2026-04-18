@@ -109,13 +109,13 @@ The task should produce:
 
 ## 7. Acceptance Criteria
 
-- [ ] A reusable app-local design system exists for core UI primitives.
-- [ ] Buttons, inputs, chips, loaders, cards/panels, links, alerts, and empty states have consistent variants.
-- [ ] Loading and disabled states are accessible and layout-stable.
-- [ ] Motion respects reduced-motion preferences.
-- [ ] Any added dependency is justified, documented, and covered by lockfile updates.
-- [ ] Relevant tests are added or updated.
-- [ ] Documentation is updated if behavior or setup changed.
+- [x] A reusable app-local design system exists for core UI primitives.
+- [x] Buttons, inputs, chips, loaders, cards/panels, links, alerts, and empty states have consistent variants.
+- [x] Loading and disabled states are accessible and layout-stable.
+- [x] Motion respects reduced-motion preferences.
+- [x] Any added dependency is justified, documented, and covered by lockfile updates.
+- [x] Relevant tests are added or updated.
+- [x] Documentation is updated if behavior or setup changed.
 
 ## 8. Testing
 
@@ -141,10 +141,20 @@ Run the app locally and inspect the component usage in a temporary or integrated
 
 ## 10. Definition of Done
 
-- [ ] Implementation is complete.
-- [ ] Acceptance criteria are met.
-- [ ] Tests pass.
-- [ ] No obvious regressions were introduced.
-- [ ] Logs, metrics, and error handling were considered.
-- [ ] Security and permissions were reviewed if relevant.
-- [ ] Task is ready for review or merge.
+- [x] Implementation is complete.
+- [x] Acceptance criteria are met.
+- [x] Tests pass.
+- [x] No obvious regressions were introduced.
+- [x] Logs, metrics, and error handling were considered.
+- [x] Security and permissions were reviewed if relevant.
+- [x] Task is ready for review or merge.
+
+## 11. Implementation Summary (2026-04-18)
+
+- Added reusable UI primitives under `app/src/components/ui`: `Button`, `Text`, `Heading`, `Link`, `Chip`, `Loader`, `Card`, `TextField`, `TextAreaField`, `SelectField`, `Alert`, `EmptyState`, and `Icon`.
+- Added design tokens in `app/src/styles/tokens.css` and component styles in `app/src/styles/design-system.css`.
+- Added `lucide-react` as a lightweight tree-shakeable icon dependency and wrapped it behind the app-local `Icon` primitive.
+- Documented design-system usage in `app/README.md`.
+- Added ADR-015 in `docs/mvp-technical-specs.md` for the icon library decision.
+- Added component tests for accessibility, variants, loading/disabled states, form descriptions, alerts, empty states, and icon defaults.
+- Verified with `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`, and `npm audit --omit=dev` in `app/`.

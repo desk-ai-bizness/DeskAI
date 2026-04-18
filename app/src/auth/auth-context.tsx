@@ -5,15 +5,17 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   getCurrentUser,
   getUiConfig,
   login as loginRequest,
   logout as logoutRequest,
 } from '../api/endpoints';
+import { queryKeys } from '../api/query-hooks';
 import { ApiError } from '../api/client';
 import { clearAuthSession, loadAuthSession, saveAuthSession } from './sessionStorage';
-import type { AuthSession } from '../types/contracts';
+import type { AuthSession, UiConfigView, UserProfileView } from '../types/contracts';
 import { AuthContext } from './auth-context-store';
 import type { AuthContextValue } from './auth-context-store';
 
@@ -27,6 +29,7 @@ function isSessionExpired(session: AuthSession): boolean {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [session, setSession] = useState<AuthSession | null>(null);
   const [profile, setProfile] = useState<UserProfileView | null>(null);
   const [uiConfig, setUiConfig] = useState<UiConfigView | null>(null);
@@ -37,13 +40,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     setUiConfig(null);
-  }, []);
+    queryClient.clear();
+  }, [queryClient]);
 
   const refresh = useCallback(async () => {
-    const [user, config] = await Promise.all([getCurrentUser(), getUiConfig()]);
+    const [user, config] = await Promise.all([
+      queryClient.fetchQuery({
+        queryKey: queryKeys.currentUser(),
+        queryFn: getCurrentUser,
+      }),
+      queryClient.fetchQuery({
+        queryKey: queryKeys.uiConfig(),
+        queryFn: getUiConfig,
+        staleTime: 60_000,
+      }),
+    ]);
     setProfile(user);
     setUiConfig(config);
-  }, []);
+  }, [queryClient]);
 
   const restoreSession = useCallback(async () => {
     const storedSession = loadAuthSession();

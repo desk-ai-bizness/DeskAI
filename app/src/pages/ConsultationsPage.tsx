@@ -1,68 +1,68 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { FormEvent, useMemo, useState } from 'react';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import {
-  createConsultation,
-  createPatient,
-  listConsultations,
-  listPatients,
-} from '../api/endpoints';
+  useConsultationsQuery,
+  useCreateConsultationMutation,
+  useCreatePatientMutation,
+  usePatientsQuery,
+} from '../api/query-hooks';
 import { useAuth } from '../auth/use-auth';
+import {
+  Alert,
+  Button,
+  Card,
+  Chip,
+  EmptyState,
+  Loader,
+  SelectField,
+  Text,
+  TextAreaField,
+  TextField,
+} from '../components/ui';
 import type { ConsultationView, PatientView } from '../types/contracts';
 import { toPtBrDate, toPtBrDateTime } from '../utils/format';
+
+function getRequestErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
+  return fallback;
+}
 
 export function ConsultationsPage() {
   const navigate = useNavigate();
   const { profile, uiConfig } = useAuth();
 
-  const [consultations, setConsultations] = useState<ConsultationView[]>([]);
-  const [patients, setPatients] = useState<PatientView[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const [patientId, setPatientId] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
   const [notes, setNotes] = useState('');
-  const [isCreatingConsultation, setIsCreatingConsultation] = useState(false);
 
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [newPatientName, setNewPatientName] = useState('');
   const [newPatientDob, setNewPatientDob] = useState('');
-  const [isCreatingPatient, setIsCreatingPatient] = useState(false);
 
   const statusLabels = uiConfig?.status_labels;
+  const consultationsQuery = useConsultationsQuery();
+  const patientsQuery = usePatientsQuery();
+  const createConsultationMutation = useCreateConsultationMutation();
+  const createPatientMutation = useCreatePatientMutation();
 
-  async function loadData() {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const [consultationResponse, patientResponse] = await Promise.all([
-        listConsultations(),
-        listPatients(),
-      ]);
-      setConsultations(consultationResponse.consultations);
-      setPatients(patientResponse.patients);
-      if (patientResponse.patients.length > 0 && !patientId) {
-        setPatientId(patientResponse.patients[0].patient_id);
-      }
-    } catch (requestError) {
-      if (requestError instanceof ApiError) {
-        setError(requestError.message);
-      } else {
-        setError('Nao foi possivel carregar as consultas.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void loadData();
-    // patientId is intentionally excluded to avoid infinite reload loops.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const consultations: ConsultationView[] = consultationsQuery.data?.consultations ?? [];
+  const patients: PatientView[] = patientsQuery.data?.patients ?? [];
+  const selectedPatientId = patientId || patients[0]?.patient_id || '';
+  const queryError =
+    consultationsQuery.error || patientsQuery.error
+      ? getRequestErrorMessage(
+        consultationsQuery.error ?? patientsQuery.error,
+        'Nao foi possivel carregar as consultas.',
+      )
+      : null;
+  const isLoading = consultationsQuery.isPending || patientsQuery.isPending;
 
   const canCreateConsultation = profile?.entitlements.can_create_consultation ?? false;
 
@@ -87,7 +87,7 @@ export function ConsultationsPage() {
     setFeedback(null);
     setError(null);
 
-    if (!patientId) {
+    if (!selectedPatientId) {
       setError('Selecione um paciente antes de criar a consulta.');
       return;
     }
@@ -97,66 +97,59 @@ export function ConsultationsPage() {
       return;
     }
 
-    setIsCreatingConsultation(true);
-
     try {
-      const created = await createConsultation({
-        patient_id: patientId,
+      const created = await createConsultationMutation.mutateAsync({
+        patient_id: selectedPatientId,
         specialty: 'general_practice',
         scheduled_date: scheduledDate,
         notes,
       });
       setFeedback('Consulta criada com sucesso.');
       setNotes('');
-      await loadData();
       navigate(`/consultations/${created.consultation_id}/live`);
     } catch (requestError) {
-      if (requestError instanceof ApiError) {
-        setError(requestError.message);
-      } else {
-        setError('Erro ao criar consulta.');
-      }
-    } finally {
-      setIsCreatingConsultation(false);
+      setError(getRequestErrorMessage(requestError, 'Erro ao criar consulta.'));
     }
   }
 
   async function handleCreatePatient() {
     setFeedback(null);
     setError(null);
-    setIsCreatingPatient(true);
 
     try {
-      const createdPatient = await createPatient({
+      const createdPatient = await createPatientMutation.mutateAsync({
         name: newPatientName,
         date_of_birth: newPatientDob,
       });
-      setPatients((current) => [...current, createdPatient]);
       setPatientId(createdPatient.patient_id);
       setNewPatientName('');
       setNewPatientDob('');
       setShowPatientForm(false);
       setFeedback('Paciente criado com sucesso.');
     } catch (requestError) {
-      if (requestError instanceof ApiError) {
-        setError(requestError.message);
-      } else {
-        setError('Erro ao criar paciente.');
-      }
-    } finally {
-      setIsCreatingPatient(false);
+      setError(getRequestErrorMessage(requestError, 'Erro ao criar paciente.'));
     }
   }
 
   return (
     <div className="page-grid">
-      <section className="panel page-span-2">
-        <header className="panel-header">
-          <h2>{uiConfig?.labels.consultation_list_title ?? 'Consultas'}</h2>
-          <button type="button" className="secondary-button" onClick={() => void loadData()}>
+      <Card
+        className="page-span-2"
+        title={uiConfig?.labels.consultation_list_title ?? 'Consultas'}
+        actions={(
+          <Button
+            type="button"
+            variant="secondary"
+            isLoading={consultationsQuery.isFetching || patientsQuery.isFetching}
+            onClick={() => {
+              void consultationsQuery.refetch();
+              void patientsQuery.refetch();
+            }}
+          >
             Atualizar
-          </button>
-        </header>
+          </Button>
+        )}
+      >
 
         <div className="stats-grid">
           <article className="stat-tile">
@@ -173,28 +166,28 @@ export function ConsultationsPage() {
           </article>
         </div>
 
-        {trialStateMessage ? <p className="hint">{trialStateMessage}</p> : null}
-        {feedback ? <p className="inline-success">{feedback}</p> : null}
+        {trialStateMessage ? <Text tone="muted">{trialStateMessage}</Text> : null}
+        {feedback ? <Alert tone="success">{feedback}</Alert> : null}
+        {queryError ? <Alert tone="danger">{queryError}</Alert> : null}
         {error ? (
-          <p className="inline-error" role="alert">
+          <Alert tone="danger">
             {error}
-          </p>
+          </Alert>
         ) : null}
-      </section>
+      </Card>
 
-      <section className="panel">
-        <h2>{uiConfig?.labels.new_consultation_button ?? 'Nova consulta'}</h2>
+      <Card title={uiConfig?.labels.new_consultation_button ?? 'Nova consulta'}>
 
         {!canCreateConsultation ? (
-          <p className="hint">
+          <Alert tone="warning">
             A criacao de consultas esta bloqueada para este usuario no momento.
-          </p>
+          </Alert>
         ) : (
           <form className="form-grid" onSubmit={handleCreateConsultation}>
-            <label htmlFor="patient-select">Paciente</label>
-            <select
+            <SelectField
               id="patient-select"
-              value={patientId}
+              label="Paciente"
+              value={selectedPatientId}
               onChange={(event) => setPatientId(event.target.value)}
               required
             >
@@ -204,78 +197,80 @@ export function ConsultationsPage() {
                   {patient.name} ({toPtBrDate(patient.date_of_birth)})
                 </option>
               ))}
-            </select>
+            </SelectField>
 
             <div className="inline-row">
-              <button
+              <Button
                 type="button"
-                className="ghost-button"
+                variant="ghost"
                 onClick={() => setShowPatientForm((current) => !current)}
               >
                 {showPatientForm ? 'Cancelar novo paciente' : 'Cadastrar novo paciente'}
-              </button>
+              </Button>
             </div>
 
             {showPatientForm ? (
               <div className="nested-form">
-                <label htmlFor="new-patient-name">Nome do paciente</label>
-                <input
+                <TextField
                   id="new-patient-name"
+                  label="Nome do paciente"
                   value={newPatientName}
                   onChange={(event) => setNewPatientName(event.target.value)}
                   required
                 />
 
-                <label htmlFor="new-patient-dob">Data de nascimento</label>
-                <input
+                <TextField
                   id="new-patient-dob"
+                  label="Data de nascimento"
                   type="date"
                   value={newPatientDob}
                   onChange={(event) => setNewPatientDob(event.target.value)}
                   required
                 />
 
-                <button
+                <Button
                   type="button"
-                  className="secondary-button"
+                  variant="secondary"
                   onClick={() => void handleCreatePatient()}
-                  disabled={isCreatingPatient}
+                  isLoading={createPatientMutation.isPending}
                 >
-                  {isCreatingPatient ? 'Salvando paciente...' : 'Salvar paciente'}
-                </button>
+                  {createPatientMutation.isPending ? 'Salvando paciente...' : 'Salvar paciente'}
+                </Button>
               </div>
             ) : null}
 
-            <label htmlFor="scheduled-date">Data da consulta</label>
-            <input
+            <TextField
               id="scheduled-date"
+              label="Data da consulta"
               type="date"
               value={scheduledDate}
               onChange={(event) => setScheduledDate(event.target.value)}
               required
             />
 
-            <label htmlFor="notes">Notas (opcional)</label>
-            <textarea
+            <TextAreaField
               id="notes"
+              label="Notas (opcional)"
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               rows={3}
             />
 
-            <button type="submit" className="primary-button" disabled={isCreatingConsultation}>
-              {isCreatingConsultation ? 'Criando consulta...' : 'Criar consulta'}
-            </button>
+            <Button type="submit" isLoading={createConsultationMutation.isPending}>
+              {createConsultationMutation.isPending ? 'Criando consulta...' : 'Criar consulta'}
+            </Button>
           </form>
         )}
-      </section>
+      </Card>
 
-      <section className="panel">
-        <h2>Consultas recentes</h2>
-        {isLoading ? <p>Carregando consultas...</p> : null}
+      <Card title="Consultas recentes">
+        {isLoading ? <Loader label="Carregando consultas" /> : null}
 
         {!isLoading && consultations.length === 0 ? (
-          <p className="hint">Nenhuma consulta encontrada para este medico.</p>
+          <EmptyState
+            title="Nenhuma consulta"
+            description="Nenhuma consulta encontrada para este medico."
+          />
         ) : null}
 
         {!isLoading && consultations.length > 0 ? (
@@ -290,22 +285,22 @@ export function ConsultationsPage() {
                       Consulta em {toPtBrDate(consultation.scheduled_date)} • Atualizada em{' '}
                       {toPtBrDateTime(consultation.updated_at)}
                     </p>
-                    <span className="badge">{statusLabel}</span>
+                    <Chip tone="info">{statusLabel}</Chip>
                   </div>
                   <div className="inline-row">
-                    <Link to={`/consultations/${consultation.consultation_id}/live`}>
+                    <RouterLink className="ds-link" to={`/consultations/${consultation.consultation_id}/live`}>
                       Sessao ao vivo
-                    </Link>
-                    <Link to={`/consultations/${consultation.consultation_id}/review`}>
+                    </RouterLink>
+                    <RouterLink className="ds-link" to={`/consultations/${consultation.consultation_id}/review`}>
                       Revisao
-                    </Link>
+                    </RouterLink>
                   </div>
                 </li>
               );
             })}
           </ul>
         ) : null}
-      </section>
+      </Card>
     </div>
   );
 }

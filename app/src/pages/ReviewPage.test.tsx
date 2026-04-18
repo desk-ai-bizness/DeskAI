@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { QueryTestProvider } from '../test/query-wrapper';
 import { ReviewPage } from './ReviewPage';
 
 const getConsultationDetailMock = vi.fn();
@@ -131,17 +132,21 @@ describe('ReviewPage', () => {
 
   it('renders disclaimer, warning and transcript fallback', async () => {
     render(
-      <MemoryRouter initialEntries={['/consultations/cons-1/review']}>
-        <Routes>
-          <Route path="/consultations/:consultationId/review" element={<ReviewPage />} />
-        </Routes>
-      </MemoryRouter>,
+      <QueryTestProvider>
+        <MemoryRouter initialEntries={['/consultations/cons-1/review']}>
+          <Routes>
+            <Route path="/consultations/:consultationId/review" element={<ReviewPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryTestProvider>,
     );
 
     expect(await screen.findByText('Conteudo gerado por IA — sujeito a revisao medica.')).toBeInTheDocument();
     expect(
       screen.getByText('Alguns campos podem estar incompletos. Revise antes de finalizar.'),
     ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Revisao da consulta', level: 2 }).closest('.ds-card')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Finalizar' })).toHaveClass('ds-button');
     expect(screen.getByText('Transcricao indisponivel no payload atual.')).toBeInTheDocument();
   });
 });

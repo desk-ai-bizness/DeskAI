@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { QueryTestProvider } from '../test/query-wrapper';
 import { ConsultationsPage } from './ConsultationsPage';
 
 const listConsultationsMock = vi.fn();
@@ -67,12 +68,17 @@ describe('ConsultationsPage', () => {
 
   it('shows empty state when there are no consultations', async () => {
     render(
-      <MemoryRouter>
-        <ConsultationsPage />
-      </MemoryRouter>,
+      <QueryTestProvider>
+        <MemoryRouter>
+          <ConsultationsPage />
+        </MemoryRouter>
+      </QueryTestProvider>,
     );
 
     expect(await screen.findByText('Nenhuma consulta encontrada para este medico.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Atualizar' })).toHaveClass('ds-button');
+    expect(screen.getByRole('heading', { name: 'Consultas', level: 2 }).closest('.ds-card')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Nenhuma consulta', level: 2 })).toBeInTheDocument();
   });
 
   it('shows create-locked message when entitlement denies creation', async () => {
@@ -105,9 +111,11 @@ describe('ConsultationsPage', () => {
     });
 
     render(
-      <MemoryRouter>
-        <ConsultationsPage />
-      </MemoryRouter>,
+      <QueryTestProvider>
+        <MemoryRouter>
+          <ConsultationsPage />
+        </MemoryRouter>
+      </QueryTestProvider>,
     );
 
     expect(

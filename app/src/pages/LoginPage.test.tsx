@@ -85,7 +85,7 @@ describe('LoginPage', () => {
     );
 
     expect(screen.getByText('Notter para medicos')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Entrar no Notter' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Entrar' })).toBeInTheDocument();
     expect(screen.queryByText(/DeskAI/i)).not.toBeInTheDocument();
 
     const brandLogo = screen.getByRole('img', { name: 'Notter' });
@@ -93,5 +93,17 @@ describe('LoginPage', () => {
 
     const iconLogo = screen.getByTestId('notter-login-logo-icon');
     expect(iconLogo).toHaveAttribute('src', '/logo-icon.png');
+  });
+
+  it('uses design-system primitives for the sign-in form', () => {
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Entrar' }).closest('.ds-card')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toHaveClass('ds-input');
+    expect(screen.getByRole('button', { name: 'Entrar' })).toHaveClass('ds-button');
   });
 });

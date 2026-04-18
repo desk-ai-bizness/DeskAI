@@ -3,6 +3,14 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/use-auth';
 import { BrandLogo } from '../components/BrandLogo';
+import {
+  Alert,
+  Button,
+  Card,
+  Heading,
+  Text,
+  TextField,
+} from '../components/ui';
 
 interface LocationState {
   from?: {
@@ -47,8 +55,6 @@ export function LoginPage() {
   return (
     <div className="auth-shell login-shell-wrap">
       <div className="login-ambient" aria-hidden="true" />
-      <div className="login-orb login-orb-one" aria-hidden="true" />
-      <div className="login-orb login-orb-two" aria-hidden="true" />
 
       <div className="login-shell two-column-layout">
         <section className="login-showcase" aria-label="Visao geral do produto">
@@ -68,58 +74,51 @@ export function LoginPage() {
           </ul>
         </section>
 
-        <section className="auth-card login-card">
+        <Card className="auth-card login-card">
           <div className="login-header">
             <p className="login-eyebrow">Area autenticada</p>
-            <h2>Entrar no Notter</h2>
-            <p>Acesse sua conta para iniciar ou revisar consultas.</p>
+            <Heading level={2}>Entrar</Heading>
+            <Text tone="muted">Acesse sua conta para iniciar ou revisar consultas.</Text>
           </div>
 
           <form onSubmit={handleSubmit} className="auth-form">
-            <div className="auth-field">
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-              />
-            </div>
+            <TextField
+              id="email"
+              name="email"
+              label="Email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
 
-            <div className="auth-field">
-              <label htmlFor="password">Senha</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-              />
-            </div>
+            <TextField
+              id="password"
+              name="password"
+              label="Senha"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
 
             {error ? (
-              <p className="inline-error" role="alert">
+              <Alert tone="danger">
                 {error}
-              </p>
+              </Alert>
             ) : null}
 
-            <button type="submit" className="primary-button login-submit" disabled={isSubmitting}>
+            <Button type="submit" className="login-submit" isLoading={isSubmitting}>
               <span>{isSubmitting ? 'Entrando...' : 'Entrar'}</span>
-              <span className="login-submit-icon" aria-hidden="true">
-                →
-              </span>
-            </button>
+            </Button>
           </form>
 
           <p className="auth-note">
             Acesso restrito a profissionais autorizados.
           </p>
-        </section>
+        </Card>
       </div>
     </div>
   );

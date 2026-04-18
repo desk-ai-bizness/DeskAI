@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { QueryTestProvider } from '../test/query-wrapper';
 import { LiveConsultationPage } from './LiveConsultationPage';
 
 const getConsultationDetailMock = vi.fn();
@@ -90,17 +91,23 @@ describe('LiveConsultationPage', () => {
 
   it('shows microphone denied error when permission is rejected', async () => {
     render(
-      <MemoryRouter initialEntries={['/consultations/cons-1/live']}>
-        <Routes>
-          <Route path="/consultations/:consultationId/live" element={<LiveConsultationPage />} />
-        </Routes>
-      </MemoryRouter>,
+      <QueryTestProvider>
+        <MemoryRouter initialEntries={['/consultations/cons-1/live']}>
+          <Routes>
+            <Route path="/consultations/:consultationId/live" element={<LiveConsultationPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryTestProvider>,
     );
 
     const button = await screen.findByRole('button', { name: 'Iniciar gravacao' });
+    expect(button).toHaveClass('ds-button');
+    expect(screen.getByRole('heading', { name: 'Sessao ao vivo', level: 2 }).closest('.ds-card')).toBeInTheDocument();
+
     await userEvent.click(button);
 
     expect(await screen.findByText('Permissao de microfone negada.')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveClass('ds-alert');
     expect(startSessionMock).not.toHaveBeenCalled();
   });
 });

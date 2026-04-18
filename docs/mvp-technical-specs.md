@@ -1064,6 +1064,21 @@ Do not include in the MVP:
 - reversibility: high — endpoints can be extended with more fields later
 - reference: `docs/architecture/03-contract-inventory.md` section 2, resolves OPEN-005
 
+### ADR-015: Authenticated App Icon Library
+
+- decision: use `lucide-react` as the authenticated app icon library
+- reason: small tree-shakeable React icon package, simple accessibility handling, and enough neutral medical-product UI icons for MVP primitives
+- reversibility: high — icons are wrapped by the app-local `Icon` primitive in `app/src/components/ui`
+- reference: `tasks/017-create-authenticated-app-design-system.md`
+
+### ADR-016: Authenticated App Query Cache
+
+- decision: use `@tanstack/react-query` for in-memory HTTP server-state caching in the authenticated React app
+- reason: centralizes request loading, error, refetch, mutation, and invalidation behavior while keeping page components presentation-focused
+- safeguards: cache persistence is disabled; global retries are disabled by default; sign-out clears the query client; WebSocket session state remains explicit and outside the HTTP query cache
+- reversibility: high — endpoint transport remains in `app/src/api/endpoints.ts`, and app-local query hooks wrap the dependency boundary
+- reference: `tasks/019-add-frontend-query-cache-and-loading-states.md`
+
 ## 26. AI Agent Notes
 
 If an AI agent uses this file as project context, assume the following:

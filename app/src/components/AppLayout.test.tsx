@@ -54,6 +54,8 @@ describe('AppLayout', () => {
     expect(screen.getByTestId('notter-app-logo-icon')).toHaveAttribute('src', '/logo-icon.png');
     expect(screen.queryByText(/DeskAI/i)).not.toBeInTheDocument();
     expect(screen.getByText('Documentacao clinica assistida por IA')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sair' })).toHaveClass('ds-button');
+    expect(screen.getByRole('link', { name: 'Consultas' })).toHaveClass('app-nav-link');
   });
 
   it('keeps the existing sign-out behavior', async () => {

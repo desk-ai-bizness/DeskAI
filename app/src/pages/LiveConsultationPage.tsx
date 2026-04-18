@@ -1,15 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import {
-  endSession,
-  getConsultationDetail,
-  startSession,
-} from '../api/endpoints';
+  useConsultationDetailQuery,
+  useEndSessionMutation,
+  useStartSessionMutation,
+} from '../api/query-hooks';
 import { useAuth } from '../auth/use-auth';
+import {
+  Alert,
+  Button,
+  Card,
+  Chip,
+  EmptyState,
+  Loader,
+  Text,
+} from '../components/ui';
 import { runtimeConfig } from '../config/env';
 import type {
-  ConsultationDetailView,
   SessionClientMessage,
   SessionServerEvent,
   SessionStartView,
@@ -51,11 +59,7 @@ export function LiveConsultationPage() {
   const { consultationId = '' } = useParams();
   const { uiConfig } = useAuth();
 
-  const [consultation, setConsultation] = useState<ConsultationDetailView | null>(null);
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isStarting, setIsStarting] = useState(false);
-  const [isStopping, setIsStopping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connectionState, setConnectionState] = useState<'idle' | 'connecting' | 'connected' | 'disconnected'>(
     'idle',
@@ -68,32 +72,16 @@ export function LiveConsultationPage() {
   const socketRef = useRef<WebSocket | null>(null);
   const sessionRef = useRef<SessionStartView | null>(null);
   const chunkIndexRef = useRef(0);
-
-  const refreshConsultation = useCallback(async () => {
-    if (!consultationId) {
-      return;
-    }
-
-    try {
-      const detail = await getConsultationDetail(consultationId);
-      setConsultation(detail);
-      setError(null);
-    } catch (requestError) {
-      if (requestError instanceof ApiError) {
-        setError(requestError.message);
-      } else {
-        setError('Nao foi possivel carregar os detalhes da consulta.');
-      }
-    }
-  }, [consultationId]);
-
-  useEffect(() => {
-    void (async () => {
-      setIsLoading(true);
-      await refreshConsultation();
-      setIsLoading(false);
-    })();
-  }, [refreshConsultation]);
+  const consultationQuery = useConsultationDetailQuery(consultationId);
+  const startSessionMutation = useStartSessionMutation(consultationId);
+  const endSessionMutation = useEndSessionMutation(consultationId);
+  const { refetch: refetchConsultation } = consultationQuery;
+  const consultation = consultationQuery.data ?? null;
+  const queryError = consultationQuery.error
+    ? consultationQuery.error instanceof ApiError
+      ? consultationQuery.error.message
+      : 'Nao foi possivel carregar os detalhes da consulta.'
+    : null;
 
   useEffect(() => {
     return () => {
@@ -141,7 +129,7 @@ export function LiveConsultationPage() {
         if (payload.event === 'session.ended') {
           setSessionMessage(String(payload.data.message ?? 'Sessao encerrada.'));
           setConnectionState('disconnected');
-          void refreshConsultation();
+          void refetchConsultation();
           return;
         }
 
@@ -167,7 +155,7 @@ export function LiveConsultationPage() {
         setConnectionState('disconnected');
       };
     },
-    [consultationId, refreshConsultation],
+    [consultationId, refetchConsultation],
   );
 
   const requestMicrophone = useCallback(async () => {
@@ -192,13 +180,12 @@ export function LiveConsultationPage() {
       return;
     }
 
-    setIsStarting(true);
     setError(null);
     setSessionMessage(null);
 
     try {
       const stream = mediaStreamRef.current ?? (await requestMicrophone());
-      const startView = await startSession(consultationId);
+      const startView = await startSessionMutation.mutateAsync();
       sessionRef.current = startView;
 
       connectWebSocket(startView);
@@ -233,15 +220,13 @@ export function LiveConsultationPage() {
 
       recorder.start(1000);
       setSessionMessage('Sessao de gravacao iniciada.');
-      await refreshConsultation();
+      await refetchConsultation();
     } catch (requestError) {
       if (requestError instanceof ApiError) {
         setError(requestError.message);
       } else {
         setError('Falha ao iniciar sessao de gravacao.');
       }
-    } finally {
-      setIsStarting(false);
     }
   }
 
@@ -250,7 +235,6 @@ export function LiveConsultationPage() {
       return;
     }
 
-    setIsStopping(true);
     setError(null);
 
     try {
@@ -267,7 +251,7 @@ export function LiveConsultationPage() {
         socketRef.current.send(JSON.stringify(stopPayload));
       }
 
-      await endSession(consultationId);
+      await endSessionMutation.mutateAsync();
       setSessionMessage('Gravacao encerrada. Processamento iniciado.');
     } catch (requestError) {
       if (requestError instanceof ApiError) {
@@ -281,8 +265,7 @@ export function LiveConsultationPage() {
       socketRef.current?.close();
       socketRef.current = null;
       setConnectionState('disconnected');
-      await refreshConsultation();
-      setIsStopping(false);
+      await refetchConsultation();
     }
   }
 
@@ -308,101 +291,104 @@ export function LiveConsultationPage() {
 
   return (
     <div className="page-grid page-grid-equal">
-      <section className="panel">
-        <header className="panel-header">
-          <h2>{uiConfig?.labels.live_session_header ?? 'Sessao ao vivo'}</h2>
-          <Link to="/consultations">Voltar para consultas</Link>
-        </header>
+      <Card
+        title={uiConfig?.labels.live_session_header ?? 'Sessao ao vivo'}
+        actions={<RouterLink className="ds-link" to="/consultations">Voltar para consultas</RouterLink>}
+      >
 
-        {isLoading ? <p>Carregando consulta...</p> : null}
+        {consultationQuery.isPending ? <Loader label="Carregando consulta" /> : null}
 
-        {!isLoading && consultation ? (
-          <>
-            <p>
-              <strong>Status:</strong> {statusLabel}
-            </p>
-            <p>
-              <strong>Microfone:</strong>{' '}
+        {!consultationQuery.isPending && consultation ? (
+          <div className="status-strip">
+            <Chip tone="info">Status: {statusLabel}</Chip>
+            <Chip tone={microphoneState === 'denied' ? 'danger' : microphoneState === 'granted' ? 'success' : 'neutral'}>
+              Microfone:{' '}
               {microphoneState === 'unknown'
                 ? 'Nao solicitado'
                 : microphoneState === 'granted'
                   ? 'Permitido'
                   : 'Negado'}
-            </p>
-            <p>
-              <strong>Conexao:</strong> {connectionState}
-            </p>
-          </>
+            </Chip>
+            <Chip tone={connectionState === 'connected' ? 'success' : connectionState === 'disconnected' ? 'warning' : 'neutral'}>
+              Conexao: {connectionState}
+            </Chip>
+          </div>
         ) : null}
 
         {consultation?.warnings.length ? (
-          <ul className="warning-list">
-            {consultation.warnings.map((warning) => (
-              <li key={warning.type}>{warning.message}</li>
-            ))}
-          </ul>
+          <Alert tone="warning">
+            <ul className="warning-list">
+              {consultation.warnings.map((warning) => (
+                <li key={warning.type}>{warning.message}</li>
+              ))}
+            </ul>
+          </Alert>
         ) : null}
 
-        {sessionMessage ? <p className="hint">{sessionMessage}</p> : null}
+        {queryError ? <Alert tone="danger">{queryError}</Alert> : null}
+        {sessionMessage ? <Alert tone="info">{sessionMessage}</Alert> : null}
         {error ? (
-          <p className="inline-error" role="alert">
+          <Alert tone="danger">
             {error}
-          </p>
+          </Alert>
         ) : null}
 
         <div className="inline-row">
-          <button
+          <Button
             type="button"
-            className="primary-button"
             onClick={() => void handleStartRecording()}
-            disabled={isStarting || !canStartRecording}
+            disabled={!canStartRecording}
+            isLoading={startSessionMutation.isPending}
           >
-            {isStarting
+            {startSessionMutation.isPending
               ? 'Iniciando...'
               : uiConfig?.labels.start_recording_button ?? 'Iniciar gravacao'}
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
-            className="secondary-button"
+            variant="secondary"
             onClick={() => void handleStopRecording()}
-            disabled={isStopping || !canStopRecording}
+            disabled={!canStopRecording}
+            isLoading={endSessionMutation.isPending}
           >
-            {isStopping
+            {endSessionMutation.isPending
               ? 'Encerrando...'
               : uiConfig?.labels.stop_recording_button ?? 'Parar gravacao'}
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
-            className="ghost-button"
+            variant="ghost"
             onClick={() => void handleReconnect()}
             disabled={connectionState === 'connected' || !sessionRef.current}
           >
             Reconectar
-          </button>
+          </Button>
 
-          <Link to={`/consultations/${consultationId}/review`} className="ghost-link">
+          <RouterLink to={`/consultations/${consultationId}/review`} className="ds-link">
             Ir para revisao
-          </Link>
+          </RouterLink>
         </div>
-      </section>
+      </Card>
 
-      <section className="panel">
-        <h2>Transcricao ao vivo</h2>
+      <Card title="Transcricao ao vivo">
         {transcript.length === 0 ? (
-          <p className="hint">A transcricao parcial aparecera aqui durante a sessao.</p>
+          <EmptyState
+            title="Aguardando transcricao"
+            description="A transcricao parcial aparecera aqui durante a sessao."
+          />
         ) : (
           <ul className="transcript-list">
             {transcript.map((item) => (
               <li key={item.id}>
                 <strong>{item.speaker}:</strong> {item.text}
-                {!item.isFinal ? ' (parcial)' : ''}
+                {!item.isFinal ? <Text tone="muted">parcial</Text> : null}
               </li>
             ))}
           </ul>
         )}
-      </section>
+      </Card>
     </div>
   );
 }

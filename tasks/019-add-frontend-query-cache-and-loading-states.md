@@ -112,13 +112,13 @@ The task should produce:
 
 ## 7. Acceptance Criteria
 
-- [ ] The app uses a query cache/request-state layer for suitable HTTP API reads and writes.
-- [ ] Loading, error, success, and mutation states are consistent with the design system.
-- [ ] Sensitive cached data is cleared on sign-out and is not persisted to browser storage.
-- [ ] Mutations invalidate or update affected data correctly.
-- [ ] Live WebSocket state remains explicit and reliable.
-- [ ] Relevant tests are added or updated.
-- [ ] Documentation is updated if behavior or setup changed.
+- [x] The app uses a query cache/request-state layer for suitable HTTP API reads and writes.
+- [x] Loading, error, success, and mutation states are consistent with the design system.
+- [x] Sensitive cached data is cleared on sign-out and is not persisted to browser storage.
+- [x] Mutations invalidate or update affected data correctly.
+- [x] Live WebSocket state remains explicit and reliable.
+- [x] Relevant tests are added or updated.
+- [x] Documentation is updated if behavior or setup changed.
 
 ## 8. Testing
 
@@ -146,10 +146,21 @@ Run the app locally, navigate between consultation list, live session, and revie
 
 ## 10. Definition of Done
 
-- [ ] Implementation is complete.
-- [ ] Acceptance criteria are met.
-- [ ] Tests pass.
-- [ ] No obvious regressions were introduced.
-- [ ] Logs, metrics, and error handling were considered.
-- [ ] Security and permissions were reviewed if relevant.
-- [ ] Task is ready for review or merge.
+- [x] Implementation is complete.
+- [x] Acceptance criteria are met.
+- [x] Tests pass.
+- [x] No obvious regressions were introduced.
+- [x] Logs, metrics, and error handling were considered.
+- [x] Security and permissions were reviewed if relevant.
+- [x] Task is ready for review or merge.
+
+## 11. Implementation Summary
+
+- Added `@tanstack/react-query` with an app-local `createAppQueryClient`, centralized query keys, and query/mutation hooks in `app/src/api/query-hooks.ts`.
+- Wrapped the authenticated React app with `QueryClientProvider` in `app/src/main.tsx`.
+- Converted authenticated HTTP reads and writes for profile/config restore, patients, consultations, live session start/end, review update, finalization, and export to query-backed state.
+- Connected query and mutation states to existing design-system loaders, alerts, empty states, and loading buttons.
+- Cleared sensitive cached server state on sign-out and failed session restoration through `AuthProvider`.
+- Kept microphone, WebSocket connection, streaming transcript, and reconnect state local to `LiveConsultationPage`.
+- Added focused tests for query client defaults, mutation invalidation, sign-out cache clearing, and updated query-backed page tests.
+- Documented the request-state approach in `app/README.md` and ADR-016 in `docs/mvp-technical-specs.md`.

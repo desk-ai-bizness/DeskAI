@@ -1,16 +1,26 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { FormEvent, useMemo, useState } from 'react';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import {
-  exportConsultation,
-  finalizeConsultation,
-  getConsultationDetail,
-  getReview,
-  updateReview,
-} from '../api/endpoints';
+  useConsultationDetailQuery,
+  useExportConsultationMutation,
+  useFinalizeConsultationMutation,
+  useReviewQuery,
+  useUpdateReviewMutation,
+} from '../api/query-hooks';
 import { useAuth } from '../auth/use-auth';
+import {
+  Alert,
+  Button,
+  Card,
+  Chip,
+  EmptyState,
+  Link as UiLink,
+  Loader,
+  Text,
+  TextAreaField,
+} from '../components/ui';
 import type {
-  ConsultationDetailView,
   ExportView,
   ReviewInsight,
   ReviewView,
@@ -57,54 +67,47 @@ export function ReviewPage() {
   const { consultationId = '' } = useParams();
   const { uiConfig } = useAuth();
 
-  const [consultation, setConsultation] = useState<ConsultationDetailView | null>(null);
-  const [review, setReview] = useState<ReviewView | null>(null);
-  const [medicalHistoryText, setMedicalHistoryText] = useState('');
-  const [summaryText, setSummaryText] = useState('');
+  const [reviewDraft, setReviewDraft] = useState<{
+    consultationId: string;
+    medicalHistoryText: string;
+    summaryText: string;
+  } | null>(null);
   const [insightActions, setInsightActions] = useState<
     Record<string, { action: 'accept' | 'dismiss' | 'edit'; note: string }>
   >({});
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isFinalizing, setIsFinalizing] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
 
   const [exportResult, setExportResult] = useState<ExportView | null>(null);
   const [finalizationConfirmed, setFinalizationConfirmed] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const consultationQuery = useConsultationDetailQuery(consultationId);
+  const reviewQuery = useReviewQuery(consultationId);
+  const updateReviewMutation = useUpdateReviewMutation(consultationId);
+  const finalizeMutation = useFinalizeConsultationMutation(consultationId);
+  const exportMutation = useExportConsultationMutation(consultationId);
+  const consultation = consultationQuery.data ?? null;
+  const review = reviewQuery.data ?? null;
+  const isLoading = consultationQuery.isPending || reviewQuery.isPending;
+  const queryError =
+    consultationQuery.error || reviewQuery.error
+      ? consultationQuery.error instanceof ApiError
+        ? consultationQuery.error.message
+        : reviewQuery.error instanceof ApiError
+          ? reviewQuery.error.message
+          : 'Nao foi possivel carregar os dados de revisao.'
+      : null;
 
-  useEffect(() => {
-    if (!consultationId) {
-      return;
-    }
-
-    void (async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const [detailResponse, reviewResponse] = await Promise.all([
-          getConsultationDetail(consultationId),
-          getReview(consultationId),
-        ]);
-
-        setConsultation(detailResponse);
-        setReview(reviewResponse);
-        setMedicalHistoryText(toPrettyJson(reviewResponse.medical_history.content));
-        setSummaryText(toPrettyJson(reviewResponse.summary.content));
-      } catch (requestError) {
-        if (requestError instanceof ApiError) {
-          setError(requestError.message);
-        } else {
-          setError('Nao foi possivel carregar os dados de revisao.');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, [consultationId]);
+  const defaultMedicalHistoryText = useMemo(
+    () => (review ? toPrettyJson(review.medical_history.content) : ''),
+    [review],
+  );
+  const defaultSummaryText = useMemo(
+    () => (review ? toPrettyJson(review.summary.content) : ''),
+    [review],
+  );
+  const activeReviewDraft = reviewDraft?.consultationId === consultationId ? reviewDraft : null;
+  const medicalHistoryText = activeReviewDraft?.medicalHistoryText ?? defaultMedicalHistoryText;
+  const summaryText = activeReviewDraft?.summaryText ?? defaultSummaryText;
 
   const sectionOrder = uiConfig?.review_screen.section_order ?? [
     'transcript',
@@ -136,22 +139,6 @@ export function ReviewPage() {
     return uiConfig?.status_labels?.[consultation.status] ?? consultation.status;
   }, [consultation, uiConfig]);
 
-  async function reloadReviewState() {
-    if (!consultationId) {
-      return;
-    }
-
-    const [detailResponse, reviewResponse] = await Promise.all([
-      getConsultationDetail(consultationId),
-      getReview(consultationId),
-    ]);
-
-    setConsultation(detailResponse);
-    setReview(reviewResponse);
-    setMedicalHistoryText(toPrettyJson(reviewResponse.medical_history.content));
-    setSummaryText(toPrettyJson(reviewResponse.summary.content));
-  }
-
   async function handleSaveChanges(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!consultationId) {
@@ -160,14 +147,13 @@ export function ReviewPage() {
 
     setError(null);
     setFeedback(null);
-    setIsSaving(true);
 
     try {
       const payload = buildReviewUpdatePayload(medicalHistoryText, summaryText, insightActions);
-      const response = await updateReview(consultationId, payload);
-      setReview(response);
+      await updateReviewMutation.mutateAsync(payload);
+      setReviewDraft(null);
       setFeedback('Alteracoes salvas com sucesso.');
-      await reloadReviewState();
+      await Promise.all([consultationQuery.refetch(), reviewQuery.refetch()]);
     } catch (requestError) {
       if (requestError instanceof SyntaxError) {
         setError('Historia clinica invalida. Use um JSON valido.');
@@ -176,8 +162,6 @@ export function ReviewPage() {
       } else {
         setError('Nao foi possivel salvar as alteracoes.');
       }
-    } finally {
-      setIsSaving(false);
     }
   }
 
@@ -193,20 +177,17 @@ export function ReviewPage() {
 
     setError(null);
     setFeedback(null);
-    setIsFinalizing(true);
 
     try {
-      await finalizeConsultation(consultationId);
+      await finalizeMutation.mutateAsync();
       setFeedback('Consulta finalizada com sucesso.');
-      await reloadReviewState();
+      await Promise.all([consultationQuery.refetch(), reviewQuery.refetch()]);
     } catch (requestError) {
       if (requestError instanceof ApiError) {
         setError(requestError.message);
       } else {
         setError('Nao foi possivel finalizar a consulta.');
       }
-    } finally {
-      setIsFinalizing(false);
     }
   }
 
@@ -217,10 +198,9 @@ export function ReviewPage() {
 
     setError(null);
     setFeedback(null);
-    setIsExporting(true);
 
     try {
-      const response = await exportConsultation(consultationId);
+      const response = await exportMutation.mutateAsync();
       setExportResult(response);
       setFeedback('Exportacao gerada com sucesso.');
     } catch (requestError) {
@@ -229,8 +209,6 @@ export function ReviewPage() {
       } else {
         setError('Nao foi possivel gerar a exportacao.');
       }
-    } finally {
-      setIsExporting(false);
     }
   }
 
@@ -254,42 +232,58 @@ export function ReviewPage() {
     }));
   }
 
+  function updateMedicalHistoryText(nextMedicalHistoryText: string) {
+    setReviewDraft({
+      consultationId,
+      medicalHistoryText: nextMedicalHistoryText,
+      summaryText,
+    });
+  }
+
+  function updateSummaryText(nextSummaryText: string) {
+    setReviewDraft({
+      consultationId,
+      medicalHistoryText,
+      summaryText: nextSummaryText,
+    });
+  }
+
   return (
     <div className="page-grid review-layout">
       <aside className="stack page-sidebar">
-        <section className="panel">
-          <header className="panel-header">
-            <h2>{uiConfig?.labels.review_title ?? 'Revisao da consulta'}</h2>
-            <Link to={`/consultations/${consultationId}/live`}>Voltar para sessao ao vivo</Link>
-          </header>
+        <Card
+          title={uiConfig?.labels.review_title ?? 'Revisao da consulta'}
+          actions={(
+            <RouterLink className="ds-link" to={`/consultations/${consultationId}/live`}>
+              Voltar para sessao ao vivo
+            </RouterLink>
+          )}
+        >
 
-          {isLoading ? <p>Carregando revisao...</p> : null}
+          {isLoading ? <Loader label="Carregando revisao" /> : null}
 
           {!isLoading ? (
             <>
-              <p>
-                <strong>Status:</strong> {statusLabel}
-              </p>
-              <p className="hint">{uiConfig?.labels.ai_disclaimer ?? 'Conteudo gerado por IA e sempre revisavel.'}</p>
+              <Chip tone="info">Status: {statusLabel}</Chip>
+              <Text tone="muted">{uiConfig?.labels.ai_disclaimer ?? 'Conteudo gerado por IA e sempre revisavel.'}</Text>
               {completenessWarning ? (
-                <p className="warning-banner">
+                <Alert tone="warning">
                   {uiConfig?.labels.completeness_warning ??
                     'Alguns campos podem estar incompletos. Revise com atencao.'}
-                </p>
+                </Alert>
               ) : null}
-              {feedback ? <p className="inline-success">{feedback}</p> : null}
+              {queryError ? <Alert tone="danger">{queryError}</Alert> : null}
+              {feedback ? <Alert tone="success">{feedback}</Alert> : null}
               {error ? (
-                <p className="inline-error" role="alert">
+                <Alert tone="danger">
                   {error}
-                </p>
+                </Alert>
               ) : null}
             </>
           ) : null}
-        </section>
+        </Card>
 
-        <section className="panel">
-          <h2>Finalizacao e exportacao</h2>
-
+        <Card title="Finalizacao e exportacao">
           <label className="checkbox-row" htmlFor="finalization-confirm">
             <input
               id="finalization-confirm"
@@ -301,35 +295,36 @@ export function ReviewPage() {
           </label>
 
           <div className="inline-row">
-            <button
+            <Button
               type="button"
-              className="primary-button"
               onClick={() => void handleFinalize()}
-              disabled={!canFinalize || isFinalizing}
+              disabled={!canFinalize}
+              isLoading={finalizeMutation.isPending}
             >
-              {isFinalizing ? 'Finalizando...' : uiConfig?.labels.finalize_button ?? 'Finalizar'}
-            </button>
+              {finalizeMutation.isPending ? 'Finalizando...' : uiConfig?.labels.finalize_button ?? 'Finalizar'}
+            </Button>
 
-            <button
+            <Button
               type="button"
-              className="secondary-button"
+              variant="secondary"
               onClick={() => void handleExport()}
-              disabled={!canExport || isExporting}
+              disabled={!canExport}
+              isLoading={exportMutation.isPending}
             >
-              {isExporting ? 'Gerando exportacao...' : uiConfig?.labels.export_button ?? 'Exportar'}
-            </button>
+              {exportMutation.isPending ? 'Gerando exportacao...' : uiConfig?.labels.export_button ?? 'Exportar'}
+            </Button>
           </div>
 
           {exportResult ? (
             <p>
-              Exportacao pronta: <a href={exportResult.export_url}>baixar PDF</a>
+              Exportacao pronta: <UiLink href={exportResult.export_url}>baixar PDF</UiLink>
             </p>
           ) : null}
-        </section>
+        </Card>
       </aside>
 
       {!isLoading && review ? (
-        <form className="panel stack page-main-panel" onSubmit={handleSaveChanges}>
+        <form className="stack page-main-panel" onSubmit={handleSaveChanges}>
           {sectionOrder.map((sectionKey) => {
             if (!sectionConfig[sectionKey].visible) {
               return null;
@@ -337,10 +332,12 @@ export function ReviewPage() {
 
             if (sectionKey === 'transcript') {
               return (
-                <section key={sectionKey} className="nested-panel">
-                  <h3>{sectionConfig.transcript.title}</h3>
+                <Card key={sectionKey} title={sectionConfig.transcript.title}>
                   {transcriptRows.length === 0 ? (
-                    <p className="hint">Transcricao indisponivel no payload atual.</p>
+                    <EmptyState
+                      title="Transcricao indisponivel"
+                      description="Transcricao indisponivel no payload atual."
+                    />
                   ) : (
                     <ul className="transcript-list">
                       {transcriptRows.map((segment, index) => (
@@ -350,43 +347,45 @@ export function ReviewPage() {
                       ))}
                     </ul>
                   )}
-                </section>
+                </Card>
               );
             }
 
             if (sectionKey === 'medical_history') {
               return (
-                <section key={sectionKey} className="nested-panel">
-                  <h3>{sectionConfig.medical_history.title}</h3>
-                  <textarea
+                <Card key={sectionKey} title={sectionConfig.medical_history.title}>
+                  <TextAreaField
+                    label="Conteudo da historia clinica"
                     value={medicalHistoryText}
-                    onChange={(event) => setMedicalHistoryText(event.target.value)}
+                    onChange={(event) => updateMedicalHistoryText(event.target.value)}
                     rows={12}
                     disabled={!canSave}
                   />
-                </section>
+                </Card>
               );
             }
 
             if (sectionKey === 'summary') {
               return (
-                <section key={sectionKey} className="nested-panel">
-                  <h3>{sectionConfig.summary.title}</h3>
-                  <textarea
+                <Card key={sectionKey} title={sectionConfig.summary.title}>
+                  <TextAreaField
+                    label="Conteudo do resumo"
                     value={summaryText}
-                    onChange={(event) => setSummaryText(event.target.value)}
+                    onChange={(event) => updateSummaryText(event.target.value)}
                     rows={8}
                     disabled={!canSave}
                   />
-                </section>
+                </Card>
               );
             }
 
             return (
-              <section key={sectionKey} className="nested-panel">
-                <h3>{sectionConfig.insights.title}</h3>
+              <Card key={sectionKey} title={sectionConfig.insights.title}>
                 {review.insights.length === 0 ? (
-                  <p className="hint">Nenhum insight disponivel.</p>
+                  <EmptyState
+                    title="Nenhum insight"
+                    description="Nenhum insight disponivel."
+                  />
                 ) : (
                   <ul className="insight-list">
                     {review.insights.map((insight) => {
@@ -397,7 +396,7 @@ export function ReviewPage() {
                       return (
                         <li key={insight.insight_id}>
                           <p>
-                            <strong>{categoryLabel ?? insight.category}</strong>
+                            <Chip tone="warning">{categoryLabel ?? insight.category}</Chip>
                           </p>
                           <p>{insight.description}</p>
 
@@ -410,33 +409,36 @@ export function ReviewPage() {
                           ) : null}
 
                           <div className="inline-row">
-                            <button
+                            <Chip
                               type="button"
-                              className={action === 'accept' ? 'chip-button selected' : 'chip-button'}
+                              selected={action === 'accept'}
                               onClick={() => updateInsightAction(insight, 'accept')}
                               disabled={!canSave}
                             >
                               Aceitar
-                            </button>
-                            <button
+                            </Chip>
+                            <Chip
                               type="button"
-                              className={action === 'dismiss' ? 'chip-button selected' : 'chip-button'}
+                              selected={action === 'dismiss'}
+                              tone="danger"
                               onClick={() => updateInsightAction(insight, 'dismiss')}
                               disabled={!canSave}
                             >
                               Descartar
-                            </button>
-                            <button
+                            </Chip>
+                            <Chip
                               type="button"
-                              className={action === 'edit' ? 'chip-button selected' : 'chip-button'}
+                              selected={action === 'edit'}
+                              tone="info"
                               onClick={() => updateInsightAction(insight, 'edit')}
                               disabled={!canSave}
                             >
                               Editar
-                            </button>
+                            </Chip>
                           </div>
 
-                          <textarea
+                          <TextAreaField
+                            label="Observacao do medico (opcional)"
                             rows={2}
                             value={note}
                             onChange={(event) => updateInsightNote(insight, event.target.value)}
@@ -448,14 +450,14 @@ export function ReviewPage() {
                     })}
                   </ul>
                 )}
-              </section>
+              </Card>
             );
           })}
 
           <div className="inline-row">
-            <button type="submit" className="primary-button" disabled={isSaving || !canSave}>
-              {isSaving ? 'Salvando...' : 'Salvar alteracoes'}
-            </button>
+            <Button type="submit" disabled={!canSave} isLoading={updateReviewMutation.isPending}>
+              {updateReviewMutation.isPending ? 'Salvando...' : 'Salvar alteracoes'}
+            </Button>
           </div>
         </form>
       ) : null}

@@ -223,7 +223,7 @@ Task manager statuses:
 - `done`
 - `canceled`
 
-Current next step: `017-create-authenticated-app-design-system.md`
+Current next step: `013-build-public-website-and-entry-flows.md`
 
 ## Change Management
 

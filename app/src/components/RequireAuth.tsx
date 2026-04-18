@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/use-auth';
+import { Card, Loader, Text } from './ui';
 
 export function RequireAuth() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -7,10 +8,10 @@ export function RequireAuth() {
 
   if (isLoading) {
     return (
-      <section className="panel">
-        <h2>Carregando sessao...</h2>
-        <p>Validando suas credenciais e configuracoes de interface.</p>
-      </section>
+      <Card title="Carregando sessao">
+        <Loader label="Validando sessao" />
+        <Text tone="muted">Validando suas credenciais e configuracoes de interface.</Text>
+      </Card>
     );
   }
 

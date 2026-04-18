@@ -111,13 +111,13 @@ The task should produce:
 
 ## 7. Acceptance Criteria
 
-- [ ] Core authenticated pages use the design system primitives consistently.
-- [ ] The full sign-in to finalization workflow still works.
-- [ ] Draft, review, finalized, and export states are visually clear.
-- [ ] Mobile and desktop layouts are responsive and layout-stable.
-- [ ] Accessibility basics are preserved or improved.
-- [ ] Relevant tests are added or updated.
-- [ ] Documentation is updated if behavior or setup changed.
+- [x] Core authenticated pages use the design system primitives consistently.
+- [x] The full sign-in to finalization workflow still works.
+- [x] Draft, review, finalized, and export states are visually clear.
+- [x] Mobile and desktop layouts are responsive and layout-stable.
+- [x] Accessibility basics are preserved or improved.
+- [x] Relevant tests are added or updated.
+- [x] Documentation is updated if behavior or setup changed.
 
 ## 8. Testing
 
@@ -145,10 +145,20 @@ Run the app locally, complete the main workflow from login through review/finali
 
 ## 10. Definition of Done
 
-- [ ] Implementation is complete.
-- [ ] Acceptance criteria are met.
-- [ ] Tests pass.
-- [ ] No obvious regressions were introduced.
-- [ ] Logs, metrics, and error handling were considered.
-- [ ] Security and permissions were reviewed if relevant.
-- [ ] Task is ready for review or merge.
+- [x] Implementation is complete.
+- [x] Acceptance criteria are met.
+- [x] Tests pass.
+- [x] No obvious regressions were introduced.
+- [x] Logs, metrics, and error handling were considered.
+- [x] Security and permissions were reviewed if relevant.
+- [x] Task is ready for review or merge.
+
+## 11. Implementation Summary (2026-04-18)
+
+- Applied design-system primitives across the authenticated shell, login, consultation list/create, live consultation, and review/finalization/export pages.
+- Replaced page-level action buttons, cards, alerts, loaders, empty states, chips, and form fields with app-local design-system components while preserving existing API calls and BFF-driven action availability.
+- Improved page-level feedback for loading, empty, warning, error, session, draft-review, and export states.
+- Removed discrete decorative login orb elements during the facelift while keeping the existing responsive login composition.
+- Added regression tests that assert design-system adoption on the primary pages and preserve core login, consultation, live-session, and review behavior.
+- Updated app README guidance to reflect design-system adoption on core authenticated pages.
+- Verified with `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` in `app/`.

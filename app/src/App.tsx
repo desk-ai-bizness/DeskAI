@@ -4,6 +4,7 @@ import { useAuth } from './auth/use-auth';
 import { AppLayout } from './components/AppLayout';
 import { BrandLogo } from './components/BrandLogo';
 import { RequireAuth } from './components/RequireAuth';
+import { Card, Loader } from './components/ui';
 import { ConsultationsPage } from './pages/ConsultationsPage';
 import { LiveConsultationPage } from './pages/LiveConsultationPage';
 import { LoginPage } from './pages/LoginPage';
@@ -23,10 +24,10 @@ function AppRoutes() {
   if (isLoading) {
     return (
       <div className="auth-shell">
-        <section className="auth-card">
+        <Card className="auth-card">
           <BrandLogo size="compact" />
-          <p>Carregando configuracao da sessao...</p>
-        </section>
+          <Loader label="Carregando configuracao da sessao" />
+        </Card>
       </div>
     );
   }

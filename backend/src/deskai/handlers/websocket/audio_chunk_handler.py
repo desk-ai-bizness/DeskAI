@@ -63,7 +63,16 @@ def handle_audio_chunk(
         return {"statusCode": 400, "body": "Audio chunk rejected"}
 
     if audio_bytes and transcription_provider is not None:
-        transcription_provider.send_audio_chunk(session.session_id, audio_bytes)
+        try:
+            transcription_provider.send_audio_chunk(session.session_id, audio_bytes)
+        except Exception:
+            logger.exception(
+                "ws_audio_chunk_send_failed",
+                extra=log_context(
+                    connection_id=connection_id,
+                    session_id=session.session_id,
+                ),
+            )
 
     session = replace(
         session,
@@ -72,7 +81,7 @@ def handle_audio_chunk(
     )
     session_repo.update(session)
 
-    logger.debug(
+    logger.info(
         "ws_audio_chunk_processed",
         extra=log_context(
             connection_id=connection_id,

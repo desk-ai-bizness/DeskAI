@@ -25,7 +25,9 @@ class WsConnectLoggingTest(unittest.TestCase):
     )
     @patch("deskai.handlers.websocket.connect_handler.logger")
     def test_successful_connect_logs_accepted(
-        self, mock_logger: MagicMock, _mock_time: MagicMock,
+        self,
+        mock_logger: MagicMock,
+        _mock_time: MagicMock,
     ) -> None:
         from deskai.handlers.websocket.connect_handler import handle_connect
 
@@ -46,8 +48,7 @@ class WsConnectLoggingTest(unittest.TestCase):
         self.assertIn("ws_connection_accepted", info_events)
 
         accepted_call = next(
-            c for c in mock_logger.info.call_args_list
-            if c.args[0] == "ws_connection_accepted"
+            c for c in mock_logger.info.call_args_list if c.args[0] == "ws_connection_accepted"
         )
         extra = accepted_call.kwargs.get("extra", {})
         self.assertEqual(extra["connection_id"], "conn-1")
@@ -55,7 +56,8 @@ class WsConnectLoggingTest(unittest.TestCase):
 
     @patch("deskai.handlers.websocket.connect_handler.logger")
     def test_missing_token_logs_warning(
-        self, mock_logger: MagicMock,
+        self,
+        mock_logger: MagicMock,
     ) -> None:
         from deskai.handlers.websocket.connect_handler import handle_connect
 
@@ -72,7 +74,8 @@ class WsConnectLoggingTest(unittest.TestCase):
 
     @patch("deskai.handlers.websocket.connect_handler.logger")
     def test_invalid_token_logs_auth_failed(
-        self, mock_logger: MagicMock,
+        self,
+        mock_logger: MagicMock,
     ) -> None:
         from deskai.handlers.websocket.connect_handler import handle_connect
 
@@ -127,7 +130,9 @@ class WsSessionInitLoggingTest(unittest.TestCase):
     )
     @patch("deskai.handlers.websocket.session_init_handler.logger")
     def test_successful_init_logs_initialized(
-        self, mock_logger: MagicMock, _mock_time: MagicMock,
+        self,
+        mock_logger: MagicMock,
+        _mock_time: MagicMock,
     ) -> None:
         from deskai.handlers.websocket.session_init_handler import (
             handle_session_init,
@@ -141,10 +146,12 @@ class WsSessionInitLoggingTest(unittest.TestCase):
 
         event = {
             "requestContext": {"connectionId": "conn-1"},
-            "body": json.dumps({
-                "event": "session.init",
-                "data": {"session_id": "sess-1", "consultation_id": "cons-1"},
-            }),
+            "body": json.dumps(
+                {
+                    "event": "session.init",
+                    "data": {"session_id": "sess-1", "consultation_id": "cons-1"},
+                }
+            ),
         }
 
         handle_session_init(event, connection_repo, session_repo, apigw)
@@ -154,7 +161,8 @@ class WsSessionInitLoggingTest(unittest.TestCase):
 
     @patch("deskai.handlers.websocket.session_init_handler.logger")
     def test_unknown_connection_logs_warning(
-        self, mock_logger: MagicMock,
+        self,
+        mock_logger: MagicMock,
     ) -> None:
         from deskai.handlers.websocket.session_init_handler import (
             handle_session_init,
@@ -164,10 +172,12 @@ class WsSessionInitLoggingTest(unittest.TestCase):
         connection_repo.find_by_connection_id.return_value = None
         event = {
             "requestContext": {"connectionId": "conn-unknown"},
-            "body": json.dumps({
-                "event": "session.init",
-                "data": {"session_id": "s1"},
-            }),
+            "body": json.dumps(
+                {
+                    "event": "session.init",
+                    "data": {"session_id": "s1"},
+                }
+            ),
         }
 
         result = handle_session_init(event, connection_repo, MagicMock(), MagicMock())
@@ -178,7 +188,8 @@ class WsSessionInitLoggingTest(unittest.TestCase):
 
     @patch("deskai.handlers.websocket.session_init_handler.logger")
     def test_session_not_found_logs_warning(
-        self, mock_logger: MagicMock,
+        self,
+        mock_logger: MagicMock,
     ) -> None:
         from deskai.handlers.websocket.session_init_handler import (
             handle_session_init,
@@ -190,10 +201,12 @@ class WsSessionInitLoggingTest(unittest.TestCase):
         session_repo.find_by_id.return_value = None
         event = {
             "requestContext": {"connectionId": "conn-1"},
-            "body": json.dumps({
-                "event": "session.init",
-                "data": {"session_id": "missing"},
-            }),
+            "body": json.dumps(
+                {
+                    "event": "session.init",
+                    "data": {"session_id": "missing"},
+                }
+            ),
         }
 
         result = handle_session_init(event, connection_repo, session_repo, MagicMock())
@@ -204,7 +217,8 @@ class WsSessionInitLoggingTest(unittest.TestCase):
 
     @patch("deskai.handlers.websocket.session_init_handler.logger")
     def test_ownership_mismatch_logs_warning(
-        self, mock_logger: MagicMock,
+        self,
+        mock_logger: MagicMock,
     ) -> None:
         from deskai.handlers.websocket.session_init_handler import (
             handle_session_init,
@@ -218,10 +232,12 @@ class WsSessionInitLoggingTest(unittest.TestCase):
         session_repo.find_by_id.return_value = self._make_session(doctor_id="doc-1")
         event = {
             "requestContext": {"connectionId": "conn-1"},
-            "body": json.dumps({
-                "event": "session.init",
-                "data": {"session_id": "sess-1"},
-            }),
+            "body": json.dumps(
+                {
+                    "event": "session.init",
+                    "data": {"session_id": "sess-1"},
+                }
+            ),
         }
 
         result = handle_session_init(event, connection_repo, session_repo, MagicMock())
@@ -241,7 +257,8 @@ class WsAudioChunkLoggingTest(unittest.TestCase):
 
     @patch("deskai.handlers.websocket.audio_chunk_handler.logger")
     def test_oversized_chunk_logs_warning_with_size(
-        self, mock_logger: MagicMock,
+        self,
+        mock_logger: MagicMock,
     ) -> None:
         import base64
 
@@ -252,10 +269,12 @@ class WsAudioChunkLoggingTest(unittest.TestCase):
         big_audio = base64.b64encode(b"x" * 2_000_000).decode()
         event = {
             "requestContext": {"connectionId": "conn-1"},
-            "body": json.dumps({
-                "event": "audio.chunk",
-                "data": {"audio": big_audio},
-            }),
+            "body": json.dumps(
+                {
+                    "event": "audio.chunk",
+                    "data": {"audio": big_audio},
+                }
+            ),
         }
 
         result = handle_audio_chunk(event, MagicMock(), MagicMock(), MagicMock())
@@ -265,15 +284,15 @@ class WsAudioChunkLoggingTest(unittest.TestCase):
         self.assertIn("ws_audio_chunk_too_large", warning_events)
 
         size_call = next(
-            c for c in mock_logger.warning.call_args_list
-            if c.args[0] == "ws_audio_chunk_too_large"
+            c for c in mock_logger.warning.call_args_list if c.args[0] == "ws_audio_chunk_too_large"
         )
         extra = size_call.kwargs.get("extra", {})
         self.assertGreater(extra["size_bytes"], 1_000_000)
 
     @patch("deskai.handlers.websocket.audio_chunk_handler.logger")
     def test_unknown_connection_logs_warning(
-        self, mock_logger: MagicMock,
+        self,
+        mock_logger: MagicMock,
     ) -> None:
         from deskai.handlers.websocket.audio_chunk_handler import (
             handle_audio_chunk,
@@ -293,8 +312,9 @@ class WsAudioChunkLoggingTest(unittest.TestCase):
         self.assertIn("ws_audio_chunk_unknown_connection", warning_events)
 
     @patch("deskai.handlers.websocket.audio_chunk_handler.logger")
-    def test_successful_chunk_logs_at_debug(
-        self, mock_logger: MagicMock,
+    def test_successful_chunk_logs_at_info(
+        self,
+        mock_logger: MagicMock,
     ) -> None:
         import base64
 
@@ -304,13 +324,17 @@ class WsAudioChunkLoggingTest(unittest.TestCase):
 
         audio = base64.b64encode(b"tiny-audio").decode()
         connection = ConnectionInfo(
-            connection_id="conn-1", session_id="sess-1",
-            doctor_id="doc-1", clinic_id="clinic-1",
+            connection_id="conn-1",
+            session_id="sess-1",
+            doctor_id="doc-1",
+            clinic_id="clinic-1",
             connected_at="2026-04-03T10:00:00+00:00",
         )
         session = Session(
-            session_id="sess-1", consultation_id="cons-1",
-            doctor_id="doc-1", clinic_id="clinic-1",
+            session_id="sess-1",
+            consultation_id="cons-1",
+            doctor_id="doc-1",
+            clinic_id="clinic-1",
             state=SessionState.RECORDING,
             audio_chunks_received=0,
             started_at="2026-04-03T10:00:00+00:00",
@@ -330,8 +354,8 @@ class WsAudioChunkLoggingTest(unittest.TestCase):
 
         handle_audio_chunk(event, connection_repo, session_repo, apigw)
 
-        debug_events = [c.args[0] for c in mock_logger.debug.call_args_list]
-        self.assertIn("ws_audio_chunk_processed", debug_events)
+        info_events = [c.args[0] for c in mock_logger.info.call_args_list]
+        self.assertIn("ws_audio_chunk_processed", info_events)
 
 
 if __name__ == "__main__":

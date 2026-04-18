@@ -38,7 +38,7 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-Authenticated app facelift complete — public website and hardening pending
+Authenticated app core workflow corrections planned — public website deferred
 
 ### Overall Progress
 94% complete
@@ -73,9 +73,10 @@ Authenticated app facelift complete — public website and hardening pending
 - Task 017 completed: authenticated app design system primitives, tokens, icon wrapper, tests, docs, and ADR are in place.
 - Task 018 completed: authenticated app pages now use the design system across shell, login, consultation, live session, review, finalization, and export surfaces.
 - Task 019 completed: TanStack Query-backed request state, mutation invalidation, loading buttons, cache clearing on sign-out, tests, docs, and ADR-016 are in place.
+- Tasks 020 through 024 created: authenticated app polish/copy/logo fixes, patient CPF/search/history contracts, staged consultation entry flow, realtime consultation data feed, and unified Anamnese consultation workspace.
 
 ### Immediate Next Step
-Start `013-build-public-website-and-entry-flows.md`
+Start `020-fix-authenticated-app-polish-copy-and-logo.md`
 
 ## 5. Priority Queue
 
@@ -83,9 +84,14 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure |
-| 2 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | planned | Dashboards, alarms, retention, IAM tightening |
-| 3 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | planned | End-to-end validation and release packaging after remaining frontend/security work |
+| 1 | `020-fix-authenticated-app-polish-copy-and-logo.md` | Fix authenticated app polish, copy, and logo | planned | Immediate authenticated app visual/copy quality fixes |
+| 2 | `021-extend-patient-identity-search-and-history-contracts.md` | Extend patient identity, search, and history contracts | planned | Required for CPF-based patient-first consultation flow |
+| 3 | `023-implement-realtime-consultation-data-feed.md` | Implement realtime consultation data feed | planned | Removes stub transcript behavior before workspace redesign |
+| 4 | `022-build-staged-consultation-entry-and-patient-flow.md` | Build staged consultation entry and patient flow | planned | Separates list and new-consultation flow after patient contract expansion |
+| 5 | `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` | Redesign consultation workspace with Anamnese and inline review | planned | Makes the live consultation screen the core app workspace |
+| 6 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure after core app corrections |
+| 7 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | planned | Dashboards, alarms, retention, IAM tightening |
+| 8 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | planned | End-to-end validation and release packaging after remaining frontend/security work |
 
 ## 6. Active Blockers
 
@@ -93,7 +99,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 013 implementation |
+| None | No active blockers | N/A | N/A | Begin Task 020 implementation |
 
 ## 7. Task Index
 
@@ -115,11 +121,16 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | 012 | `012-build-authenticated-react-app.md` | Build authenticated React app | Frontend | Critical | done | `005-implement-authentication-and-plan-access-control.md`, `007-build-bff-contracts-ui-config-and-feature-flags.md`, `008-implement-realtime-consultation-session-transport.md`, `011-implement-review-finalization-and-export-workflows.md` | 100 | Authenticated React app completed with login/session flows, consultation list/create, live recording UI, review/edit/finalize/export screens, backend-driven UI rendering, and frontend tests |
 | 013 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | Frontend | Medium | planned | `003-bootstrap-repository-and-engineering-foundation.md`, `004-provision-aws-foundation-with-cdk.md` | 0 | Delivers the static marketing website and login entrypoints with MVP-accurate messaging and SEO-friendly structure |
 | 014 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | Security | High | planned | `004-provision-aws-foundation-with-cdk.md`, `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md`, `011-implement-review-finalization-and-export-workflows.md` | 0 | Adds dashboards, alarms, retention controls, PHI-aware logging, IAM tightening, and budget enforcement |
-| 015 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | QA | Critical | planned | `005-implement-authentication-and-plan-access-control.md`, `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md`, `011-implement-review-finalization-and-export-workflows.md`, `012-build-authenticated-react-app.md`, `013-build-public-website-and-entry-flows.md`, `014-add-observability-security-privacy-and-cost-controls.md`, `016-apply-notter-frontend-branding.md`, `017-create-authenticated-app-design-system.md`, `018-apply-authenticated-app-facelift.md`, `019-add-frontend-query-cache-and-loading-states.md` | 0 | Validates the integrated MVP, closes blockers, and prepares the release, rollback, and runbook package |
+| 015 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | QA | Critical | planned | `005-implement-authentication-and-plan-access-control.md`, `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md`, `011-implement-review-finalization-and-export-workflows.md`, `012-build-authenticated-react-app.md`, `013-build-public-website-and-entry-flows.md`, `014-add-observability-security-privacy-and-cost-controls.md`, `016-apply-notter-frontend-branding.md`, `017-create-authenticated-app-design-system.md`, `018-apply-authenticated-app-facelift.md`, `019-add-frontend-query-cache-and-loading-states.md`, `020-fix-authenticated-app-polish-copy-and-logo.md`, `021-extend-patient-identity-search-and-history-contracts.md`, `022-build-staged-consultation-entry-and-patient-flow.md`, `023-implement-realtime-consultation-data-feed.md`, `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` | 0 | Validates the integrated MVP, closes blockers, and prepares the release, rollback, and runbook package |
 | 016 | `016-apply-notter-frontend-branding.md` | Apply Notter frontend branding | Frontend | High | done | `012-build-authenticated-react-app.md` | 100 | Authenticated app visible branding updated to Notter with logo assets, document title, and regression tests while preserving DeskAI technical identifiers |
 | 017 | `017-create-authenticated-app-design-system.md` | Create authenticated app design system | Frontend | High | done | `012-build-authenticated-react-app.md`, `016-apply-notter-frontend-branding.md` | 100 | Reusable UI primitives, design tokens, lucide-backed icon wrapper, tests, README guidance, and ADR-015 are in place |
 | 018 | `018-apply-authenticated-app-facelift.md` | Apply authenticated app facelift | Frontend | High | done | `012-build-authenticated-react-app.md`, `016-apply-notter-frontend-branding.md`, `017-create-authenticated-app-design-system.md` | 100 | Design system applied across authenticated shell, login, consultation, live session, review, finalization, and export surfaces with regression tests |
 | 019 | `019-add-frontend-query-cache-and-loading-states.md` | Add frontend query cache and loading states | Frontend | Medium | done | `012-build-authenticated-react-app.md`, `017-create-authenticated-app-design-system.md`, `018-apply-authenticated-app-facelift.md` | 100 | TanStack Query-backed request state added with query/mutation hooks, provider setup, cache invalidation, sign-out cache clearing, loading states, tests, docs, and ADR-016 |
+| 020 | `020-fix-authenticated-app-polish-copy-and-logo.md` | Fix authenticated app polish, copy, and logo | Full Stack | High | planned | `016-apply-notter-frontend-branding.md`, `017-create-authenticated-app-design-system.md`, `018-apply-authenticated-app-facelift.md` | 0 | Fixes authenticated app background treatment, pt-BR accent issues, and login logo contrast |
+| 021 | `021-extend-patient-identity-search-and-history-contracts.md` | Extend patient identity, search, and history contracts | Full Stack | Critical | planned | `006-model-consultation-domain-persistence-and-audit.md`, `011-implement-review-finalization-and-export-workflows.md`, `014-add-observability-security-privacy-and-cost-controls.md` | 0 | Adds CPF-based patient identity/search and current-doctor patient history contract |
+| 022 | `022-build-staged-consultation-entry-and-patient-flow.md` | Build staged consultation entry and patient flow | Frontend | Critical | planned | `021-extend-patient-identity-search-and-history-contracts.md` | 0 | Splits consultation list from new consultation flow and makes post-login home patient-first |
+| 023 | `023-implement-realtime-consultation-data-feed.md` | Implement realtime consultation data feed | Full Stack | Critical | planned | `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md` | 0 | Replaces stub transcript events with real realtime transcript/session feed and provisional update contracts |
+| 024 | `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` | Redesign consultation workspace with Anamnese and inline review | Full Stack | Critical | planned | `021-extend-patient-identity-search-and-history-contracts.md`, `022-build-staged-consultation-entry-and-patient-flow.md`, `023-implement-realtime-consultation-data-feed.md` | 0 | Makes `/consultations/:id/live` the unified consultation, Anamnese, recording, review, finalization, and export workspace |
 
 ## 8. Milestones
 
@@ -130,7 +141,7 @@ Track major delivery checkpoints for the MVP.
 | Project Setup | Task system ready for execution | done | Template and manager files created |
 | Infrastructure Ready | AWS baseline in place | done | Tasks 003 and 004 completed. Dev environment deployed 2026-04-02: 9 stacks live in us-east-1, health endpoint verified. Lambda packaging and env var issues from Task 005 fixed (OI-007). |
 | Backend Ready | Core API and business logic in place | done | Tasks 005 through 011 completed. All core backend endpoints implemented: auth, consultations, sessions, transcription, AI pipeline, review, finalization, export. 1115 tests passing. |
-| Frontend Ready | Core MVP interface in place | in_progress | Authenticated app facelift and query-state work completed through Task 019. Task 013 public website work remains. |
+| Frontend Ready | Core MVP interface in place | in_progress | Authenticated app facelift and query-state work completed through Task 019. Tasks 020-024 plan core workflow corrections before Task 013 public website work. |
 | MVP Ready | End-to-end usable first version | planned | Covered by Tasks 014 and 015 |
 
 ## 9. Open Issues
@@ -154,14 +165,20 @@ Track cross-task decisions, missing information, or conflicts.
 | OI-013 | `unsafe_plain_text` placeholder committed to git history | `SecretValue.unsafe_plain_text("see-elevenlabs-secret")` was committed in e0681d9 (now superseded by f35425c). Not a real key, but the pattern is a code smell in version control. | resolved | Not a real secret (placeholder text only). Git history cannot be rewritten. Pattern avoided in subsequent CDK code. No action needed. |
 | OI-014 | WebSocket container wiring uses dependency stubs, not full container resolution | `router.py` has `_get_transcription_provider()` and `_get_finalize_transcript_use_case()` stubs that raise `NotImplementedError`. WebSocket handlers don't go through the full `build_container()` path yet. | resolved | Fixed in PR #51: WebSocket router now uses `_get_container()` for all routes (session.init, audio.chunk, session.stop). Authorizer handler added. Route dispatch normalised for named routes and $default. Tested live: session.init and audio.chunk work end-to-end. |
 | OI-015 | Finalization runs synchronously inside `session.stop` handler | `FinalizeTranscriptUseCase` is called inline after session ends. Long transcriptions could exceed Lambda 30s timeout. Handler catches and logs exceptions to avoid breaking the stop response. | open | Decouple via EventBridge or SQS before prod. Session.stop should fire an event, and a separate Lambda invocation should handle finalization. Acceptable for dev/testing. |
-| OI-016 | Stub `transcript.partial` still sent in `audio.chunk` handler | Real-time partial transcripts from ElevenLabs require persistent WebSocket or callback. Current handler still sends `[stub transcript]` placeholder. The actual transcription happens in batch when `fetch_final_transcript` is called. | open | Task 012 implemented resilient frontend fallback for current payload. Complete backend transcription-token endpoint and direct ElevenLabs realtime streaming path in a follow-up task to remove stub events. |
-| OI-017 | Review payload contract drift (`ReviewView`) | Frontend must use defensive fallbacks because backend `build_review_view` currently omits or weakly-types fields expected by contract (`transcript`, `ui_config`, `summary.content` shape mismatch). | open | Align backend `ReviewView` response with `contracts/http/review.yaml` and add contract tests to prevent future drift. |
+| OI-016 | Stub `transcript.partial` still sent in `audio.chunk` handler | Real-time partial transcripts from ElevenLabs require persistent WebSocket or callback. Current handler still sends `[stub transcript]` placeholder. The actual transcription happens in batch when `fetch_final_transcript` is called. | open | Resolve in `023-implement-realtime-consultation-data-feed.md` by replacing stub events with a real realtime transcript path or provider-token streaming path. |
+| OI-017 | Review payload contract drift (`ReviewView`) | Frontend must use defensive fallbacks because backend `build_review_view` currently omits or weakly-types fields expected by contract (`transcript`, `ui_config`, `summary.content` shape mismatch). | open | Address during `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` or an earlier contract alignment step if needed by the unified workspace. |
 
 ## 10. Recently Updated Tasks
 
 List the most recently changed tasks first.
 
 | Date | Task File | Change |
+| 2026-04-18 | `@task-manager.md` | Added Tasks 020 through 024 to priority queue and task index; updated current phase, next step, dependencies, milestone notes, and open issue next actions |
+| 2026-04-18 | `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` | Created unified consultation workspace, Anamnese, inline review, finalization, and export redesign task |
+| 2026-04-18 | `023-implement-realtime-consultation-data-feed.md` | Created realtime transcript/session feed and provisional update contract task |
+| 2026-04-18 | `022-build-staged-consultation-entry-and-patient-flow.md` | Created staged post-login consultation entry and patient flow task |
+| 2026-04-18 | `021-extend-patient-identity-search-and-history-contracts.md` | Created CPF-based patient identity, search, and current-doctor history contract task |
+| 2026-04-18 | `020-fix-authenticated-app-polish-copy-and-logo.md` | Created authenticated app background, pt-BR copy, and login logo polish task |
 | 2026-04-18 | `019-add-frontend-query-cache-and-loading-states.md` | Completed: TanStack Query provider/hooks, query-backed pages, mutation invalidation, sign-out cache clearing, tests, docs, and ADR-016 |
 | 2026-04-18 | `019-add-frontend-query-cache-and-loading-states.md` | Started implementation: moved to in_progress for TanStack Query-backed request state and cache clearing |
 | 2026-04-18 | `018-apply-authenticated-app-facelift.md` | Completed: design-system primitives applied across authenticated pages with loading, alert, empty, chip, form, and action states verified |

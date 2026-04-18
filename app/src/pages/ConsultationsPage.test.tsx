@@ -1,0 +1,117 @@
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ConsultationsPage } from './ConsultationsPage';
+
+const listConsultationsMock = vi.fn();
+const listPatientsMock = vi.fn();
+const createConsultationMock = vi.fn();
+const createPatientMock = vi.fn();
+const useAuthMock = vi.fn();
+
+vi.mock('../api/endpoints', () => ({
+  listConsultations: (...args: unknown[]) => listConsultationsMock(...args),
+  listPatients: (...args: unknown[]) => listPatientsMock(...args),
+  createConsultation: (...args: unknown[]) => createConsultationMock(...args),
+  createPatient: (...args: unknown[]) => createPatientMock(...args),
+}));
+
+vi.mock('../auth/use-auth', () => ({
+  useAuth: () => useAuthMock(),
+}));
+
+describe('ConsultationsPage', () => {
+  beforeEach(() => {
+    listConsultationsMock.mockReset();
+    listPatientsMock.mockReset();
+    createConsultationMock.mockReset();
+    createPatientMock.mockReset();
+
+    useAuthMock.mockReturnValue({
+      profile: {
+        user: {
+          doctor_id: 'doc-1',
+          name: 'Dra. Maria',
+          email: 'maria@example.com',
+          plan_type: 'free_trial',
+          clinic_id: 'clinic-1',
+          clinic_name: 'Clinica Centro',
+        },
+        entitlements: {
+          can_create_consultation: true,
+          consultations_remaining: 10,
+          consultations_used_this_month: 0,
+          max_duration_minutes: 30,
+          export_enabled: true,
+          trial_expired: false,
+          trial_days_remaining: 12,
+        },
+      },
+      uiConfig: {
+        labels: {
+          consultation_list_title: 'Consultas',
+          new_consultation_button: 'Nova consulta',
+        },
+      },
+    });
+
+    listConsultationsMock.mockResolvedValue({
+      consultations: [],
+      total_count: 0,
+      page: 1,
+      page_size: 20,
+    });
+
+    listPatientsMock.mockResolvedValue({ patients: [] });
+  });
+
+  it('shows empty state when there are no consultations', async () => {
+    render(
+      <MemoryRouter>
+        <ConsultationsPage />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('Nenhuma consulta encontrada para este medico.')).toBeInTheDocument();
+  });
+
+  it('shows create-locked message when entitlement denies creation', async () => {
+    useAuthMock.mockReturnValue({
+      profile: {
+        user: {
+          doctor_id: 'doc-1',
+          name: 'Dra. Maria',
+          email: 'maria@example.com',
+          plan_type: 'free_trial',
+          clinic_id: 'clinic-1',
+          clinic_name: 'Clinica Centro',
+        },
+        entitlements: {
+          can_create_consultation: false,
+          consultations_remaining: 0,
+          consultations_used_this_month: 10,
+          max_duration_minutes: 30,
+          export_enabled: true,
+          trial_expired: false,
+          trial_days_remaining: 0,
+        },
+      },
+      uiConfig: {
+        labels: {
+          consultation_list_title: 'Consultas',
+          new_consultation_button: 'Nova consulta',
+        },
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <ConsultationsPage />
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByText('A criacao de consultas esta bloqueada para este usuario no momento.'),
+    ).toBeInTheDocument();
+  });
+});

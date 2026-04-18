@@ -2,8 +2,6 @@ You are working inside this project repository and must implement one task at a 
 
 The repository root, together with `./docs` and `./tasks`, is the current planning and implementation source of truth for this project. If older notes elsewhere in the repository conflict with these files, prefer the root `README.md`, `./docs`, and `./tasks`.
 
-Before doing anything else, follow the reading order and priority rules defined in `CLAUDE.md` (section "Current Source Of Truth"). That file is the single canonical reference for which documents to read and in what order.
-
 Your job is to fully implement the assigned task in the codebase, following all business rules, technical specs, architecture constraints, and clean code expectations defined in those files.
 
 Core instructions:

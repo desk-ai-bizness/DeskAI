@@ -468,7 +468,12 @@ class StackSynthesisTest(unittest.TestCase):
             {
                 "Name": DEV_CONFIG.http_api_name,
                 "CorsConfiguration": Match.object_like(
-                    {"AllowOrigins": Match.array_with(["https://app.dev.deskai.com.br"])}
+                    {
+                        "AllowOrigins": Match.array_with(["https://app.dev.deskai.com.br"]),
+                        "AllowHeaders": Match.array_with(
+                            ["Authorization", "Content-Type", "X-Request-Id", "X-Contract-Version"]
+                        ),
+                    }
                 ),
                 "ProtocolType": "HTTP",
             },

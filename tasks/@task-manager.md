@@ -38,10 +38,10 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-Backend complete — ready for frontend implementation
+Frontend core app complete — public website implementation pending
 
 ### Overall Progress
-87% complete
+93% complete
 
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
@@ -63,9 +63,14 @@ Backend complete — ready for frontend implementation
 - Task 009 completed: ElevenLabs Scribe v2 transcription provider integrated through internal adapter interface. Transcription domain layer (NormalizedTranscript entity, SpeakerSegment/PartialTranscript/CompletenessStatus VOs, TranscriptionNormalizer service, 5 exception types). ElevenLabs adapter with HTTP batch upload for Lambda compatibility, tenacity retry, Secrets Manager config. S3 artifact persistence (S3Client, S3ArtifactRepository, S3TranscriptRepository) with existing key strategy. TranscriptionProvider port extended to 5 methods. ProcessAudioChunk and FinalizeTranscript use cases. WebSocket handlers updated (audio.chunk forwards to provider, session.stop triggers finalization). Container wired with all new dependencies. 108 new tests (569 total), zero regressions, lint clean
 - Task 010 completed: AI processing pipeline with Claude API (Anthropic) generating medical history, SOAP summary, and evidence-backed insights. Domain layer (6 exceptions, InsightCategory/InsightSeverity enums, EvidenceExcerpt/Insight/GenerationMetadata/ArtifactResult VOs, PipelineResult entity, ArtifactValidator and EvidenceLinker services). ClaudeLLMProvider adapter with tenacity retry and Secrets Manager config, LazyLLMProvider for deferred initialization, SecretsManagerClient adapter. RunPipelineUseCase orchestrating sequential 3-step pipeline (anamnesis → summary → insights) with schema validation, evidence linking, partial completion support, and audit trail. Pipeline Lambda handler for Step Functions/EventBridge trigger. Container wired: StubLLMProvider replaced with LazyLLMProvider backed by ClaudeLLMProvider. anthropic dependency added. 145 new tests (951 total), zero regressions, lint clean
 - Task 011 completed: Review, finalization, and export workflows. Review domain (InsightAction enum, InsightReviewItem/ReviewPayload/FinalizedRecord entities, finalization guards, 5 exception types, ReviewUpdate VO). Export domain (ExportRequest/ExportArtifact entities, ExportGenerationError, S3 key builders). 4 use cases (OpenReview with draft→review transition, UpdateReview with per-field audit, FinalizeConsultation with idempotency, GenerateExport with presigned URLs). PdfExportGenerator adapter (replaces stub, no external deps). S3StorageProvider with presigned URL generation. HTTP handlers for GET/PUT review, POST finalize, POST export. BFF views (ReviewView, FinalizeView, ExportView). Middleware exception map + BFF router wired. Container updated with 4 new use cases. 164 new tests (1115 total), zero regressions, lint clean
+- Task 012 completed: authenticated React app delivered with sign-in/session restore/sign-out, consultation list and creation, live session with microphone + WebSocket connection handling, review/edit/finalize/export flow, backend-driven labels/status/action rendering, and frontend test suite (11 tests) using Vitest + Testing Library. App docs updated.
+- Task 012 post-completion fix completed: local dev CORS login issue addressed by adding Vite API proxy support (`/api`), updating local app env defaults, and allowing `X-Contract-Version` in API Gateway CORS headers (infra stack + synthesis test coverage).
+- Task 012 post-completion polish completed: login page visual redesign and copy refresh for a more production-ready experience, including removal of developer-facing authentication text.
+- Task 012 post-completion polish (phase 2) completed: richer login motion system and interaction design with ambient animated background, staggered section entrances, hover depth, CTA micro-interactions, and reduced-motion fallback.
+- Task 012 post-completion polish (phase 3) completed: desktop-first side-by-side layout restored for login and expanded into reusable responsive two-column layouts across consultations, live session, and review pages.
 
 ### Immediate Next Step
-Start `012-build-authenticated-react-app.md`
+Start `013-build-public-website-and-entry-flows.md`
 
 ## 5. Priority Queue
 
@@ -73,9 +78,9 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `012-build-authenticated-react-app.md` | Build authenticated React app | planned | Frontend for consultation flow, review, and finalization |
-| 2 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure |
-| 3 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | planned | Dashboards, alarms, retention, IAM tightening |
+| 1 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure |
+| 2 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | planned | Dashboards, alarms, retention, IAM tightening |
+| 3 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | planned | End-to-end validation and release packaging after remaining frontend/security work |
 
 ## 6. Active Blockers
 
@@ -83,7 +88,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 012 |
+| None | No active blockers | N/A | N/A | Begin Task 013 implementation |
 
 ## 7. Task Index
 
@@ -102,7 +107,7 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | 009 | `009-integrate-transcription-provider-and-normalization.md` | Integrate transcription provider and normalization | Backend | Critical | done | `008-implement-realtime-consultation-session-transport.md` | 100 | ElevenLabs Scribe v2 adapter (HTTP batch for Lambda, tenacity retry, Secrets Manager config), transcription domain (NormalizedTranscript, SpeakerSegment, CompletenessStatus, TranscriptionNormalizer, 5 exceptions), S3 persistence (S3Client, ArtifactRepository, TranscriptRepository), ProcessAudioChunk and FinalizeTranscript use cases, WebSocket handler wiring, container DI updated, 108 new tests (569 total) |
 | 010 | `010-build-ai-processing-pipeline-and-artifacts.md` | Build AI processing pipeline and artifacts | Backend | Critical | done | `006-model-consultation-domain-persistence-and-audit.md`, `009-integrate-transcription-provider-and-normalization.md` | 100 | AI pipeline with Claude API: domain layer (6 exceptions, InsightCategory/Severity enums, EvidenceExcerpt/Insight/GenerationMetadata/ArtifactResult VOs, PipelineResult entity, ArtifactValidator/EvidenceLinker services), ClaudeLLMProvider adapter (tenacity retry, Secrets Manager), LazyLLMProvider, SecretsManagerClient, RunPipelineUseCase (3-step sequential: anamnesis→summary→insights, schema validation, evidence linking, partial completion, audit trail), pipeline Lambda handler, container wired, 145 new tests (951 total) |
 | 011 | `011-implement-review-finalization-and-export-workflows.md` | Implement review, finalization, and export workflows | Backend | Critical | done | `007-build-bff-contracts-ui-config-and-feature-flags.md`, `010-build-ai-processing-pipeline-and-artifacts.md` | 100 | Review domain (InsightAction, ReviewPayload, FinalizedRecord, finalization guards, 5 exceptions), export domain (ExportRequest, ExportArtifact, PdfExportGenerator), 4 use cases (OpenReview, UpdateReview, FinalizeConsultation, GenerateExport), HTTP handlers (GET/PUT review, POST finalize, POST export), BFF views, middleware + router wired, container updated, 164 new tests (1115 total) |
-| 012 | `012-build-authenticated-react-app.md` | Build authenticated React app | Frontend | Critical | planned | `005-implement-authentication-and-plan-access-control.md`, `007-build-bff-contracts-ui-config-and-feature-flags.md`, `008-implement-realtime-consultation-session-transport.md`, `011-implement-review-finalization-and-export-workflows.md` | 0 | Builds the physician-facing app for login, live consultation, review, editing, and finalization in `pt-BR` |
+| 012 | `012-build-authenticated-react-app.md` | Build authenticated React app | Frontend | Critical | done | `005-implement-authentication-and-plan-access-control.md`, `007-build-bff-contracts-ui-config-and-feature-flags.md`, `008-implement-realtime-consultation-session-transport.md`, `011-implement-review-finalization-and-export-workflows.md` | 100 | Authenticated React app completed with login/session flows, consultation list/create, live recording UI, review/edit/finalize/export screens, backend-driven UI rendering, and frontend tests |
 | 013 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | Frontend | Medium | planned | `003-bootstrap-repository-and-engineering-foundation.md`, `004-provision-aws-foundation-with-cdk.md` | 0 | Delivers the static marketing website and login entrypoints with MVP-accurate messaging and SEO-friendly structure |
 | 014 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | Security | High | planned | `004-provision-aws-foundation-with-cdk.md`, `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md`, `011-implement-review-finalization-and-export-workflows.md` | 0 | Adds dashboards, alarms, retention controls, PHI-aware logging, IAM tightening, and budget enforcement |
 | 015 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | QA | Critical | planned | `005-implement-authentication-and-plan-access-control.md`, `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md`, `011-implement-review-finalization-and-export-workflows.md`, `012-build-authenticated-react-app.md`, `013-build-public-website-and-entry-flows.md`, `014-add-observability-security-privacy-and-cost-controls.md` | 0 | Validates the integrated MVP, closes blockers, and prepares the release, rollback, and runbook package |
@@ -116,7 +121,7 @@ Track major delivery checkpoints for the MVP.
 | Project Setup | Task system ready for execution | done | Template and manager files created |
 | Infrastructure Ready | AWS baseline in place | done | Tasks 003 and 004 completed. Dev environment deployed 2026-04-02: 9 stacks live in us-east-1, health endpoint verified. Lambda packaging and env var issues from Task 005 fixed (OI-007). |
 | Backend Ready | Core API and business logic in place | done | Tasks 005 through 011 completed. All core backend endpoints implemented: auth, consultations, sessions, transcription, AI pipeline, review, finalization, export. 1115 tests passing. |
-| Frontend Ready | Core MVP interface in place | planned | Covered by Tasks 012 and 013 |
+| Frontend Ready | Core MVP interface in place | in_progress | Task 012 completed. Task 013 pending for public website and entry-flow completion. |
 | MVP Ready | End-to-end usable first version | planned | Covered by Tasks 014 and 015 |
 
 ## 9. Open Issues
@@ -131,7 +136,7 @@ Track cross-task decisions, missing information, or conflicts.
 | OI-004 | Export output scope beyond the finalized note is not fully specified | Export implementation could diverge from stakeholder expectations | resolved | PDF with metadata + finalized history + summary + accepted insights. No transcript. See DEC-004. |
 | OI-005 | Specialty list and validation approach not defined | Domain model cannot validate specialty field | resolved | `Specialty` enum with `GENERAL_PRACTICE` implemented in Task 006. Expandable via configuration. |
 | OI-006 | Patient CRUD endpoints not defined in API contract | Cannot create consultations without patient management | resolved | Minimal `POST /v1/patients` and `GET /v1/patients` added to API contract. See ADR-014 and `docs/architecture/03-contract-inventory.md`. |
-| OI-007 | Token delivery strategy (body vs HttpOnly cookie) | XSS risk for browser-based clients if refresh_token stays in JSON body | open | Decide based on client architecture before Task 012 (React app). See Task 005 follow-ups. |
+| OI-007 | Token delivery strategy (body vs HttpOnly cookie) | XSS risk for browser-based clients if refresh_token stays in JSON body | open | Task 012 uses `sessionStorage` as an interim strategy. Decide whether to move to HttpOnly cookie strategy before production rollout. |
 | OI-008 | `DoctorProfile.created_at` is `str` instead of `datetime` | Every consumer must parse ISO strings; domain model is not self-descriptive | resolved | Refactored: `created_at` is now `datetime`, `compute_entitlements` accepts `datetime` directly, DynamoDB adapter handles serialization. 14 files updated, 951 tests passing. |
 | OI-009 | BFF Lambda `sys.path` manipulation is fragile | Lambda packaging changes will silently break imports | resolved | Fixed: Makefile build step bundles `lambda_handlers/` + `backend/src/deskai/` + pip deps into `infra/.build/lambda/`. `sys.path` hack removed from `bff.py`. |
 | OI-010 | BFF router does not support path parameters | Cannot route `/v1/consultations/{id}` style endpoints | resolved | Fixed in Task 006: BFF router upgraded with regex-based parameterized routing. Path parameters extracted and injected into event['pathParameters']. |
@@ -140,13 +145,26 @@ Track cross-task decisions, missing information, or conflicts.
 | OI-013 | `unsafe_plain_text` placeholder committed to git history | `SecretValue.unsafe_plain_text("see-elevenlabs-secret")` was committed in e0681d9 (now superseded by f35425c). Not a real key, but the pattern is a code smell in version control. | resolved | Not a real secret (placeholder text only). Git history cannot be rewritten. Pattern avoided in subsequent CDK code. No action needed. |
 | OI-014 | WebSocket container wiring uses dependency stubs, not full container resolution | `router.py` has `_get_transcription_provider()` and `_get_finalize_transcript_use_case()` stubs that raise `NotImplementedError`. WebSocket handlers don't go through the full `build_container()` path yet. | resolved | Fixed in PR #51: WebSocket router now uses `_get_container()` for all routes (session.init, audio.chunk, session.stop). Authorizer handler added. Route dispatch normalised for named routes and $default. Tested live: session.init and audio.chunk work end-to-end. |
 | OI-015 | Finalization runs synchronously inside `session.stop` handler | `FinalizeTranscriptUseCase` is called inline after session ends. Long transcriptions could exceed Lambda 30s timeout. Handler catches and logs exceptions to avoid breaking the stop response. | open | Decouple via EventBridge or SQS before prod. Session.stop should fire an event, and a separate Lambda invocation should handle finalization. Acceptable for dev/testing. |
-| OI-016 | Stub `transcript.partial` still sent in `audio.chunk` handler | Real-time partial transcripts from ElevenLabs require persistent WebSocket or callback. Current handler still sends `[stub transcript]` placeholder. The actual transcription happens in batch when `fetch_final_transcript` is called. | open | **Architecture decided:** Client-side streaming via ElevenLabs WebSocket (`wss://api.elevenlabs.io/v1/speech-to-text/realtime`). Backend provides single-use token endpoint (`POST /v1/consultations/{id}/transcription-token`). Frontend connects directly, receives `partial_transcript` and `committed_transcript` events, forwards committed segments to backend for persistence. Implementation deferred to Task 012 (React app). See ElevenLabs Scribe v2 Realtime API docs. |
+| OI-016 | Stub `transcript.partial` still sent in `audio.chunk` handler | Real-time partial transcripts from ElevenLabs require persistent WebSocket or callback. Current handler still sends `[stub transcript]` placeholder. The actual transcription happens in batch when `fetch_final_transcript` is called. | open | Task 012 implemented resilient frontend fallback for current payload. Complete backend transcription-token endpoint and direct ElevenLabs realtime streaming path in a follow-up task to remove stub events. |
+| OI-017 | Review payload contract drift (`ReviewView`) | Frontend must use defensive fallbacks because backend `build_review_view` currently omits or weakly-types fields expected by contract (`transcript`, `ui_config`, `summary.content` shape mismatch). | open | Align backend `ReviewView` response with `contracts/http/review.yaml` and add contract tests to prevent future drift. |
 
 ## 10. Recently Updated Tasks
 
 List the most recently changed tasks first.
 
 | Date | Task File | Change |
+| 2026-04-15 | `012-build-authenticated-react-app.md` | Post-completion polish (phase 3): fixed login desktop side-by-side composition and applied consistent responsive two-column layout patterns to consultations, live session, and review pages |
+| 2026-04-15 | `@task-manager.md` | Updated Task 012 summary and recent updates with cross-page responsive layout polish phase 3 |
+| 2026-04-15 | `012-build-authenticated-react-app.md` | Post-completion polish (phase 2): upgraded login page with modern motion/interaction design (ambient animation, staggered entrances, hover depth, animated CTA, and reduced-motion fallback) |
+| 2026-04-15 | `@task-manager.md` | Updated Task 012 summary and recent updates with login motion/interaction polish phase 2 |
+| 2026-04-12 | `012-build-authenticated-react-app.md` | Post-completion polish: refined login page layout and visual hierarchy, refreshed copy, removed developer-facing authentication note, and added test coverage to prevent technical auth copy from returning |
+| 2026-04-12 | `@task-manager.md` | Updated Task 012 summary and recent updates with login page production-readiness polish |
+| 2026-04-11 | `012-build-authenticated-react-app.md` | Post-completion fix: resolved localhost login CORS by adding Vite `/api` proxy support, updating local env defaults (`VITE_API_BASE_URL=/api` + `VITE_API_PROXY_TARGET`), and extending API Gateway CORS allow headers with `X-Contract-Version` (with infra test coverage) |
+| 2026-04-11 | `@task-manager.md` | Updated snapshot and recent changes with Task 012 CORS post-completion fix details |
+| 2026-04-11 | `012-build-authenticated-react-app.md` | Completed: route-based authenticated app (login/session restore/sign-out), consultation list/create + patient helper, live session UI (microphone/WebSocket/transcript/reconnect), review/edit/finalize/export screens, backend-driven UI rendering, app docs update, and 11 frontend tests |
+| 2026-04-11 | `@task-manager.md` | Updated for Task 012 completion: status done, progress 93%, priority queue updated, next step set to Task 013, frontend milestone moved to in-progress, OI-017 added |
+| 2026-04-11 | `012-build-authenticated-react-app.md` | Started implementation: task moved to in-progress and authenticated app implementation/testing work underway |
+| 2026-04-11 | `@task-manager.md` | Updated snapshot, priority queue, and Task 012 status to in-progress |
 | 2026-04-04 | `011-implement-review-finalization-and-export-workflows.md` | Completed: Review domain (InsightAction enum, InsightReviewItem/ReviewPayload/FinalizedRecord entities, finalization guards, 5 exceptions, ReviewUpdate VO), export domain (ExportRequest/ExportArtifact, ExportGenerationError, S3 key builders), PdfExportGenerator adapter (replaces stub), S3StorageProvider + presigned URLs, 4 use cases (OpenReview, UpdateReview, FinalizeConsultation, GenerateExport), HTTP handlers (GET/PUT review, POST finalize, POST export), BFF views (ReviewView, FinalizeView, ExportView), middleware exception map + BFF router wired, container updated, 164 new tests (1115 total) |
 | 2026-04-04 | `@task-manager.md` | Updated for Task 011 completion: status done, progress 87%, priority queue updated, Backend Ready milestone marked done, next step set to Task 012 |
 | --- | --- | --- |

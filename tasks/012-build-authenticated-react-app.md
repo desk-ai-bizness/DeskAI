@@ -107,12 +107,12 @@ The task should produce:
 
 ## 7. Acceptance Criteria
 
-- [ ] Physicians can complete the MVP workflow in the authenticated app from sign-in to finalization.
-- [ ] Product-facing UI content is presented in `pt-BR`.
-- [ ] The app renders backend-driven configuration, statuses, and action availability.
-- [ ] The UI clearly distinguishes draft content from finalized records.
-- [ ] Relevant tests are added or updated
-- [ ] Documentation is updated if behavior or setup changed
+- [x] Physicians can complete the MVP workflow in the authenticated app from sign-in to finalization.
+- [x] Product-facing UI content is presented in `pt-BR`.
+- [x] The app renders backend-driven configuration, statuses, and action availability.
+- [x] The UI clearly distinguishes draft content from finalized records.
+- [x] Relevant tests are added or updated
+- [x] Documentation is updated if behavior or setup changed
 
 ## 8. Testing
 
@@ -136,10 +136,29 @@ Use the app as a physician, start a consultation, review live transcript updates
 
 ## 10. Definition of Done
 
-- [ ] Implementation is complete
-- [ ] Acceptance criteria are met
-- [ ] Tests pass
-- [ ] No obvious regressions were introduced
-- [ ] Logs, metrics, and error handling were considered
-- [ ] Security and permissions were reviewed if relevant
-- [ ] Task is ready for review or merge
+- [x] Implementation is complete
+- [x] Acceptance criteria are met
+- [x] Tests pass
+- [x] No obvious regressions were introduced
+- [x] Logs, metrics, and error handling were considered
+- [x] Security and permissions were reviewed if relevant
+- [x] Task is ready for review or merge
+
+## 11. Implementation Summary (2026-04-11)
+
+- Implemented authenticated route-based React app with sign-in, session restoration, and sign-out.
+- Implemented consultation list and creation flow with patient helper creation form.
+- Implemented live consultation screen with microphone permission handling, WebSocket connection state, transcript partial rendering, and reconnect controls.
+- Implemented review/edit/finalization/export flow with explicit physician confirmation and draft warning banners.
+- Implemented backend-driven UI rendering for labels, status labels, review section order, insight category labels, and action availability.
+- Added frontend test stack (`vitest` + Testing Library) and component/integration tests covering auth session handling, API client behavior, consultation list states, live microphone denial handling, and review rendering.
+- Updated app documentation (`app/README.md`) with routes, environment variables, and commands.
+
+## 12. Post-Completion Fixes (2026-04-11)
+
+- Fixed local login CORS failures by adding Vite dev proxy support (`/api` → AWS dev API target) and documenting local env setup.
+- Updated local app env defaults to use proxy-first API base URL for localhost development.
+- Updated HTTP API Gateway CORS allowed headers to include `X-Contract-Version` and added synthesis test coverage for this header.
+- Refined login page UX/UI for production-readiness: upgraded layout and visual hierarchy, improved page copy, and removed developer-facing authentication note text.
+- Applied advanced login motion and interaction polish: ambient animated background layers, staggered content entrance, improved hover/focus transitions, animated CTA button, and reduced-motion accessibility fallback.
+- Fixed desktop layout composition by restoring side-by-side block rendering for login and applying the same responsive two-column pattern to consultations, live session, and review screens.

@@ -12,12 +12,12 @@ def get_review_screen_config() -> dict:
         ],
         "sections": {
             "transcript": {
-                "title": "Transcricao",
+                "title": "Transcrição",
                 "editable": False,
                 "visible": True,
             },
             "medical_history": {
-                "title": "Historia Clinica",
+                "title": "História Clínica",
                 "editable": True,
                 "visible": True,
             },

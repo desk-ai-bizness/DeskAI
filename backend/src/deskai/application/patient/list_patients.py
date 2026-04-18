@@ -24,7 +24,9 @@ class ListPatientsUseCase:
         logger.debug(
             "patients_listed",
             extra=log_context(
-                clinic_id=clinic_id, count=len(result), search_term=search_term or None,
+                clinic_id=clinic_id,
+                count=len(result),
+                search_present=bool(search_term),
             ),
         )
         return result

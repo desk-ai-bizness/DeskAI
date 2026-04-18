@@ -72,7 +72,7 @@ def handle_session_stop(
                 "event": "session.ended",
                 "data": {
                     "reason": "manual",
-                    "message": "Sessao encerrada.",
+                    "message": "Sessão encerrada.",
                 },
             },
         )

@@ -74,13 +74,15 @@ contracts/
 |--------|------|-------------|---------------|-------|
 | `POST` | `/v1/patients` | `CreatePatientRequest` | `PatientView` | `handlers/http/patient_handler.py` |
 | `GET` | `/v1/patients` | Query: `?search=` | `PatientListView` | `handlers/http/patient_handler.py` |
+| `GET` | `/v1/patients/{patient_id}` | None | `PatientDetailView` | `handlers/http/patient_handler.py` |
 
 #### CreatePatientRequest
 
 ```json
 {
   "name": "string",
-  "date_of_birth": "YYYY-MM-DD"
+  "cpf": "string (digits or punctuated CPF)",
+  "date_of_birth": "YYYY-MM-DD | null (optional)"
 }
 ```
 
@@ -90,11 +92,33 @@ contracts/
 {
   "patient_id": "uuid",
   "name": "string",
-  "date_of_birth": "YYYY-MM-DD",
+  "cpf": "masked CPF string",
+  "date_of_birth": "YYYY-MM-DD | null",
   "clinic_id": "uuid",
   "created_at": "ISO 8601"
 }
 ```
+
+#### PatientDetailView
+
+```json
+{
+  "patient": "PatientView",
+  "history": [
+    {
+      "consultation_id": "uuid",
+      "status": "started | recording | in_processing | processing_failed | draft_generated | under_physician_review | finalized",
+      "scheduled_date": "YYYY-MM-DD",
+      "finalized_at": "ISO 8601 | null",
+      "preview": {
+        "summary": "string"
+      } | null
+    }
+  ]
+}
+```
+
+Patient history is filtered to consultations owned by the current doctor. CPF is stored normalized as digits and returned masked for display.
 
 ### Consultation Endpoints
 

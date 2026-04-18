@@ -13,6 +13,10 @@ class PatientRepository(ABC):
         """Persist a patient record."""
 
     @abstractmethod
+    def find_by_cpf(self, cpf: str, clinic_id: str) -> Patient | None:
+        """Look up a patient by normalized CPF within a clinic."""
+
+    @abstractmethod
     def find_by_id(self, patient_id: str, clinic_id: str) -> Patient | None:
         """Look up a patient by ID within a clinic."""
 

@@ -702,6 +702,7 @@ The frontend should speak primarily to the BFF, not to deep domain services dire
 - `GET /v1/me`
 - `POST /v1/patients`
 - `GET /v1/patients`
+- `GET /v1/patients/{patient_id}`
 - `POST /v1/consultations`
 - `GET /v1/consultations`
 - `GET /v1/consultations/{consultation_id}`
@@ -1059,10 +1060,25 @@ Do not include in the MVP:
 
 ### ADR-014: Patient Endpoints
 
-- decision: add minimal `POST /v1/patients` and `GET /v1/patients` endpoints to the API contract
-- reason: consultations require a `patient_id`; without patient CRUD, consultations cannot be created without hardcoding IDs
-- reversibility: high — endpoints can be extended with more fields later
+- decision: patient identity uses required CPF plus name; `date_of_birth` is optional. The API exposes `POST /v1/patients`, `GET /v1/patients?search=`, and `GET /v1/patients/{patient_id}` with current-doctor-only consultation history.
+- reason: the patient-first consultation flow must find patients by name or CPF while preserving the MVP access rule that consultation content belongs to the creating physician.
+- reversibility: medium — the contract is additive for search/detail, but CPF uniqueness is now part of patient identity and would require migration if replaced.
 - reference: `docs/architecture/03-contract-inventory.md` section 2, resolves OPEN-005
+
+### ADR-015: Authenticated App Icon Library
+
+- decision: use `lucide-react` as the authenticated app icon library
+- reason: small tree-shakeable React icon package, simple accessibility handling, and enough neutral medical-product UI icons for MVP primitives
+- reversibility: high — icons are wrapped by the app-local `Icon` primitive in `app/src/components/ui`
+- reference: `tasks/017-create-authenticated-app-design-system.md`
+
+### ADR-016: Authenticated App Query Cache
+
+- decision: use `@tanstack/react-query` for in-memory HTTP server-state caching in the authenticated React app
+- reason: centralizes request loading, error, refetch, mutation, and invalidation behavior while keeping page components presentation-focused
+- safeguards: cache persistence is disabled; global retries are disabled by default; sign-out clears the query client; WebSocket session state remains explicit and outside the HTTP query cache
+- reversibility: high — endpoint transport remains in `app/src/api/endpoints.ts`, and app-local query hooks wrap the dependency boundary
+- reference: `tasks/019-add-frontend-query-cache-and-loading-states.md`
 
 ## 26. AI Agent Notes
 

@@ -1,27 +1,58 @@
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './auth/auth-context';
+import { useAuth } from './auth/use-auth';
 import { AppLayout } from './components/AppLayout';
-import { ConsultationPage } from './pages/ConsultationPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { useUiConfig } from './hooks/useUiConfig';
+import { BrandLogo } from './components/BrandLogo';
+import { RequireAuth } from './components/RequireAuth';
+import { Card, Loader } from './components/ui';
+import { ConsultationsPage } from './pages/ConsultationsPage';
+import { LiveConsultationPage } from './pages/LiveConsultationPage';
+import { LoginPage } from './pages/LoginPage';
+import { ReviewPage } from './pages/ReviewPage';
 
-function App() {
-  const { config, loading, error } = useUiConfig();
-
+function AppShell() {
   return (
     <AppLayout>
-      {loading && <p className="panel">Carregando configuracoes...</p>}
-      {error && <p className="panel error">{error}</p>}
-      {!loading && !error && (
-        <>
-          <DashboardPage />
-          <ConsultationPage />
-          <section className="panel">
-            <h2>Configuração ativa</h2>
-            <p>Versao: {config?.version ?? 'indisponivel'}</p>
-            <p>Locale: {config?.locale ?? 'indisponivel'}</p>
-          </section>
-        </>
-      )}
+      <Outlet />
     </AppLayout>
+  );
+}
+
+function AppRoutes() {
+  const { isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="auth-shell">
+        <Card className="auth-card">
+          <BrandLogo size="compact" />
+          <Loader label="Carregando configuração da sessão" />
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<RequireAuth />}>
+        <Route element={<AppShell />}>
+          <Route path="/" element={<Navigate to="/consultations" replace />} />
+          <Route path="/consultations" element={<ConsultationsPage />} />
+          <Route path="/consultations/:consultationId/live" element={<LiveConsultationPage />} />
+          <Route path="/consultations/:consultationId/review" element={<ReviewPage />} />
+        </Route>
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
 

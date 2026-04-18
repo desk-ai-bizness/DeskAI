@@ -41,6 +41,12 @@ paths:
             application/json:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "409":
+          description: Patient CPF already exists in clinic
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
         "500":
           description: Internal server error
           content:
@@ -64,7 +70,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Free-text search filter on patient name
+          description: Free-text search filter on patient name or CPF digits/punctuation
       responses:
         "200":
           description: Patient list
@@ -97,6 +103,57 @@ paths:
               schema:
                 $ref: "errors.yaml#/components/schemas/ErrorResponse"
 
+  /v1/patients/{patient_id}:
+    get:
+      operationId: getPatient
+      summary: Get patient detail with current-doctor consultation history
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: patient_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Patient identifier within the current clinic
+      responses:
+        "200":
+          description: Patient detail and authorized history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientDetailView"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Not authorized to view patient detail
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "404":
+          description: Patient not found in the current clinic
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+        "503":
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "errors.yaml#/components/schemas/ErrorResponse"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -107,33 +164,91 @@ components:
   schemas:
     CreatePatientRequest:
       type: object
-      required: [name]
+      required: [name, cpf]
       properties:
         name:
           type: string
-        date_of_birth:
+        cpf:
           type: string
-          format: date
+          description: CPF in digits-only or punctuated format. The backend stores normalized digits.
+        date_of_birth:
+          anyOf:
+            - type: string
+              format: date
+            - type: "null"
       additionalProperties: false
 
     PatientView:
       type: object
-      required: [patient_id, name, clinic_id, created_at]
+      required: [patient_id, name, cpf, date_of_birth, clinic_id, created_at]
       properties:
         patient_id:
           type: string
           format: uuid
         name:
           type: string
-        date_of_birth:
+        cpf:
           type: string
-          format: date
+          description: Masked CPF for display.
+          pattern: '^[0-9]{3}\.\*\*\*\.\*\*\*-[0-9]{2}$'
+        date_of_birth:
+          anyOf:
+            - type: string
+              format: date
+            - type: "null"
         clinic_id:
           type: string
           format: uuid
         created_at:
           type: string
           format: date-time
+      additionalProperties: false
+
+    PatientHistoryItemView:
+      type: object
+      required: [consultation_id, status, scheduled_date, finalized_at, preview]
+      properties:
+        consultation_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - started
+            - recording
+            - in_processing
+            - processing_failed
+            - draft_generated
+            - under_physician_review
+            - finalized
+        scheduled_date:
+          type: string
+          format: date
+        finalized_at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        preview:
+          anyOf:
+            - type: object
+              properties:
+                summary:
+                  type: string
+              additionalProperties: false
+            - type: "null"
+      additionalProperties: false
+
+    PatientDetailView:
+      type: object
+      required: [patient, history]
+      properties:
+        patient:
+          $ref: "#/components/schemas/PatientView"
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/PatientHistoryItemView"
       additionalProperties: false
 
     PatientListView:

@@ -187,7 +187,7 @@ class TestConsultationContract(unittest.TestCase):
         )
         repo.save(consultation)
 
-        call_kwargs = self.mock_table.put_item.call_args[1]
+        call_kwargs = self.mock_table.put_item.call_args.kwargs
         item = call_kwargs["Item"]
 
         # Assert against hardcoded string keys — NOT F.* constants
@@ -303,7 +303,7 @@ class TestSessionContract(unittest.TestCase):
         )
         repo.save(session)
 
-        call_kwargs = self.mock_table.put_item.call_args[1]
+        call_kwargs = self.mock_table.put_item.call_args.kwargs
         item = call_kwargs["Item"]
 
         self.assertEqual(item["PK"], "SESSION#sess-002")
@@ -343,6 +343,7 @@ class TestPatientContract(unittest.TestCase):
             "SK": "PATIENT#pat-001",
             "patient_id": "pat-001",
             "name": "Maria Santos",
+            "cpf": "52998224725",
             "date_of_birth": "1985-03-22",
             "clinic_id": "clinic-001",
             "created_at": "2026-01-15T09:00:00+00:00",
@@ -367,19 +368,21 @@ class TestPatientContract(unittest.TestCase):
         patient = Patient(
             patient_id="pat-002",
             name="Carlos Oliveira",
+            cpf="39053344705",
             date_of_birth="1990-07-10",
             clinic_id="clinic-002",
             created_at="2026-04-01T10:00:00+00:00",
         )
         repo.save(patient)
 
-        call_kwargs = self.mock_table.put_item.call_args[1]
+        call_kwargs = self.mock_table.put_item.call_args_list[1].kwargs
         item = call_kwargs["Item"]
 
         self.assertEqual(item["PK"], "CLINIC#clinic-002")
         self.assertEqual(item["SK"], "PATIENT#pat-002")
         self.assertEqual(item["patient_id"], "pat-002")
         self.assertEqual(item["name"], "Carlos Oliveira")
+        self.assertEqual(item["cpf"], "39053344705")
 
 
 # ---------------------------------------------------------------------------

@@ -89,7 +89,7 @@ def handle_session_init(
             "data": {
                 "status": "recording",
                 "session_id": session_id,
-                "message": "Sessao iniciada com sucesso.",
+                "message": "Sessão iniciada com sucesso.",
             },
         },
     )

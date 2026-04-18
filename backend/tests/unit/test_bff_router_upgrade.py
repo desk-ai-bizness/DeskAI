@@ -185,6 +185,21 @@ class BffRouterUpgradeTest(unittest.TestCase):
         handler(event, MagicMock())
         mock_handler.assert_called_once()
 
+    @patch(
+        "deskai.handlers.http.patient_handler.handle_get_patient"
+    )
+    def test_get_patient_detail_route(
+        self, mock_handler: MagicMock
+    ) -> None:
+        mock_handler.return_value = {
+            "statusCode": 200,
+            "body": "{}",
+        }
+        event = _api_event("/v1/patients/pat-001", "GET")
+        handler(event, MagicMock())
+        mock_handler.assert_called_once()
+        self.assertEqual(event["pathParameters"]["id"], "pat-001")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -11,20 +11,35 @@ class PatientEntityTest(unittest.TestCase):
         p = Patient(
             patient_id="pat-001",
             name="Maria Silva",
+            cpf="52998224725",
             date_of_birth="1990-05-15",
             clinic_id="clinic-1",
             created_at="2026-03-20T10:00:00+00:00",
         )
         self.assertEqual(p.patient_id, "pat-001")
         self.assertEqual(p.name, "Maria Silva")
+        self.assertEqual(p.cpf, "52998224725")
         self.assertEqual(p.date_of_birth, "1990-05-15")
         self.assertEqual(p.clinic_id, "clinic-1")
         self.assertEqual(p.created_at, "2026-03-20T10:00:00+00:00")
+
+    def test_create_patient_without_date_of_birth(self) -> None:
+        p = Patient(
+            patient_id="pat-001",
+            name="Maria Silva",
+            cpf="52998224725",
+            date_of_birth=None,
+            clinic_id="clinic-1",
+            created_at="2026-03-20T10:00:00+00:00",
+        )
+
+        self.assertIsNone(p.date_of_birth)
 
     def test_patient_is_frozen(self) -> None:
         p = Patient(
             patient_id="pat-001",
             name="Maria Silva",
+            cpf="52998224725",
             date_of_birth="1990-05-15",
             clinic_id="clinic-1",
             created_at="2026-03-20T10:00:00+00:00",
@@ -43,6 +58,7 @@ class PatientValidationTest(unittest.TestCase):
             Patient(
                 patient_id="",
                 name="Maria Silva",
+                cpf="52998224725",
                 date_of_birth="1990-05-15",
                 clinic_id="clinic-1",
                 created_at="2026-03-20T10:00:00+00:00",
@@ -55,18 +71,20 @@ class PatientValidationTest(unittest.TestCase):
             Patient(
                 patient_id="pat-001",
                 name="",
+                cpf="52998224725",
                 date_of_birth="1990-05-15",
                 clinic_id="clinic-1",
                 created_at="2026-03-20T10:00:00+00:00",
             )
 
-    def test_empty_date_of_birth_raises_domain_validation_error(self) -> None:
+    def test_empty_cpf_raises_domain_validation_error(self) -> None:
         from deskai.shared.errors import DomainValidationError
 
         with self.assertRaises(DomainValidationError):
             Patient(
                 patient_id="pat-001",
                 name="Maria Silva",
+                cpf="",
                 date_of_birth="",
                 clinic_id="clinic-1",
                 created_at="2026-03-20T10:00:00+00:00",
@@ -79,6 +97,7 @@ class PatientValidationTest(unittest.TestCase):
             Patient(
                 patient_id="pat-001",
                 name="Maria Silva",
+                cpf="52998224725",
                 date_of_birth="1990-05-15",
                 clinic_id="",
                 created_at="2026-03-20T10:00:00+00:00",
@@ -91,6 +110,7 @@ class PatientValidationTest(unittest.TestCase):
             Patient(
                 patient_id="pat-001",
                 name="Maria Silva",
+                cpf="52998224725",
                 date_of_birth="1990-05-15",
                 clinic_id="clinic-1",
                 created_at="",
@@ -103,6 +123,7 @@ class PatientValidationTest(unittest.TestCase):
             Patient(
                 patient_id="   ",
                 name="Maria Silva",
+                cpf="52998224725",
                 date_of_birth="1990-05-15",
                 clinic_id="clinic-1",
                 created_at="2026-03-20T10:00:00+00:00",

@@ -47,7 +47,12 @@ class ApiStack(Stack):
                     apigwv2.CorsHttpMethod.DELETE,
                     apigwv2.CorsHttpMethod.OPTIONS,
                 ],
-                allow_headers=["Authorization", "Content-Type", "X-Request-Id"],
+                allow_headers=[
+                    "Authorization",
+                    "Content-Type",
+                    "X-Request-Id",
+                    "X-Contract-Version",
+                ],
                 expose_headers=["X-Request-Id"],
                 allow_credentials=True,
                 max_age=Duration.hours(1),

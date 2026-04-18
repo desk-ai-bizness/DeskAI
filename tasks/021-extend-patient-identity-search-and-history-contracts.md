@@ -124,14 +124,14 @@ The task should produce:
 
 ## 7. Acceptance Criteria
 
-- [ ] Patient creation requires `name` and CPF and treats `date_of_birth` as optional.
-- [ ] CPF is normalized, validated, unique per clinic, and never logged raw.
-- [ ] `GET /v1/patients?search=` searches by name or CPF.
-- [ ] `GET /v1/patients/{patient_id}` returns patient details plus current-doctor-only consultation history.
-- [ ] Patient history does not expose other doctors' consultation content.
-- [ ] Contract inventory, DEC-008, and ADR-014 are updated.
-- [ ] Relevant tests are added or updated.
-- [ ] Documentation is updated if behavior or setup changed.
+- [x] Patient creation requires `name` and CPF and treats `date_of_birth` as optional.
+- [x] CPF is normalized, validated, unique per clinic, and never logged raw.
+- [x] `GET /v1/patients?search=` searches by name or CPF.
+- [x] `GET /v1/patients/{patient_id}` returns patient details plus current-doctor-only consultation history.
+- [x] Patient history does not expose other doctors' consultation content.
+- [x] Contract inventory, DEC-008, and ADR-014 are updated.
+- [x] Relevant tests are added or updated.
+- [x] Documentation is updated if behavior or setup changed.
 
 ## 8. Testing
 
@@ -163,10 +163,10 @@ Create a patient with name and CPF, attempt duplicate CPF in the same clinic, se
 
 ## 10. Definition of Done
 
-- [ ] Implementation is complete.
-- [ ] Acceptance criteria are met.
-- [ ] Tests pass.
-- [ ] No obvious regressions were introduced.
-- [ ] Logs, metrics, and error handling were considered.
-- [ ] Security and permissions were reviewed if relevant.
-- [ ] Task is ready for review or merge.
+- [x] Implementation is complete.
+- [x] Acceptance criteria are met.
+- [x] Tests pass.
+- [x] No obvious regressions were introduced.
+- [x] Logs, metrics, and error handling were considered.
+- [x] Security and permissions were reviewed if relevant.
+- [x] Task is ready for review or merge.

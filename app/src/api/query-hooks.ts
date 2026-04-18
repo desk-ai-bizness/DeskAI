@@ -12,6 +12,7 @@ import {
   finalizeConsultation,
   getConsultationDetail,
   getCurrentUser,
+  getPatientDetail,
   getReview,
   getUiConfig,
   listConsultations,
@@ -27,6 +28,7 @@ export const queryKeys = {
   patients: {
     all: ['patients'] as const,
     list: (search = '') => ['patients', 'list', search] as const,
+    detail: (patientId: string) => ['patients', 'detail', patientId] as const,
   },
   consultations: {
     all: ['consultations'] as const,
@@ -73,6 +75,14 @@ export function usePatientsQuery(search = '') {
   return useQuery({
     queryKey: queryKeys.patients.list(search),
     queryFn: () => listPatients(search),
+  });
+}
+
+export function usePatientDetailQuery(patientId: string) {
+  return useQuery({
+    queryKey: queryKeys.patients.detail(patientId),
+    queryFn: () => getPatientDetail(patientId),
+    enabled: Boolean(patientId),
   });
 }
 

@@ -8,6 +8,7 @@ import type {
   FinalizeView,
   PatientListView,
   PatientView,
+  PatientDetailView,
   ReviewView,
   SessionEndView,
   SessionStartView,
@@ -39,9 +40,14 @@ export async function listPatients(search = ''): Promise<PatientListView> {
 
 export async function createPatient(input: {
   name: string;
-  date_of_birth: string;
+  cpf: string;
+  date_of_birth?: string | null;
 }): Promise<PatientView> {
   return apiClient.post<PatientView>('/v1/patients', input);
+}
+
+export async function getPatientDetail(patientId: string): Promise<PatientDetailView> {
+  return apiClient.get<PatientDetailView>(`/v1/patients/${patientId}`);
 }
 
 export async function listConsultations(): Promise<ConsultationListView> {

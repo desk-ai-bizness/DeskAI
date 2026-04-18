@@ -41,7 +41,7 @@ Use only one of these statuses:
 Authenticated app core workflow corrections planned — public website deferred
 
 ### Overall Progress
-95% complete
+96% complete
 
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
@@ -75,9 +75,10 @@ Authenticated app core workflow corrections planned — public website deferred
 - Task 019 completed: TanStack Query-backed request state, mutation invalidation, loading buttons, cache clearing on sign-out, tests, docs, and ADR-016 are in place.
 - Task 020 completed: authenticated app neutral gray surfaces, corrected pt-BR copy, and login logo light treatment delivered with frontend and BFF tests.
 - Tasks 020 through 024 created: authenticated app polish/copy/logo fixes, patient CPF/search/history contracts, staged consultation entry flow, realtime consultation data feed, and unified Anamnese consultation workspace.
+- Task 021 completed: CPF-required patient identity, CPF/name search, masked CPF views, duplicate CPF conflict handling, patient detail/history endpoint, current-doctor-only history filtering, frontend API/type readiness, 409 contract response, and patient HTTP schema contract tests delivered.
 
 ### Immediate Next Step
-Start `021-extend-patient-identity-search-and-history-contracts.md`
+Start `023-implement-realtime-consultation-data-feed.md`
 
 ## 5. Priority Queue
 
@@ -85,13 +86,12 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `021-extend-patient-identity-search-and-history-contracts.md` | Extend patient identity, search, and history contracts | planned | Required for CPF-based patient-first consultation flow |
-| 2 | `023-implement-realtime-consultation-data-feed.md` | Implement realtime consultation data feed | planned | Removes stub transcript behavior before workspace redesign |
-| 3 | `022-build-staged-consultation-entry-and-patient-flow.md` | Build staged consultation entry and patient flow | planned | Separates list and new-consultation flow after patient contract expansion |
-| 4 | `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` | Redesign consultation workspace with Anamnese and inline review | planned | Makes the live consultation screen the core app workspace |
-| 5 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure after core app corrections |
-| 6 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | planned | Dashboards, alarms, retention, IAM tightening |
-| 7 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | planned | End-to-end validation and release packaging after remaining frontend/security work |
+| 1 | `023-implement-realtime-consultation-data-feed.md` | Implement realtime consultation data feed | planned | Removes stub transcript behavior before workspace redesign |
+| 2 | `022-build-staged-consultation-entry-and-patient-flow.md` | Build staged consultation entry and patient flow | planned | Separates list and new-consultation flow after patient contract expansion |
+| 3 | `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` | Redesign consultation workspace with Anamnese and inline review | planned | Makes the live consultation screen the core app workspace |
+| 4 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure after core app corrections |
+| 5 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | planned | Dashboards, alarms, retention, IAM tightening |
+| 6 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | planned | End-to-end validation and release packaging after remaining frontend/security work |
 
 ## 6. Active Blockers
 
@@ -99,7 +99,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 021 implementation |
+| None | No active blockers | N/A | N/A | Begin Task 023 implementation |
 
 ## 7. Task Index
 
@@ -127,7 +127,7 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | 018 | `018-apply-authenticated-app-facelift.md` | Apply authenticated app facelift | Frontend | High | done | `012-build-authenticated-react-app.md`, `016-apply-notter-frontend-branding.md`, `017-create-authenticated-app-design-system.md` | 100 | Design system applied across authenticated shell, login, consultation, live session, review, finalization, and export surfaces with regression tests |
 | 019 | `019-add-frontend-query-cache-and-loading-states.md` | Add frontend query cache and loading states | Frontend | Medium | done | `012-build-authenticated-react-app.md`, `017-create-authenticated-app-design-system.md`, `018-apply-authenticated-app-facelift.md` | 100 | TanStack Query-backed request state added with query/mutation hooks, provider setup, cache invalidation, sign-out cache clearing, loading states, tests, docs, and ADR-016 |
 | 020 | `020-fix-authenticated-app-polish-copy-and-logo.md` | Fix authenticated app polish, copy, and logo | Full Stack | High | done | `016-apply-notter-frontend-branding.md`, `017-create-authenticated-app-design-system.md`, `018-apply-authenticated-app-facelift.md` | 100 | Neutral gray authenticated app surfaces, corrected pt-BR copy, and login logo light treatment delivered with frontend and BFF tests |
-| 021 | `021-extend-patient-identity-search-and-history-contracts.md` | Extend patient identity, search, and history contracts | Full Stack | Critical | planned | `006-model-consultation-domain-persistence-and-audit.md`, `011-implement-review-finalization-and-export-workflows.md`, `014-add-observability-security-privacy-and-cost-controls.md` | 0 | Adds CPF-based patient identity/search and current-doctor patient history contract |
+| 021 | `021-extend-patient-identity-search-and-history-contracts.md` | Extend patient identity, search, and history contracts | Full Stack | Critical | done | `006-model-consultation-domain-persistence-and-audit.md`, `011-implement-review-finalization-and-export-workflows.md`, `014-add-observability-security-privacy-and-cost-controls.md` | 100 | CPF-required patient identity, CPF/name search, masked CPF views, duplicate CPF conflict handling, patient detail/history endpoint, current-doctor-only history filtering, frontend API/type readiness, 409 contract response, and patient HTTP schema contract tests delivered |
 | 022 | `022-build-staged-consultation-entry-and-patient-flow.md` | Build staged consultation entry and patient flow | Frontend | Critical | planned | `021-extend-patient-identity-search-and-history-contracts.md` | 0 | Splits consultation list from new consultation flow and makes post-login home patient-first |
 | 023 | `023-implement-realtime-consultation-data-feed.md` | Implement realtime consultation data feed | Full Stack | Critical | planned | `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md` | 0 | Replaces stub transcript events with real realtime transcript/session feed and provisional update contracts |
 | 024 | `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` | Redesign consultation workspace with Anamnese and inline review | Full Stack | Critical | planned | `021-extend-patient-identity-search-and-history-contracts.md`, `022-build-staged-consultation-entry-and-patient-flow.md`, `023-implement-realtime-consultation-data-feed.md` | 0 | Makes `/consultations/:id/live` the unified consultation, Anamnese, recording, review, finalization, and export workspace |
@@ -173,6 +173,9 @@ Track cross-task decisions, missing information, or conflicts.
 List the most recently changed tasks first.
 
 | Date | Task File | Change |
+| 2026-04-18 | `021-extend-patient-identity-search-and-history-contracts.md` | Corrected completion gap: added duplicate CPF 409 response to patient OpenAPI contract and patient HTTP schema contract tests |
+| 2026-04-18 | `021-extend-patient-identity-search-and-history-contracts.md` | Completed: CPF identity/search, duplicate handling, patient detail/history endpoint, frontend API/types, docs, and tests delivered |
+| 2026-04-18 | `021-extend-patient-identity-search-and-history-contracts.md` | Started implementation: moved to in_progress for CPF patient identity, search, detail/history contracts, and related backend/frontend/doc updates |
 | 2026-04-18 | `020-fix-authenticated-app-polish-copy-and-logo.md` | Completed: neutral gray app surfaces, removed login ambient gradients, corrected authenticated app and BFF pt-BR copy, and added logo/style/copy regression tests |
 | 2026-04-18 | `020-fix-authenticated-app-polish-copy-and-logo.md` | Started implementation: moved to in_progress for authenticated app background, pt-BR copy, and logo contrast fixes |
 | 2026-04-18 | `@task-manager.md` | Added Tasks 020 through 024 to priority queue and task index; updated current phase, next step, dependencies, milestone notes, and open issue next actions |

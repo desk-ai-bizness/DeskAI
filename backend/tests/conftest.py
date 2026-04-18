@@ -199,6 +199,7 @@ def make_sample_patient(**overrides: Any) -> Patient:
     defaults: dict[str, Any] = dict(
         patient_id="pat-001",
         name="Joao Silva",
+        cpf="52998224725",
         date_of_birth="1990-05-15",
         clinic_id="clinic-001",
         created_at="2026-04-01T10:00:00+00:00",

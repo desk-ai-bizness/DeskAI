@@ -33,10 +33,10 @@ class ListPatientsUseCaseTest(unittest.TestCase):
     def test_passes_search_term_to_repo(self) -> None:
         self.patient_repo.find_by_clinic.return_value = []
 
-        self.use_case.execute(clinic_id="clinic-001", search_term="Silva")
+        self.use_case.execute(clinic_id="clinic-001", search_term="529.982")
 
         self.patient_repo.find_by_clinic.assert_called_once_with(
-            "clinic-001", "Silva"
+            "clinic-001", "529.982"
         )
 
 

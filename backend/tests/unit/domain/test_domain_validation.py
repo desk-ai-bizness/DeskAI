@@ -657,6 +657,7 @@ class TestPatientValidation(unittest.TestCase):
         defaults = dict(
             patient_id="p-1",
             name="Maria",
+            cpf="52998224725",
             date_of_birth="1990-01-01",
             clinic_id="cl-1",
             created_at="2026-01-01T00:00:00+00:00",
@@ -676,9 +677,13 @@ class TestPatientValidation(unittest.TestCase):
         with self.assertRaises(DomainValidationError):
             self._make(name="")
 
-    def test_empty_date_of_birth(self):
+    def test_date_of_birth_is_optional(self):
+        p = self._make(date_of_birth=None)
+        self.assertIsNone(p.date_of_birth)
+
+    def test_empty_cpf(self):
         with self.assertRaises(DomainValidationError):
-            self._make(date_of_birth="")
+            self._make(cpf="")
 
     def test_empty_clinic_id(self):
         with self.assertRaises(DomainValidationError):

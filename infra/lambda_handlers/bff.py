@@ -27,9 +27,10 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     import logging
 
     logging.getLogger().setLevel(logging.INFO)
+    body = event.get("body", "") or ""
     logging.info(
-        "BFF_EVENT: body=%s isBase64=%s",
-        event.get("body", "")[:200],
+        "BFF_EVENT: body_length=%s isBase64=%s",
+        len(body),
         event.get("isBase64Encoded"),
     )
     raw_path = event.get("rawPath", "/")
@@ -78,6 +79,11 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
     # Parameterized routes: (compiled pattern, method, handler_fn)
     _param_routes = [
+        (
+            re.compile(r"^/v1/patients/(?P<id>[^/]+)$"),
+            "GET",
+            patient_handler.handle_get_patient,
+        ),
         (
             re.compile(r"^/v1/consultations/(?P<id>[^/]+)$"),
             "GET",

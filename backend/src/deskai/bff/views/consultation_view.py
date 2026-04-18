@@ -1,7 +1,9 @@
 """BFF view builders for consultation and patient responses."""
 
+from deskai.application.patient.get_patient_detail import PatientDetailResult
 from deskai.bff.action_availability import compute_actions, compute_warnings
 from deskai.domain.consultation.entities import Consultation, ConsultationStatus
+from deskai.domain.patient.cpf import mask_cpf
 from deskai.domain.patient.entities import Patient
 
 
@@ -74,7 +76,25 @@ def build_patient_view(patient: Patient) -> dict:
     return {
         "patient_id": patient.patient_id,
         "name": patient.name,
+        "cpf": mask_cpf(patient.cpf),
         "date_of_birth": patient.date_of_birth,
         "clinic_id": patient.clinic_id,
         "created_at": patient.created_at,
+    }
+
+
+def build_patient_detail_view(result: PatientDetailResult) -> dict:
+    """Assemble the patient detail/history view contract."""
+    return {
+        "patient": build_patient_view(result.patient),
+        "history": [
+            {
+                "consultation_id": item.consultation.consultation_id,
+                "status": item.consultation.status.value,
+                "scheduled_date": item.consultation.scheduled_date,
+                "finalized_at": item.consultation.finalized_at,
+                "preview": item.preview,
+            }
+            for item in result.history
+        ],
     }

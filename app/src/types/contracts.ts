@@ -57,7 +57,8 @@ export interface UserProfileView {
 export interface PatientView {
   patient_id: string;
   name: string;
-  date_of_birth: string;
+  cpf: string;
+  date_of_birth: string | null;
   clinic_id: string;
   created_at: string;
 }
@@ -66,11 +67,27 @@ export interface PatientListView {
   patients: PatientView[];
 }
 
+export interface PatientHistoryItemView {
+  consultation_id: string;
+  status: ConsultationStatus;
+  scheduled_date: string;
+  finalized_at: string | null;
+  preview: {
+    summary?: string;
+  } | null;
+}
+
+export interface PatientDetailView {
+  patient: PatientView;
+  history: PatientHistoryItemView[];
+}
+
 export interface ConsultationView {
   consultation_id: string;
   patient: {
-    patient_id: string;
-    name: string;
+      patient_id: string;
+      name: string;
+      cpf?: string;
   };
   doctor_id: string;
   clinic_id: string;

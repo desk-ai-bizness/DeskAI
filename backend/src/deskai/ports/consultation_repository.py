@@ -23,6 +23,12 @@ class ConsultationRepository(ABC):
         """Find consultations for a doctor within a date range."""
 
     @abstractmethod
+    def find_by_patient_for_doctor(
+        self, clinic_id: str, patient_id: str, doctor_id: str
+    ) -> list[Consultation]:
+        """Find a patient's consultations owned by a specific doctor."""
+
+    @abstractmethod
     def update_status(
         self, consultation_id: str, new_status: ConsultationStatus, **kwargs: object
     ) -> None:

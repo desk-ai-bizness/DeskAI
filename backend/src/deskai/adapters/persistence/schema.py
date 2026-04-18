@@ -71,6 +71,8 @@ class ConsultationFields:
     SK = "SK"
     GSI1PK = "GSI1PK"
     GSI1SK = "GSI1SK"
+    GSI3PK = "GSI3PK"
+    GSI3SK = "GSI3SK"
     CONSULTATION_ID = "consultation_id"
     CLINIC_ID = "clinic_id"
     DOCTOR_ID = "doctor_id"
@@ -119,6 +121,8 @@ class ConsultationFields:
             cls.SK: f"CONSULTATION#{consultation_id}",
             cls.GSI1PK: f"DOCTOR#{doctor_id}",
             cls.GSI1SK: f"CONSULTATION#{scheduled_date}#{consultation_id}",
+            cls.GSI3PK: f"CLINIC#{clinic_id}#PATIENT#{patient_id}",
+            cls.GSI3SK: f"DOCTOR#{doctor_id}#CONSULTATION#{scheduled_date}#{consultation_id}",
             cls.CONSULTATION_ID: consultation_id,
             cls.CLINIC_ID: clinic_id,
             cls.DOCTOR_ID: doctor_id,
@@ -222,6 +226,7 @@ class PatientFields:
     SK = "SK"
     PATIENT_ID = "patient_id"
     NAME = "name"
+    CPF = "cpf"
     DATE_OF_BIRTH = "date_of_birth"
     CLINIC_ID = "clinic_id"
     CREATED_AT = "created_at"
@@ -232,16 +237,18 @@ class PatientFields:
         *,
         patient_id: str,
         name: str,
-        date_of_birth: str,
+        cpf: str,
+        date_of_birth: str | None,
         clinic_id: str,
         created_at: str,
-    ) -> dict[str, str]:
+    ) -> dict[str, str | None]:
         """Build a canonical DynamoDB item dict for a patient."""
         return {
             cls.PK: f"CLINIC#{clinic_id}",
             cls.SK: f"PATIENT#{patient_id}",
             cls.PATIENT_ID: patient_id,
             cls.NAME: name,
+            cls.CPF: cpf,
             cls.DATE_OF_BIRTH: date_of_birth,
             cls.CLINIC_ID: clinic_id,
             cls.CREATED_AT: created_at,

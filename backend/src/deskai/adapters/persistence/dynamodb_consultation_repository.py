@@ -32,6 +32,11 @@ class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationReposit
                 f"CONSULTATION#{consultation.scheduled_date}"
                 f"#{consultation.consultation_id}"
             ),
+            F.GSI3PK: f"CLINIC#{consultation.clinic_id}#PATIENT#{consultation.patient_id}",
+            F.GSI3SK: (
+                f"DOCTOR#{consultation.doctor_id}#CONSULTATION#"
+                f"{consultation.scheduled_date}#{consultation.consultation_id}"
+            ),
             F.CONSULTATION_ID: consultation.consultation_id,
             F.CLINIC_ID: consultation.clinic_id,
             F.DOCTOR_ID: consultation.doctor_id,
@@ -111,6 +116,31 @@ class DynamoDBConsultationRepository(DynamoDBBaseRepository, ConsultationReposit
             "dynamodb_consultations_queried",
             extra=log_context(
                 doctor_id=doctor_id, start_date=start_date, end_date=end_date, count=len(results),
+            ),
+        )
+        return results
+
+    def find_by_patient_for_doctor(
+        self, clinic_id: str, patient_id: str, doctor_id: str
+    ) -> list[Consultation]:
+        response = self._safe_query(
+            IndexName="gsi_patient",
+            KeyConditionExpression=(
+                "GSI3PK = :pk AND begins_with(GSI3SK, :sk_prefix)"
+            ),
+            ExpressionAttributeValues={
+                ":pk": f"CLINIC#{clinic_id}#PATIENT#{patient_id}",
+                ":sk_prefix": f"DOCTOR#{doctor_id}#CONSULTATION#",
+            },
+        )
+        results = [self._to_entity(item) for item in response.get("Items", [])]
+        logger.debug(
+            "dynamodb_patient_history_queried",
+            extra=log_context(
+                clinic_id=clinic_id,
+                patient_id=patient_id,
+                doctor_id=doctor_id,
+                count=len(results),
             ),
         )
         return results

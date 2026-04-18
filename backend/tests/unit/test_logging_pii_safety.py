@@ -28,6 +28,7 @@ _PII_KEYS = frozenset({
     "email",
     "patient_name",
     "name",
+    "cpf",
     "date_of_birth",
     "dob",
     "raw_transcript",

@@ -44,6 +44,7 @@ export function ConsultationsPage() {
 
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [newPatientName, setNewPatientName] = useState('');
+  const [newPatientCpf, setNewPatientCpf] = useState('');
   const [newPatientDob, setNewPatientDob] = useState('');
 
   const statusLabels = uiConfig?.status_labels;
@@ -119,10 +120,12 @@ export function ConsultationsPage() {
     try {
       const createdPatient = await createPatientMutation.mutateAsync({
         name: newPatientName,
-        date_of_birth: newPatientDob,
+        cpf: newPatientCpf,
+        date_of_birth: newPatientDob || null,
       });
       setPatientId(createdPatient.patient_id);
       setNewPatientName('');
+      setNewPatientCpf('');
       setNewPatientDob('');
       setShowPatientForm(false);
       setFeedback('Paciente criado com sucesso.');
@@ -194,7 +197,7 @@ export function ConsultationsPage() {
               {patients.length === 0 ? <option value="">Nenhum paciente cadastrado</option> : null}
               {patients.map((patient) => (
                 <option value={patient.patient_id} key={patient.patient_id}>
-                  {patient.name} ({toPtBrDate(patient.date_of_birth)})
+                  {patient.name} ({patient.cpf})
                 </option>
               ))}
             </SelectField>
@@ -220,12 +223,19 @@ export function ConsultationsPage() {
                 />
 
                 <TextField
+                  id="new-patient-cpf"
+                  label="CPF"
+                  value={newPatientCpf}
+                  onChange={(event) => setNewPatientCpf(event.target.value)}
+                  required
+                />
+
+                <TextField
                   id="new-patient-dob"
-                  label="Data de nascimento"
+                  label="Data de nascimento (opcional)"
                   type="date"
                   value={newPatientDob}
                   onChange={(event) => setNewPatientDob(event.target.value)}
-                  required
                 />
 
                 <Button

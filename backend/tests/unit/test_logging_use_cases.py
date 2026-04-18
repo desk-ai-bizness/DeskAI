@@ -55,7 +55,7 @@ class CreateConsultationLoggingTest(unittest.TestCase):
         uc.doctor_repo.count_consultations_this_month.return_value = 0
         uc.doctor_repo.find_created_at.return_value = None
         uc.patient_repo.find_by_id.return_value = Patient(
-            patient_id="pat-1", name="Test", date_of_birth="1990-01-01",
+            patient_id="pat-1", name="Test", cpf="52998224725", date_of_birth="1990-01-01",
             clinic_id="clinic-1", created_at="2026-01-01T00:00:00+00:00",
         )
 

@@ -56,6 +56,9 @@ from deskai.application.export.generate_export import (
 from deskai.application.patient.create_patient import (
     CreatePatientUseCase,
 )
+from deskai.application.patient.get_patient_detail import (
+    GetPatientDetailUseCase,
+)
 from deskai.application.patient.list_patients import (
     ListPatientsUseCase,
 )
@@ -131,6 +134,7 @@ class Container:
     list_consultations: ListConsultationsUseCase
     create_patient: CreatePatientUseCase
     list_patients: ListPatientsUseCase
+    get_patient_detail: GetPatientDetailUseCase
     start_session: StartSessionUseCase
     end_session: EndSessionUseCase
     process_audio_chunk: ProcessAudioChunkUseCase
@@ -299,6 +303,11 @@ def build_container() -> Container:
         ),
         list_patients=ListPatientsUseCase(
             patient_repo=patient_repo,
+        ),
+        get_patient_detail=GetPatientDetailUseCase(
+            patient_repo=patient_repo,
+            consultation_repo=consultation_repo,
+            artifact_repo=artifact_repo,
         ),
         start_session=StartSessionUseCase(
             consultation_repo=consultation_repo,

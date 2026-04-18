@@ -29,6 +29,7 @@ from deskai.domain.consultation.exceptions import (
 )
 from deskai.domain.export.exceptions import ExportGenerationError
 from deskai.domain.patient.exceptions import (
+    PatientDuplicateCpfError,
     PatientNotFoundError,
     PatientValidationError,
 )
@@ -62,6 +63,7 @@ _EXCEPTION_MAP: dict[type[Exception], tuple[int, str]] = {
     ConsultationAlreadyFinalizedError: (409, "conflict"),
     PatientNotFoundError: (404, "not_found"),
     PatientValidationError: (400, "validation_error"),
+    PatientDuplicateCpfError: (409, "conflict"),
     InvalidSessionStateError: (409, "conflict"),
     SessionNotActiveError: (404, "not_found"),
     SessionOwnershipError: (403, "forbidden"),

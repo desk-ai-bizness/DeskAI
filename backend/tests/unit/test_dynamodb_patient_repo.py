@@ -29,6 +29,7 @@ class DynamoDBPatientRepositoryTest(unittest.TestCase):
         patient = Patient(
             patient_id="pat-001",
             name="Maria Silva",
+            cpf="52998224725",
             date_of_birth="1990-05-15",
             clinic_id="clinic-01",
             created_at="2026-04-01T10:00:00Z",
@@ -36,12 +37,18 @@ class DynamoDBPatientRepositoryTest(unittest.TestCase):
 
         repo.save(patient)
 
-        call_kwargs = self.mock_table.put_item.call_args[1]
+        first_call = self.mock_table.put_item.call_args_list[0]
+        call_kwargs = first_call.kwargs
+        self.assertEqual(call_kwargs["Item"]["SK"], "PATIENT_CPF#52998224725")
+        self.assertIn("ConditionExpression", call_kwargs)
+
+        call_kwargs = self.mock_table.put_item.call_args_list[1].kwargs
         item = call_kwargs["Item"]
         self.assertEqual(item["PK"], "CLINIC#clinic-01")
         self.assertEqual(item["SK"], "PATIENT#pat-001")
         self.assertEqual(item["patient_id"], "pat-001")
         self.assertEqual(item["name"], "Maria Silva")
+        self.assertEqual(item["cpf"], "52998224725")
         self.assertEqual(item["date_of_birth"], "1990-05-15")
         self.assertEqual(item["clinic_id"], "clinic-01")
         self.assertEqual(item["created_at"], "2026-04-01T10:00:00Z")
@@ -58,6 +65,7 @@ class DynamoDBPatientRepositoryTest(unittest.TestCase):
                 "SK": "PATIENT#pat-001",
                 "patient_id": "pat-001",
                 "name": "Maria Silva",
+                "cpf": "52998224725",
                 "date_of_birth": "1990-05-15",
                 "clinic_id": "clinic-01",
                 "created_at": "2026-04-01T10:00:00Z",
@@ -69,6 +77,7 @@ class DynamoDBPatientRepositoryTest(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.patient_id, "pat-001")
         self.assertEqual(result.name, "Maria Silva")
+        self.assertEqual(result.cpf, "52998224725")
         self.assertEqual(result.date_of_birth, "1990-05-15")
         self.assertEqual(result.clinic_id, "clinic-01")
         self.mock_table.get_item.assert_called_once_with(
@@ -99,6 +108,7 @@ class DynamoDBPatientRepositoryTest(unittest.TestCase):
                 {
                     "patient_id": "pat-001",
                     "name": "Maria Silva",
+                    "cpf": "52998224725",
                     "date_of_birth": "1990-05-15",
                     "clinic_id": "clinic-01",
                     "created_at": "2026-04-01T10:00:00Z",
@@ -122,6 +132,7 @@ class DynamoDBPatientRepositoryTest(unittest.TestCase):
                 {
                     "patient_id": "pat-001",
                     "name": "Maria Silva",
+                    "cpf": "52998224725",
                     "date_of_birth": "1990-05-15",
                     "clinic_id": "clinic-01",
                     "created_at": "2026-04-01T10:00:00Z",
@@ -129,6 +140,7 @@ class DynamoDBPatientRepositoryTest(unittest.TestCase):
                 {
                     "patient_id": "pat-002",
                     "name": "Joao Santos",
+                    "cpf": "39053344705",
                     "date_of_birth": "1985-03-20",
                     "clinic_id": "clinic-01",
                     "created_at": "2026-04-01T11:00:00Z",
@@ -140,6 +152,61 @@ class DynamoDBPatientRepositoryTest(unittest.TestCase):
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].name, "Maria Silva")
+
+    def test_find_by_clinic_with_search_term_filters_by_cpf(
+        self, mock_boto3: MagicMock
+    ) -> None:
+        repo = self._make_repo(mock_boto3)
+        self.mock_table.query.return_value = {
+            "Items": [
+                {
+                    "patient_id": "pat-001",
+                    "name": "Maria Silva",
+                    "cpf": "52998224725",
+                    "date_of_birth": None,
+                    "clinic_id": "clinic-01",
+                    "created_at": "2026-04-01T10:00:00Z",
+                },
+                {
+                    "patient_id": "pat-002",
+                    "name": "Joao Santos",
+                    "cpf": "39053344705",
+                    "date_of_birth": "1985-03-20",
+                    "clinic_id": "clinic-01",
+                    "created_at": "2026-04-01T11:00:00Z",
+                },
+            ]
+        }
+
+        result = repo.find_by_clinic("clinic-01", search_term="529.982")
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].patient_id, "pat-001")
+
+    def test_find_by_cpf_uses_unique_guard_item(self, mock_boto3: MagicMock) -> None:
+        repo = self._make_repo(mock_boto3)
+        self.mock_table.get_item.side_effect = [
+            {"Item": {"patient_id": "pat-001"}},
+            {
+                "Item": {
+                    "patient_id": "pat-001",
+                    "name": "Maria Silva",
+                    "cpf": "52998224725",
+                    "date_of_birth": None,
+                    "clinic_id": "clinic-01",
+                    "created_at": "2026-04-01T10:00:00Z",
+                }
+            },
+        ]
+
+        result = repo.find_by_cpf("52998224725", clinic_id="clinic-01")
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result.patient_id, "pat-001")
+        self.assertEqual(self.mock_table.get_item.call_args_list[0].kwargs["Key"], {
+            "PK": "CLINIC#clinic-01",
+            "SK": "PATIENT_CPF#52998224725",
+        })
 
     def test_find_by_clinic_returns_empty_list(
         self, mock_boto3: MagicMock

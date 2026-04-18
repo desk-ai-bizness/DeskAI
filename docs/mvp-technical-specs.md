@@ -702,6 +702,7 @@ The frontend should speak primarily to the BFF, not to deep domain services dire
 - `GET /v1/me`
 - `POST /v1/patients`
 - `GET /v1/patients`
+- `GET /v1/patients/{patient_id}`
 - `POST /v1/consultations`
 - `GET /v1/consultations`
 - `GET /v1/consultations/{consultation_id}`
@@ -1059,9 +1060,9 @@ Do not include in the MVP:
 
 ### ADR-014: Patient Endpoints
 
-- decision: add minimal `POST /v1/patients` and `GET /v1/patients` endpoints to the API contract
-- reason: consultations require a `patient_id`; without patient CRUD, consultations cannot be created without hardcoding IDs
-- reversibility: high — endpoints can be extended with more fields later
+- decision: patient identity uses required CPF plus name; `date_of_birth` is optional. The API exposes `POST /v1/patients`, `GET /v1/patients?search=`, and `GET /v1/patients/{patient_id}` with current-doctor-only consultation history.
+- reason: the patient-first consultation flow must find patients by name or CPF while preserving the MVP access rule that consultation content belongs to the creating physician.
+- reversibility: medium — the contract is additive for search/detail, but CPF uniqueness is now part of patient identity and would require migration if replaced.
 - reference: `docs/architecture/03-contract-inventory.md` section 2, resolves OPEN-005
 
 ### ADR-015: Authenticated App Icon Library

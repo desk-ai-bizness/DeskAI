@@ -91,11 +91,11 @@ Each decision includes the context, the chosen option, the reasoning, and the re
 | Field | Value |
 |-------|-------|
 | **Context** | Consultations require a `patient_id`, but no patient CRUD endpoints were defined in the API contract. |
-| **Decision** | Add minimal `POST /v1/patients` and `GET /v1/patients` endpoints. Fields: `name`, `date_of_birth`, `clinic_id`. |
-| **Reasoning** | (1) Consultations cannot be created without patient references. (2) Minimal patient CRUD is sufficient for MVP. (3) Endpoints can be extended later without breaking changes. |
-| **Reversibility** | High. Endpoints can be extended with additional fields without breaking existing consumers. |
+| **Decision** | Add patient endpoints and extend identity to require `name` and CPF. `date_of_birth` is optional. Patient search supports name or CPF, and `GET /v1/patients/{patient_id}` returns patient detail with current-doctor-only consultation history. |
+| **Reasoning** | (1) Consultations cannot be created without patient references. (2) CPF is the required clinic-scoped identity field for the revised patient-first flow. (3) Consultation history must respect the MVP rule that consultation content belongs to the creating physician. |
+| **Reversibility** | Medium. Endpoints can still be extended, but CPF uniqueness is now part of patient identity and would require data migration if replaced. |
 | **Resolves** | Open Issue OI-006, previously OPEN-005 |
-| **Impact on Tasks** | Task 006 includes patient domain model. Task 012 includes patient creation UI. |
+| **Impact on Tasks** | Task 006 includes the original patient domain model. Task 021 extends CPF/search/history contracts. Task 022 builds the staged patient-first entry flow. |
 
 ---
 

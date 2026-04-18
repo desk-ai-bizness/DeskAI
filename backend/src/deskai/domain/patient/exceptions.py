@@ -9,3 +9,7 @@ class PatientNotFoundError(DeskAIError):
 
 class PatientValidationError(DeskAIError):
     """Raised when patient data fails validation."""
+
+
+class PatientDuplicateCpfError(DeskAIError):
+    """Raised when a patient CPF already exists in the clinic."""

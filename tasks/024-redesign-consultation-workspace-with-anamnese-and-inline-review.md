@@ -20,7 +20,9 @@ The live consultation screen is the core product experience. Doctors should not 
 The doctor begins a consultation with patient identity and today's date, records the session, watches transcript and AI-filled documentation appear, ends the session intentionally, then reviews and finalizes the generated content on the same screen.
 
 ### Technical Context
-The current app has `/consultations/:id/live` for recording and `/consultations/:id/review` for review/finalization. Task 021 provides patient CPF/history contracts, Task 022 provides the staged entry flow, and Task 023 provides real realtime transcript/session data.
+The current app has `/consultations/:id/live` for recording and `/consultations/:id/review` for review/finalization. Task 021 provides patient CPF/history contracts, Task 022 provides the staged entry flow, and Task 023 provides real realtime transcript/session data, async finalization, pause/resume, and the **schema-only** definitions for `insight.provisional` and `autofill.candidate` events.
+
+This task is responsible for emitting those provisional AI/autofill events at runtime (backend producer) and rendering them (frontend consumer). Task 023 intentionally ships the contracts without an emitter; all runtime behavior for provisional events lands here.
 
 ### Related Systems
 - Frontend app
@@ -54,7 +56,9 @@ Before implementing this task, read these documents in addition to the standard 
 - Build an "Anamnese" form with patient identity, consultation date, queixa principal, história da doença atual, medicamentos em uso, alergias, antecedentes pessoais, cirurgias/internações, antecedentes familiares, hábitos/estilo de vida, revisão de sistemas, exame objetivo/observações, transcript, resumo, and insights.
 - Require only patient name, CPF, and today's consultation date to begin a new consultation.
 - Show live transcript, provisional insights, and AI field-fill candidates during recording.
-- Add pause/resume controls.
+- Emit the `insight.provisional` and `autofill.candidate` events defined in Task 023 from the backend (AI pipeline / BFF) as soon as the pipeline has partial content, marked draft/incomplete with required evidence references.
+- Render those provisional events on the workspace with explicit draft visual treatment and never as authoritative clinical content.
+- Add pause/resume controls using the `session.pause` / `session.resume` actions introduced in Task 023.
 - Add an end-session confirmation dialog.
 - Keep the doctor on the same workspace after ending the session in a clear review state.
 - Allow review, edit, finalization, and export from the same workspace.

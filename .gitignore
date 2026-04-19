@@ -8,6 +8,9 @@
 .history/
 .claude
 
+# JetBrains IDEs
+.idea/
+
 # macOS
 .DS_Store
 
@@ -47,3 +50,8 @@ cdk.out/
 
 # Misc
 .poc-frontend/
+
+# Local developer scripts and reports (keep locally, do not commit)
+scripts/test_transcription.py
+backend/_analyze_coverage.py
+backend/tests/AUDIT_REPORT.md

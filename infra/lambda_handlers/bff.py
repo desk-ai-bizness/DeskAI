@@ -51,6 +51,7 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         patient_handler,
         review_handler,
         session_handler,
+        transcription_token_handler,
         ui_config_handler,
     )
 
@@ -118,6 +119,11 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
             re.compile(r"^/v1/consultations/(?P<id>[^/]+)/export$"),
             "POST",
             export_handler.handle_export,
+        ),
+        (
+            re.compile(r"^/v1/consultations/(?P<id>[^/]+)/transcription-token$"),
+            "POST",
+            transcription_token_handler.handle_get_transcription_token,
         ),
     ]
 

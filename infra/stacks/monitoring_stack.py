@@ -103,6 +103,26 @@ class MonitoringStack(Stack):
         )
         state_machine_failed_alarm.add_alarm_action(sns_action)
 
+        finalization_failure_alarm = cloudwatch.Alarm(
+            self,
+            "FinalizationFailureAlarm",
+            alarm_name=f"{config.resource_prefix}-finalization-failures",
+            metric=cloudwatch.Metric(
+                namespace="AWS/States",
+                metric_name="LambdaFunctionsFailed",
+                dimensions_map={
+                    "StateMachineArn": consultation_workflow.state_machine_arn,
+                },
+                statistic="sum",
+                period=Duration.minutes(5),
+            ),
+            threshold=1,
+            evaluation_periods=1,
+            datapoints_to_alarm=1,
+            treat_missing_data=cloudwatch.TreatMissingData.NOT_BREACHING,
+        )
+        finalization_failure_alarm.add_alarm_action(sns_action)
+
         dlq_visible_alarm = cloudwatch.Alarm(
             self,
             "DlqVisibleAlarm",
@@ -131,6 +151,16 @@ class MonitoringStack(Stack):
             "MvpDashboard",
             dashboard_name=f"{config.resource_prefix}-mvp-dashboard",
         )
+        finalization_latency_metric = cloudwatch.Metric(
+            namespace="AWS/States",
+            metric_name="LambdaFunctionRunTime",
+            dimensions_map={
+                "StateMachineArn": consultation_workflow.state_machine_arn,
+            },
+            statistic="avg",
+            period=Duration.minutes(5),
+        )
+
         dashboard.add_widgets(
             cloudwatch.GraphWidget(
                 title="Lambda Errors",
@@ -156,5 +186,9 @@ class MonitoringStack(Stack):
                         statistic="max",
                     ),
                 ],
+            ),
+            cloudwatch.GraphWidget(
+                title="Finalization Latency",
+                left=[finalization_latency_metric],
             ),
         )

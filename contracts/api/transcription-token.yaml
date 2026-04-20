@@ -1,0 +1,74 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: TranscriptionToken
+description: >
+  POST /v1/consultations/{id}/transcription-token
+  Issues a single-use ElevenLabs Scribe token for client-side realtime transcription.
+
+endpoint:
+  method: POST
+  path: /v1/consultations/{id}/transcription-token
+  auth: Bearer token (JWT)
+
+request:
+  type: object
+  description: No request body required. Consultation ID is in the path.
+  properties: {}
+
+responses:
+  "200":
+    description: Token issued successfully.
+    type: object
+    required: [token, websocket_url, model_id, language_code, expires_at, expires_in_seconds]
+    properties:
+      token:
+        type: string
+        description: Single-use ElevenLabs realtime scribe token.
+      websocket_url:
+        type: string
+        format: uri
+        description: WebSocket URL to connect to ElevenLabs realtime scribe.
+      model_id:
+        type: string
+        description: ElevenLabs model identifier for the scribe session.
+      language_code:
+        type: string
+        description: Language code for transcription (e.g. "pt").
+      expires_at:
+        type: string
+        format: date-time
+        description: ISO 8601 timestamp when the token expires.
+      expires_in_seconds:
+        type: integer
+        minimum: 0
+        description: Time-to-live in seconds from issuance.
+    additionalProperties: false
+
+  "403":
+    description: Consultation not owned by the requesting doctor.
+    type: object
+    required: [error]
+    properties:
+      error:
+        type: object
+        required: [code, message]
+        properties:
+          code:
+            type: string
+            const: forbidden
+          message:
+            type: string
+
+  "409":
+    description: Consultation is not in a state that allows token issuance.
+    type: object
+    required: [error]
+    properties:
+      error:
+        type: object
+        required: [code, message]
+        properties:
+          code:
+            type: string
+            const: invalid_state
+          message:
+            type: string

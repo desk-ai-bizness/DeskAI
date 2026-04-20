@@ -1,9 +1,9 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 title: SessionServerEvent
-description: Server-to-client WebSocket events for audio session management.
+description: Server-to-client WebSocket events for session management.
 
 type: object
-required: [event, data]
+required: [event, data, event_version]
 properties:
   event:
     type: string
@@ -14,8 +14,14 @@ properties:
       - session.warning
       - session.ended
       - server.pong
+      - insight.provisional
+      - autofill.candidate
   data:
     type: object
+  event_version:
+    type: string
+    default: "2"
+    description: Schema version for the event payload.
 
 allOf:
   - if:
@@ -90,7 +96,7 @@ allOf:
           properties:
             status:
               type: string
-              enum: [connected, recording, processing, error]
+              enum: [connected, recording, paused, processing, error]
             message:
               type: string
           additionalProperties: false
@@ -145,6 +151,56 @@ allOf:
             timestamp:
               type: string
               format: date-time
+          additionalProperties: false
+
+  - if:
+      properties:
+        event:
+          const: insight.provisional
+    then:
+      properties:
+        data:
+          type: object
+          required: [insight_id, category, text, severity, evidence_excerpt, is_draft]
+          properties:
+            insight_id:
+              type: string
+              format: uuid
+            category:
+              type: string
+              enum: [documentation_gap, consistency_issue, clinical_attention]
+            text:
+              type: string
+            severity:
+              type: string
+              enum: [informative, moderate, important]
+            evidence_excerpt:
+              type: string
+            is_draft:
+              type: boolean
+              const: true
+          additionalProperties: false
+
+  - if:
+      properties:
+        event:
+          const: autofill.candidate
+    then:
+      properties:
+        data:
+          type: object
+          required: [field_key, candidate_value, evidence_excerpt, confidence]
+          properties:
+            field_key:
+              type: string
+            candidate_value:
+              type: string
+            evidence_excerpt:
+              type: string
+            confidence:
+              type: number
+              minimum: 0
+              maximum: 1
           additionalProperties: false
 
 additionalProperties: false

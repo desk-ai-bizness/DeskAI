@@ -199,6 +199,7 @@ Extends `ConsultationView` with:
 |--------|------|-------------|---------------|-------|
 | `POST` | `/v1/consultations/{id}/session/start` | None | `SessionStartView` | `handlers/http/session_handler.py` |
 | `POST` | `/v1/consultations/{id}/session/end` | None | `SessionEndView` | `handlers/http/session_handler.py` |
+| `POST` | `/v1/consultations/{id}/transcription-token` | None | `TranscriptionTokenView` | `handlers/http/transcription_token_handler.py` |
 
 #### SessionStartView
 
@@ -222,6 +223,21 @@ Extends `ConsultationView` with:
   "status": "in_processing"
 }
 ```
+
+#### TranscriptionTokenView
+
+```json
+{
+  "token": "string (ElevenLabs single-use token)",
+  "websocket_url": "wss://api.elevenlabs.io/v1/speech-to-text/realtime",
+  "model_id": "scribe_v2_realtime",
+  "language_code": "pt",
+  "expires_at": "ISO 8601",
+  "expires_in_seconds": 900
+}
+```
+
+The token is a single-use ElevenLabs token (15-min TTL) generated server-side. The long-lived ElevenLabs API key never reaches the browser. See ADR-017.
 
 ### Review Endpoints
 
@@ -398,17 +414,57 @@ Sent by client to initialize the audio session after WebSocket connection.
 }
 ```
 
-#### audio.chunk
+#### transcript.commit
 
-Sent by client with audio data.
+Sent by client to persist committed transcript segments received from the ElevenLabs Realtime provider. Added in Task 023 (replaces `audio.chunk`).
 
 ```json
 {
-  "action": "audio.chunk",
+  "action": "transcript.commit",
   "data": {
-    "chunk_index": 0,
-    "audio": "base64-encoded audio bytes",
-    "timestamp": "ISO 8601"
+    "consultation_id": "uuid",
+    "segments": [
+      {
+        "speaker": "doctor | patient | unknown",
+        "text": "string",
+        "start_time": 0.0,
+        "end_time": 5.2,
+        "confidence": 0.95,
+        "is_final": true
+      }
+    ],
+    "timestamp": "ISO 8601",
+    "event_version": "2"
+  }
+}
+```
+
+#### session.pause
+
+Sent by client to pause the recording session. Frontend stops audio capture. Backend transitions session to PAUSED state.
+
+```json
+{
+  "action": "session.pause",
+  "data": {
+    "consultation_id": "uuid",
+    "timestamp": "ISO 8601",
+    "event_version": "2"
+  }
+}
+```
+
+#### session.resume
+
+Sent by client to resume a paused recording session. Frontend restarts audio capture. Backend transitions session back to RECORDING.
+
+```json
+{
+  "action": "session.resume",
+  "data": {
+    "consultation_id": "uuid",
+    "timestamp": "ISO 8601",
+    "event_version": "2"
   }
 }
 ```
@@ -487,8 +543,9 @@ Session state changes.
 {
   "event": "session.status",
   "data": {
-    "status": "connected | recording | processing | error",
-    "message": "string (pt-BR)"
+    "status": "connected | recording | paused | processing | error",
+    "message": "string (pt-BR)",
+    "event_version": "2"
   }
 }
 ```
@@ -518,6 +575,42 @@ Session auto-ended (duration limit or grace period expired).
   "data": {
     "reason": "duration_limit | grace_period_expired | manual",
     "message": "string (pt-BR)"
+  }
+}
+```
+
+#### insight.provisional (schema only — emitter in Task 024)
+
+Provisional insight generated during or shortly after a consultation. Marked as draft and must not be presented as authoritative clinical content.
+
+```json
+{
+  "event": "insight.provisional",
+  "data": {
+    "insight_id": "uuid",
+    "category": "documentation_gap | consistency_issue | clinical_attention",
+    "text": "string (pt-BR)",
+    "severity": "low | medium | high",
+    "evidence_excerpt": "string",
+    "is_draft": true,
+    "event_version": "2"
+  }
+}
+```
+
+#### autofill.candidate (schema only — emitter in Task 024)
+
+Candidate value for a medical history field, suggested based on transcript evidence. Must be reviewed by the physician before acceptance.
+
+```json
+{
+  "event": "autofill.candidate",
+  "data": {
+    "field_key": "string",
+    "candidate_value": "string",
+    "evidence_excerpt": "string",
+    "confidence": 0.85,
+    "event_version": "2"
   }
 }
 ```
@@ -699,4 +792,5 @@ Feature flags are evaluated by the BFF and included in API responses.
 - Breaking changes require a new version prefix (`/v2/...`). Non-breaking additions (new optional fields) do not.
 - UI config includes a `version` field. The frontend checks it for compatibility.
 - WebSocket messages include `action` (client) or `event` (server) as discriminators.
+- All WebSocket event payloads include an `event_version` string field (current: `"2"`, introduced in Task 023). Frontend checks version for compatibility.
 - Contract changes must update the corresponding YAML schema in `contracts/` and both backend and frontend code.

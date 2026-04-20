@@ -14,6 +14,7 @@ import {
   getCurrentUser,
   getPatientDetail,
   getReview,
+  getTranscriptionToken,
   getUiConfig,
   listConsultations,
   listPatients,
@@ -182,5 +183,11 @@ export function useFinalizeConsultationMutation(consultationId: string) {
 export function useExportConsultationMutation(consultationId: string) {
   return useMutation({
     mutationFn: () => exportConsultation(consultationId),
+  });
+}
+
+export function useTranscriptionTokenMutation(consultationId: string) {
+  return useMutation({
+    mutationFn: () => getTranscriptionToken(consultationId),
   });
 }

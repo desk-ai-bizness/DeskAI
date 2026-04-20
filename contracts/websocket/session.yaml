@@ -1,13 +1,13 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 title: SessionClientMessage
-description: Client-to-server WebSocket messages for audio session management.
+description: Client-to-server WebSocket messages for session management.
 
 type: object
 required: [action, data]
 properties:
   action:
     type: string
-    enum: [session.init, audio.chunk, session.stop, client.ping]
+    enum: [session.init, transcript.commit, session.pause, session.resume, session.stop, client.ping]
   data:
     type: object
 
@@ -32,20 +32,74 @@ allOf:
   - if:
       properties:
         action:
-          const: audio.chunk
+          const: transcript.commit
     then:
       properties:
         data:
           type: object
-          required: [chunk_index, audio, timestamp]
+          required: [consultation_id, segments, timestamp]
           properties:
-            chunk_index:
-              type: integer
-              minimum: 0
-            audio:
+            consultation_id:
               type: string
-              contentEncoding: base64
-              description: Base64-encoded audio bytes
+              format: uuid
+            segments:
+              type: array
+              items:
+                type: object
+                required: [speaker, text, start_time, end_time, confidence, is_final]
+                properties:
+                  speaker:
+                    type: string
+                    enum: [doctor, patient, unknown]
+                  text:
+                    type: string
+                  start_time:
+                    type: number
+                    minimum: 0
+                  end_time:
+                    type: number
+                    minimum: 0
+                  confidence:
+                    type: number
+                    minimum: 0
+                    maximum: 1
+                  is_final:
+                    type: boolean
+                additionalProperties: false
+            timestamp:
+              type: string
+              format: date-time
+          additionalProperties: false
+  - if:
+      properties:
+        action:
+          const: session.pause
+    then:
+      properties:
+        data:
+          type: object
+          required: [consultation_id, timestamp]
+          properties:
+            consultation_id:
+              type: string
+              format: uuid
+            timestamp:
+              type: string
+              format: date-time
+          additionalProperties: false
+  - if:
+      properties:
+        action:
+          const: session.resume
+    then:
+      properties:
+        data:
+          type: object
+          required: [consultation_id, timestamp]
+          properties:
+            consultation_id:
+              type: string
+              format: uuid
             timestamp:
               type: string
               format: date-time

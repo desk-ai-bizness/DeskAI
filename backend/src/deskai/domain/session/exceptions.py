@@ -31,6 +31,10 @@ class SessionOwnershipError(DeskAIError):
     """Raised when a doctor tries to operate on a session they do not own."""
 
 
+class SessionPauseRejectedError(DeskAIError):
+    """Raised when a pause or resume is rejected due to invalid session state."""
+
+
 class InvalidSessionTransitionError(DeskAIError):
     """Raised when a session state transition is not allowed."""
 

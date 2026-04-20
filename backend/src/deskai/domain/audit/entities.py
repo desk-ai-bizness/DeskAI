@@ -11,6 +11,8 @@ class AuditAction(StrEnum):
 
     CONSULTATION_CREATED = "consultation.created"
     SESSION_STARTED = "session.started"
+    SESSION_PAUSED = "session.paused"
+    SESSION_RESUMED = "session.resumed"
     SESSION_ENDED = "session.ended"
     PROCESSING_STARTED = "processing.started"
     PROCESSING_COMPLETED = "processing.completed"

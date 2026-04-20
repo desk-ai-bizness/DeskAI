@@ -489,10 +489,30 @@ class StackSynthesisTest(unittest.TestCase):
     def test_api_stack_websocket_has_custom_action_routes(self) -> None:
         f = self._create_foundation()
         template = Template.from_stack(f.api)
-        for route_key in ["session.init", "audio.chunk", "session.stop", "client.ping"]:
+        for route_key in [
+            "session.init",
+            "session.stop",
+            "client.ping",
+            "transcript.commit",
+            "session.pause",
+            "session.resume",
+        ]:
             template.has_resource_properties(
                 "AWS::ApiGatewayV2::Route",
                 {"RouteKey": route_key},
+            )
+
+    def test_api_stack_websocket_audio_chunk_route_removed(self) -> None:
+        """audio.chunk route must no longer exist (D1: retire entirely)."""
+        f = self._create_foundation()
+        template = Template.from_stack(f.api)
+        routes = template.find_resources("AWS::ApiGatewayV2::Route")
+        for logical_id, resource in routes.items():
+            route_key = resource.get("Properties", {}).get("RouteKey", "")
+            self.assertNotEqual(
+                route_key,
+                "audio.chunk",
+                f"Route {logical_id} still defines retired audio.chunk route",
             )
 
     def test_api_stack_websocket_stage_has_auto_deploy(self) -> None:
@@ -621,6 +641,34 @@ class StackSynthesisTest(unittest.TestCase):
         template.resource_count_is("AWS::SNS::Topic", 1)
         template.resource_count_is("AWS::Events::EventBus", 1)
 
+    def test_orchestration_stack_state_machine_has_two_step_definition(self) -> None:
+        """State machine must have FinalizeTranscript and RunAIPipeline steps (D2, D8)."""
+        f = self._create_foundation()
+        template = Template.from_stack(f.orchestration)
+        state_machines = template.find_resources("AWS::StepFunctions::StateMachine")
+        self.assertEqual(len(state_machines), 1, "Expected exactly one state machine")
+
+        sm_resource = next(iter(state_machines.values()))
+        definition_string = sm_resource["Properties"]["DefinitionString"]
+
+        # CDK serialises the definition as Fn::Join or a string.  Walk
+        # through it so we can search for state names.
+        if isinstance(definition_string, dict):
+            definition_blob = json.dumps(definition_string)
+        else:
+            definition_blob = str(definition_string)
+
+        self.assertIn(
+            "FinalizeTranscript",
+            definition_blob,
+            "State machine must include a FinalizeTranscript step",
+        )
+        self.assertIn(
+            "RunAIPipeline",
+            definition_blob,
+            "State machine must include a RunAIPipeline step",
+        )
+
     # --- Budget ---
 
     def test_budget_stack_alerts_at_five_usd(self) -> None:
@@ -674,7 +722,18 @@ class StackSynthesisTest(unittest.TestCase):
         f = self._create_foundation()
         template = Template.from_stack(f.monitoring)
         template.resource_count_is("AWS::CloudWatch::Dashboard", 1)
-        template.resource_count_is("AWS::CloudWatch::Alarm", 6)
+        template.resource_count_is("AWS::CloudWatch::Alarm", 7)
+
+    def test_monitoring_stack_has_finalization_failure_alarm(self) -> None:
+        """Alarm must exist for Step Functions finalization failures."""
+        f = self._create_foundation()
+        template = Template.from_stack(f.monitoring)
+        template.has_resource_properties(
+            "AWS::CloudWatch::Alarm",
+            {
+                "AlarmName": f"{DEV_CONFIG.resource_prefix}-finalization-failures",
+            },
+        )
 
     # --- CDN ---
 

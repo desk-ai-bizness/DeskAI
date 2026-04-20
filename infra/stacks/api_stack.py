@@ -157,15 +157,23 @@ class ApiStack(Stack):
             integration=websocket_integration,
         )
         self.websocket_api.add_route(
-            route_key="audio.chunk",
-            integration=websocket_integration,
-        )
-        self.websocket_api.add_route(
             route_key="session.stop",
             integration=websocket_integration,
         )
         self.websocket_api.add_route(
             route_key="client.ping",
+            integration=websocket_integration,
+        )
+        self.websocket_api.add_route(
+            route_key="transcript.commit",
+            integration=websocket_integration,
+        )
+        self.websocket_api.add_route(
+            route_key="session.pause",
+            integration=websocket_integration,
+        )
+        self.websocket_api.add_route(
+            route_key="session.resume",
             integration=websocket_integration,
         )
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createPatient, getPatientDetail, listPatients } from './endpoints';
+import { createPatient, getPatientDetail, getTranscriptionToken, listPatients } from './endpoints';
 
 const getMock = vi.fn();
 const postMock = vi.fn();
@@ -54,5 +54,29 @@ describe('patient endpoints', () => {
     await getPatientDetail('pat-1');
 
     expect(getMock).toHaveBeenCalledWith('/v1/patients/pat-1');
+  });
+});
+
+describe('transcription token endpoint', () => {
+  beforeEach(() => {
+    postMock.mockReset();
+  });
+
+  it('requests a transcription token for a consultation', async () => {
+    const tokenResponse = {
+      token: 'el-token-abc',
+      websocket_url: 'wss://api.elevenlabs.io/v1/speech-to-text/realtime',
+      model_id: 'scribe_v2_realtime',
+      language_code: 'pt',
+      expires_at: '2026-04-19T12:15:00Z',
+      expires_in_seconds: 900,
+    };
+    postMock.mockResolvedValue(tokenResponse);
+
+    const result = await getTranscriptionToken('cons-1');
+
+    expect(postMock).toHaveBeenCalledWith('/v1/consultations/cons-1/transcription-token');
+    expect(result.token).toBe('el-token-abc');
+    expect(result.expires_in_seconds).toBe(900);
   });
 });

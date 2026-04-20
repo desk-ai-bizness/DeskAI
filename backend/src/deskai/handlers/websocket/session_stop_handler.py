@@ -1,4 +1,7 @@
-"""WebSocket session.stop handler — end session and trigger finalization."""
+"""WebSocket session.stop handler — end session and notify client.
+
+Finalization is now handled asynchronously by Step Functions (D2).
+"""
 
 import json
 
@@ -12,10 +15,8 @@ def handle_session_stop(
     connection_repo,
     end_session_use_case,
     apigw,
-    transcription_provider=None,
-    finalize_transcript_use_case=None,
 ) -> dict:
-    """End a session via WebSocket and optionally trigger finalization."""
+    """End a session via WebSocket."""
     connection_id = event["requestContext"]["connectionId"]
     body = json.loads(event.get("body", "{}"))
     data = body.get("data", {})
@@ -31,8 +32,6 @@ def handle_session_stop(
         doctor_id = connection.doctor_id
         clinic_id = connection.clinic_id
     else:
-        # Connection may have been removed by $disconnect racing ahead.
-        # Fall back to the authorizer context propagated by API Gateway.
         authorizer = event.get("requestContext", {}).get("authorizer", {})
         doctor_id = authorizer.get("doctor_id", "")
         clinic_id = authorizer.get("clinic_id", "")
@@ -53,18 +52,6 @@ def handle_session_stop(
         clinic_id=clinic_id,
     )
 
-    if transcription_provider is not None:
-        try:
-            transcription_provider.finish_realtime_session(session.session_id)
-        except Exception:
-            logger.exception(
-                "ws_session_stop_provider_finish_failed",
-                extra=log_context(
-                    session_id=session.session_id,
-                    consultation_id=consultation_id,
-                ),
-            )
-
     try:
         apigw.send_to_connection(
             connection_id=connection_id,
@@ -84,22 +71,6 @@ def handle_session_stop(
                 reason="connection_gone",
             ),
         )
-
-    if finalize_transcript_use_case is not None:
-        try:
-            finalize_transcript_use_case.execute(
-                session_id=session.session_id,
-                consultation_id=consultation_id,
-                clinic_id=clinic_id,
-            )
-        except Exception:
-            logger.exception(
-                "ws_session_stop_finalization_failed",
-                extra=log_context(
-                    session_id=session.session_id,
-                    consultation_id=consultation_id,
-                ),
-            )
 
     logger.info(
         "ws_session_stop_completed",

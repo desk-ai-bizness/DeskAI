@@ -83,6 +83,40 @@ class TranscriptionSessionInfo:
 
 
 @dataclass(frozen=True)
+class CommittedSegment:
+    """Immutable committed transcript segment relayed from the client."""
+
+    consultation_id: str
+    session_id: str
+    speaker: str
+    text: str
+    start_time: float
+    end_time: float
+    confidence: float
+    is_final: bool
+    received_at: str
+    segment_index: int
+
+    def __post_init__(self) -> None:
+        if not self.consultation_id or not self.consultation_id.strip():
+            raise DomainValidationError("consultation_id must be a non-empty string")
+        if not self.session_id or not self.session_id.strip():
+            raise DomainValidationError("session_id must be a non-empty string")
+        if not self.speaker or not self.speaker.strip():
+            raise DomainValidationError("speaker must be a non-empty string")
+        if not self.received_at or not self.received_at.strip():
+            raise DomainValidationError("received_at must be a non-empty string")
+        if self.segment_index < 0:
+            raise DomainValidationError("segment_index must be non-negative")
+        if self.start_time < 0:
+            raise DomainValidationError("start_time must be non-negative")
+        if self.end_time < 0:
+            raise DomainValidationError("end_time must be non-negative")
+        if not (0.0 <= self.confidence <= 1.0):
+            raise DomainValidationError("confidence must be between 0.0 and 1.0")
+
+
+@dataclass(frozen=True)
 class FinalTranscript:
     """Immutable final transcription result from a provider."""
 

@@ -136,21 +136,46 @@ def handler(event: dict, context) -> dict:
                 c.connection_repo,
                 c.session_repo,
                 _build_apigw(event),
-                c.transcription_provider,
             )
 
-        if action == "audio.chunk":
-            from deskai.handlers.websocket.audio_chunk_handler import (
-                handle_audio_chunk,
+        if action == "transcript.commit":
+            from deskai.handlers.websocket.transcript_commit_handler import (
+                handle_transcript_commit,
             )
 
             c = _get_container()
-            return handle_audio_chunk(
+            return handle_transcript_commit(
                 event,
                 c.connection_repo,
                 c.session_repo,
+                c.transcript_segment_repo,
                 _build_apigw(event),
-                c.transcription_provider,
+            )
+
+        if action == "session.pause":
+            from deskai.handlers.websocket.session_pause_handler import (
+                handle_session_pause,
+            )
+
+            c = _get_container()
+            return handle_session_pause(
+                event,
+                c.connection_repo,
+                c.pause_session,
+                _build_apigw(event),
+            )
+
+        if action == "session.resume":
+            from deskai.handlers.websocket.session_resume_handler import (
+                handle_session_resume,
+            )
+
+            c = _get_container()
+            return handle_session_resume(
+                event,
+                c.connection_repo,
+                c.resume_session,
+                _build_apigw(event),
             )
 
         if action == "session.stop":
@@ -164,8 +189,6 @@ def handler(event: dict, context) -> dict:
                 c.connection_repo,
                 c.end_session,
                 _build_apigw(event),
-                c.transcription_provider,
-                c.finalize_transcript,
             )
 
         if action == "client.ping":

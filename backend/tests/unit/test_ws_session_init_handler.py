@@ -64,14 +64,12 @@ class HandleSessionInitTest(unittest.TestCase):
         self.connection_repo.find_by_connection_id.return_value = _make_connection()
         session = _make_session()
         self.session_repo.find_by_id.return_value = session
-        transcription_provider = MagicMock()
 
         result = handle_session_init(
             self._make_event(),
             self.connection_repo,
             self.session_repo,
             self.apigw,
-            transcription_provider,
         )
 
         self.assertEqual(result["statusCode"], 200)
@@ -79,58 +77,10 @@ class HandleSessionInitTest(unittest.TestCase):
         updated = self.session_repo.update.call_args[0][0]
         self.assertEqual(updated.state, SessionState.RECORDING)
         self.assertEqual(updated.connection_id, "conn-abc")
-        transcription_provider.start_realtime_session.assert_called_once_with(
-            session_id="sess-001",
-            language="pt",
-        )
         self.apigw.send_to_connection.assert_called_once()
         sent_data = self.apigw.send_to_connection.call_args[1]["data"]
         self.assertEqual(sent_data["event"], "session.status")
         self.assertEqual(sent_data["data"]["status"], "recording")
-
-    @patch(
-        "deskai.handlers.websocket.session_init_handler.utc_now_iso",
-        return_value="2026-04-02T12:00:00+00:00",
-    )
-    def test_init_ignores_duplicate_provider_session(self, _mock_time):
-        from deskai.handlers.websocket.session_init_handler import handle_session_init
-
-        self.connection_repo.find_by_connection_id.return_value = _make_connection()
-        session = _make_session()
-        self.session_repo.find_by_id.return_value = session
-        transcription_provider = MagicMock()
-        transcription_provider.start_realtime_session.side_effect = Exception("already exists")
-
-        result = handle_session_init(
-            self._make_event(),
-            self.connection_repo,
-            self.session_repo,
-            self.apigw,
-            transcription_provider,
-        )
-
-        self.assertEqual(result["statusCode"], 200)
-        self.session_repo.update.assert_called_once()
-
-    def test_init_provider_unavailable(self):
-        from deskai.handlers.websocket.session_init_handler import handle_session_init
-
-        self.connection_repo.find_by_connection_id.return_value = _make_connection()
-        session = _make_session()
-        self.session_repo.find_by_id.return_value = session
-        transcription_provider = MagicMock()
-        transcription_provider.start_realtime_session.side_effect = RuntimeError("timeout")
-
-        result = handle_session_init(
-            self._make_event(),
-            self.connection_repo,
-            self.session_repo,
-            self.apigw,
-            transcription_provider,
-        )
-
-        self.assertEqual(result["statusCode"], 503)
-        self.session_repo.update.assert_not_called()
 
     def test_init_invalid_session(self):
         from deskai.handlers.websocket.session_init_handler import handle_session_init

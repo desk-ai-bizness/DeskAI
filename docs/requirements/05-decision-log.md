@@ -97,6 +97,18 @@ Each decision includes the context, the chosen option, the reasoning, and the re
 | **Resolves** | Open Issue OI-006, previously OPEN-005 |
 | **Impact on Tasks** | Task 006 includes the original patient domain model. Task 021 extends CPF/search/history contracts. Task 022 builds the staged patient-first entry flow. |
 
+### DEC-009: Client-Side Realtime Streaming Architecture
+
+| Field | Value |
+|-------|-------|
+| **Context** | Task 023 requires real-time transcript during recording. The existing backend `audio.chunk` path sends audio through Lambda, but Lambda cannot maintain a persistent WebSocket to ElevenLabs (each message triggers a separate invocation). |
+| **Decision** | **Client-side direct streaming** via ElevenLabs single-use tokens. Browser connects directly to `wss://api.elevenlabs.io/v1/speech-to-text/realtime`. Backend issues short-lived tokens (15-min TTL) via `POST /v1/consultations/{id}/transcription-token`. Committed segments are relayed to the backend via the app WebSocket (`transcript.commit` action) and persisted as DynamoDB items. The backend `audio.chunk` route is fully retired. |
+| **Reasoning** | (1) Lambda invocations are stateless — cannot hold a persistent WebSocket to ElevenLabs. (2) ElevenLabs single-use tokens keep the API key server-side. (3) Direct streaming gives the doctor real-time transcript with ~150ms latency. (4) Segment relay to backend ensures durable persistence and enables finalization fallback. (5) Retiring `audio.chunk` eliminates the S3 chunk-key collision bug (OI-018). |
+| **Alternatives Considered** | (a) ECS/Fargate proxy — persistent compute for WebSocket proxying, but breaks serverless architecture. (b) Batch upload at session end — no live transcript during recording, poor UX. (c) Backend-proxied streaming — impossible with Lambda's invocation model. |
+| **Reversibility** | High. Provider is behind adapter interfaces. Switching streaming architecture requires frontend and adapter changes only. |
+| **Resolves** | OI-015 (async finalization), OI-016 (stub transcript removal), OI-018 (chunk-key collision) |
+| **Impact on Tasks** | Task 023 implements this architecture. Task 024 builds on it for the unified workspace. |
+
 ---
 
 ## Open Decisions (Deferred)

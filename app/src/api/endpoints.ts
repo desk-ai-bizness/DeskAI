@@ -12,6 +12,7 @@ import type {
   ReviewView,
   SessionEndView,
   SessionStartView,
+  TranscriptionTokenView,
   UiConfigView,
   UpdateReviewRequest,
   UserProfileView,
@@ -92,4 +93,8 @@ export async function finalizeConsultation(consultationId: string): Promise<Fina
 
 export async function exportConsultation(consultationId: string): Promise<ExportView> {
   return apiClient.post<ExportView>(`/v1/consultations/${consultationId}/export`);
+}
+
+export async function getTranscriptionToken(consultationId: string): Promise<TranscriptionTokenView> {
+  return apiClient.post<TranscriptionTokenView>(`/v1/consultations/${consultationId}/transcription-token`);
 }

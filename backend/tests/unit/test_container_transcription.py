@@ -4,11 +4,13 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
+from deskai.application.session.pause_session import PauseSessionUseCase
+from deskai.application.session.resume_session import ResumeSessionUseCase
 from deskai.application.transcription.finalize_transcript import (
     FinalizeTranscriptUseCase,
 )
-from deskai.application.transcription.process_audio_chunk import (
-    ProcessAudioChunkUseCase,
+from deskai.application.transcription.issue_transcription_token import (
+    IssueTranscriptionTokenUseCase,
 )
 from deskai.container import build_container
 
@@ -46,13 +48,6 @@ def _build_with_mocked_boto():
 
 class ContainerTranscriptionTest(unittest.TestCase):
     @patch.dict(os.environ, _REQUIRED_ENV, clear=False)
-    def test_container_has_process_audio_chunk(self) -> None:
-        container = _build_with_mocked_boto()
-        self.assertIsInstance(
-            container.process_audio_chunk, ProcessAudioChunkUseCase
-        )
-
-    @patch.dict(os.environ, _REQUIRED_ENV, clear=False)
     def test_container_has_finalize_transcript(self) -> None:
         container = _build_with_mocked_boto()
         self.assertIsInstance(
@@ -75,6 +70,35 @@ class ContainerTranscriptionTest(unittest.TestCase):
         container = _build_with_mocked_boto()
         self.assertIsInstance(
             container.transcript_repo, TranscriptRepository
+        )
+
+    @patch.dict(os.environ, _REQUIRED_ENV, clear=False)
+    def test_container_has_pause_session(self) -> None:
+        container = _build_with_mocked_boto()
+        self.assertIsInstance(container.pause_session, PauseSessionUseCase)
+
+    @patch.dict(os.environ, _REQUIRED_ENV, clear=False)
+    def test_container_has_resume_session(self) -> None:
+        container = _build_with_mocked_boto()
+        self.assertIsInstance(container.resume_session, ResumeSessionUseCase)
+
+    @patch.dict(os.environ, _REQUIRED_ENV, clear=False)
+    def test_container_has_issue_transcription_token(self) -> None:
+        container = _build_with_mocked_boto()
+        self.assertIsInstance(
+            container.issue_transcription_token,
+            IssueTranscriptionTokenUseCase,
+        )
+
+    @patch.dict(os.environ, _REQUIRED_ENV, clear=False)
+    def test_container_has_transcript_segment_repo(self) -> None:
+        from deskai.ports.transcript_segment_repository import (
+            TranscriptSegmentRepository,
+        )
+
+        container = _build_with_mocked_boto()
+        self.assertIsInstance(
+            container.transcript_segment_repo, TranscriptSegmentRepository
         )
 
 

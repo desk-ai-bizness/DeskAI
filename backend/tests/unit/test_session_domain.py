@@ -31,7 +31,7 @@ class TestSessionState(unittest.TestCase):
         assert SessionState.DISCONNECTED == "disconnected"
 
     def test_state_count(self):
-        assert len(SessionState) == 6
+        assert len(SessionState) == 7
 
 
 class TestSession(unittest.TestCase):

@@ -6,10 +6,12 @@ from deskai.domain.audit.entities import AuditAction, AuditEvent
 
 
 class AuditActionEnumTest(unittest.TestCase):
-    def test_all_eleven_action_values_exist(self) -> None:
+    def test_all_action_values_exist(self) -> None:
         expected = {
             "consultation.created",
             "session.started",
+            "session.paused",
+            "session.resumed",
             "session.ended",
             "processing.started",
             "processing.completed",
@@ -24,7 +26,7 @@ class AuditActionEnumTest(unittest.TestCase):
         self.assertEqual(actual, expected)
 
     def test_action_count(self) -> None:
-        self.assertEqual(len(AuditAction), 11)
+        self.assertEqual(len(AuditAction), 13)
 
 
 class AuditEventEntityTest(unittest.TestCase):

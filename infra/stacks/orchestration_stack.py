@@ -84,13 +84,37 @@ class OrchestrationStack(Stack):
         pipeline_handler.grant_invoke(self.state_machine_role)
         self.processing_dlq.grant_send_messages(self.state_machine_role)
 
-        process_consultation = sfn_tasks.LambdaInvoke(
+        finalize_transcript = sfn_tasks.LambdaInvoke(
             self,
-            "ProcessConsultation",
+            "FinalizeTranscript",
             lambda_function=pipeline_handler,
             output_path="$.Payload",
+            payload=sfn.TaskInput.from_object(
+                {
+                    "action": "finalize_transcript",
+                    "detail": sfn.JsonPath.entire_payload,
+                }
+            ),
         )
-        process_consultation.add_retry(
+        finalize_transcript.add_retry(
+            max_attempts=3,
+            interval=Duration.seconds(2),
+            backoff_rate=2.0,
+        )
+
+        run_ai_pipeline = sfn_tasks.LambdaInvoke(
+            self,
+            "RunAIPipeline",
+            lambda_function=pipeline_handler,
+            output_path="$.Payload",
+            payload=sfn.TaskInput.from_object(
+                {
+                    "action": "run_pipeline",
+                    "detail": sfn.JsonPath.entire_payload,
+                }
+            ),
+        )
+        run_ai_pipeline.add_retry(
             max_attempts=3,
             interval=Duration.seconds(2),
             backoff_rate=2.0,
@@ -104,9 +128,14 @@ class OrchestrationStack(Stack):
         )
 
         fail_state = sfn.Fail(self, "ProcessingFailed")
-        process_consultation.add_catch(send_to_dlq.next(fail_state), result_path="$.error")
+        dlq_then_fail = send_to_dlq.next(fail_state)
 
-        definition = process_consultation.next(sfn.Succeed(self, "ProcessingSucceeded"))
+        finalize_transcript.add_catch(dlq_then_fail, result_path="$.error")
+        run_ai_pipeline.add_catch(dlq_then_fail, result_path="$.error")
+
+        definition = finalize_transcript.next(
+            run_ai_pipeline.next(sfn.Succeed(self, "ProcessingSucceeded"))
+        )
 
         self.consultation_workflow = sfn.StateMachine(
             self,

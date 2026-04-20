@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { ApiError } from '../api/client';
+import { getTranscriptionToken } from '../api/endpoints';
 import {
   useConsultationDetailQuery,
   useEndSessionMutation,
@@ -17,12 +18,17 @@ import {
   Text,
 } from '../components/ui';
 import { runtimeConfig } from '../config/env';
+import { ElevenLabsScribe } from '../services/elevenlabs-scribe';
+import type { ScribeCommittedEvent } from '../services/elevenlabs-scribe';
+import { relayCommittedSegment } from '../services/transcript-relay';
 import type {
   SessionClientMessage,
   SessionServerEvent,
   SessionStartView,
 } from '../types/contracts';
-import { blobToBase64 } from '../utils/base64';
+import { CURRENT_EVENT_VERSION } from '../types/contracts';
+
+type RecordingState = 'idle' | 'connecting' | 'recording' | 'paused' | 'disconnected';
 
 interface TranscriptItem {
   id: string;
@@ -60,18 +66,19 @@ export function LiveConsultationPage() {
   const { uiConfig } = useAuth();
 
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
+  const [partialText, setPartialText] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const [connectionState, setConnectionState] = useState<'idle' | 'connecting' | 'connected' | 'disconnected'>(
-    'idle',
-  );
+  const [recordingState, setRecordingState] = useState<RecordingState>('idle');
   const [microphoneState, setMicrophoneState] = useState<'unknown' | 'granted' | 'denied'>('unknown');
   const [sessionMessage, setSessionMessage] = useState<string | null>(null);
 
   const mediaStreamRef = useRef<MediaStream | null>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const sessionRef = useRef<SessionStartView | null>(null);
-  const chunkIndexRef = useRef(0);
+  const scribeRef = useRef<ElevenLabsScribe | null>(null);
+
   const consultationQuery = useConsultationDetailQuery(consultationId);
   const startSessionMutation = useStartSessionMutation(consultationId);
   const endSessionMutation = useEndSessionMutation(consultationId);
@@ -80,31 +87,32 @@ export function LiveConsultationPage() {
   const queryError = consultationQuery.error
     ? consultationQuery.error instanceof ApiError
       ? consultationQuery.error.message
-      : 'Não foi possível carregar os detalhes da consulta.'
+      : 'Nao foi possivel carregar os detalhes da consulta.'
     : null;
 
   useEffect(() => {
     return () => {
-      recorderRef.current?.stop();
+      scribeRef.current?.close();
+      processorRef.current?.disconnect();
+      audioContextRef.current?.close().catch(() => {});
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
       socketRef.current?.close();
     };
   }, []);
 
-  const connectWebSocket = useCallback(
+  const connectBackendWebSocket = useCallback(
     (session: SessionStartView) => {
       const url = `${toWebSocketUrl(session)}?token=${encodeURIComponent(session.connection_token)}`;
-      setConnectionState('connecting');
       const socket = new WebSocket(url);
       socketRef.current = socket;
 
       socket.onopen = () => {
-        setConnectionState('connected');
         const initPayload: SessionClientMessage = {
           action: 'session.init',
           data: {
             consultation_id: consultationId,
             session_id: session.session_id,
+            event_version: CURRENT_EVENT_VERSION,
           },
         };
         socket.send(JSON.stringify(initPayload));
@@ -117,18 +125,18 @@ export function LiveConsultationPage() {
         }
 
         if (payload.event === 'session.status') {
-          setSessionMessage(String(payload.data.message ?? 'Sessão conectada.'));
+          setSessionMessage(String(payload.data.message ?? 'Sessao conectada.'));
           return;
         }
 
         if (payload.event === 'session.warning') {
-          setSessionMessage(String(payload.data.message ?? 'Aviso de sessão.'));
+          setSessionMessage(String(payload.data.message ?? 'Aviso de sessao.'));
           return;
         }
 
         if (payload.event === 'session.ended') {
-          setSessionMessage(String(payload.data.message ?? 'Sessão encerrada.'));
-          setConnectionState('disconnected');
+          setSessionMessage(String(payload.data.message ?? 'Sessao encerrada.'));
+          setRecordingState('disconnected');
           void refetchConsultation();
           return;
         }
@@ -147,33 +155,83 @@ export function LiveConsultationPage() {
       };
 
       socket.onerror = () => {
-        setConnectionState('disconnected');
-        setSessionMessage('Conexão perdida. Use o botão de reconectar.');
+        setSessionMessage('Conexao com o servidor perdida. Use o botao de reconectar.');
       };
 
       socket.onclose = () => {
-        setConnectionState('disconnected');
+        if (recordingState !== 'idle') {
+          setRecordingState('disconnected');
+        }
       };
     },
-    [consultationId, refetchConsultation],
+    [consultationId, refetchConsultation, recordingState],
   );
 
   const requestMicrophone = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
       setMicrophoneState('denied');
-      throw new ApiError('Seu navegador não suporta captura de áudio.', 400, 'microphone_unsupported');
+      throw new ApiError('Seu navegador nao suporta captura de audio.', 400, 'microphone_unsupported');
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
+      });
       mediaStreamRef.current = stream;
       setMicrophoneState('granted');
       return stream;
     } catch {
       setMicrophoneState('denied');
-      throw new ApiError('Permissão de microfone negada.', 400, 'microphone_denied');
+      throw new ApiError('Permissao de microfone negada.', 400, 'microphone_denied');
     }
   }, []);
+
+  function startAudioCapture(stream: MediaStream, scribe: ElevenLabsScribe): void {
+    const audioContext = new AudioContext({ sampleRate: 16000 });
+    audioContextRef.current = audioContext;
+
+    const source = audioContext.createMediaStreamSource(stream);
+    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+    processorRef.current = processor;
+
+    processor.onaudioprocess = (event) => {
+      const inputData = event.inputBuffer.getChannelData(0);
+      const pcm16 = new Int16Array(inputData.length);
+      for (let i = 0; i < inputData.length; i++) {
+        const s = Math.max(-1, Math.min(1, inputData[i]));
+        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+      }
+
+      const bytes = new Uint8Array(pcm16.buffer);
+      let binary = '';
+      const chunkSize = 0x8000;
+      for (let j = 0; j < bytes.length; j += chunkSize) {
+        const chunk = bytes.subarray(j, j + chunkSize);
+        binary += String.fromCharCode(...chunk);
+      }
+      const base64 = btoa(binary);
+
+      scribe.sendAudio(base64);
+    };
+
+    source.connect(processor);
+    processor.connect(audioContext.destination);
+  }
+
+  function stopAudioCapture(): void {
+    processorRef.current?.disconnect();
+    processorRef.current = null;
+
+    if (audioContextRef.current) {
+      void audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+  }
 
   async function handleStartRecording() {
     if (!consultationId) {
@@ -182,52 +240,114 @@ export function LiveConsultationPage() {
 
     setError(null);
     setSessionMessage(null);
+    setRecordingState('connecting');
 
     try {
       const stream = mediaStreamRef.current ?? (await requestMicrophone());
       const startView = await startSessionMutation.mutateAsync();
       sessionRef.current = startView;
 
-      connectWebSocket(startView);
+      connectBackendWebSocket(startView);
 
-      const recorder = new MediaRecorder(stream);
-      recorderRef.current = recorder;
-      chunkIndexRef.current = 0;
+      const tokenView = await getTranscriptionToken(consultationId);
 
-      recorder.ondataavailable = (event) => {
-        void (async () => {
-          if (!event.data || event.data.size === 0) {
-            return;
-          }
+      const scribe = new ElevenLabsScribe();
+      scribeRef.current = scribe;
 
-          if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-            return;
-          }
+      scribe.onPartial((event) => {
+        setPartialText(event.text);
+      });
 
-          const audioBase64 = await blobToBase64(event.data);
-          const payload: SessionClientMessage = {
-            action: 'audio.chunk',
-            data: {
-              chunk_index: chunkIndexRef.current,
-              audio: audioBase64,
-              timestamp: new Date().toISOString(),
-            },
-          };
-          socketRef.current.send(JSON.stringify(payload));
-          chunkIndexRef.current += 1;
-        })();
-      };
+      scribe.onCommitted((event: ScribeCommittedEvent) => {
+        setTranscript((current) => [
+          ...current,
+          {
+            id: `scribe-${Date.now()}-${current.length}`,
+            speaker: event.speaker === 'unknown' ? 'desconhecido' : event.speaker,
+            text: event.text,
+            isFinal: true,
+          },
+        ]);
+        setPartialText('');
 
-      recorder.start(1000);
-      setSessionMessage('Sessão de gravação iniciada.');
+        relayCommittedSegment(socketRef.current, consultationId, event);
+      });
+
+      scribe.onError((event) => {
+        setSessionMessage(`Erro de transcricao: ${event.message}`);
+      });
+
+      scribe.onClose(() => {
+        setSessionMessage('Conexao com transcricao encerrada.');
+      });
+
+      scribe.setTokenRefreshCallback(async () => {
+        try {
+          return await getTranscriptionToken(consultationId);
+        } catch {
+          return null;
+        }
+      });
+
+      scribe.connect(tokenView);
+      startAudioCapture(stream, scribe);
+
+      setRecordingState('recording');
+      setSessionMessage('Sessao de gravacao iniciada.');
       await refetchConsultation();
     } catch (requestError) {
       if (requestError instanceof ApiError) {
         setError(requestError.message);
       } else {
-        setError('Falha ao iniciar sessão de gravação.');
+        setError('Falha ao iniciar sessao de gravacao.');
       }
+      setRecordingState('idle');
     }
+  }
+
+  function handlePause() {
+    stopAudioCapture();
+
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      const pausePayload: SessionClientMessage = {
+        action: 'session.pause',
+        data: {
+          consultation_id: consultationId,
+          timestamp: new Date().toISOString(),
+          event_version: CURRENT_EVENT_VERSION,
+        },
+      };
+      socketRef.current.send(JSON.stringify(pausePayload));
+    }
+
+    setRecordingState('paused');
+    setSessionMessage('Gravacao pausada.');
+  }
+
+  function handleResume() {
+    const stream = mediaStreamRef.current;
+    const scribe = scribeRef.current;
+
+    if (!stream || !scribe) {
+      setError('Nao foi possivel retomar a gravacao.');
+      return;
+    }
+
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      const resumePayload: SessionClientMessage = {
+        action: 'session.resume',
+        data: {
+          consultation_id: consultationId,
+          timestamp: new Date().toISOString(),
+          event_version: CURRENT_EVENT_VERSION,
+        },
+      };
+      socketRef.current.send(JSON.stringify(resumePayload));
+    }
+
+    startAudioCapture(stream, scribe);
+    setRecordingState('recording');
+    setSessionMessage('Gravacao retomada.');
   }
 
   async function handleStopRecording() {
@@ -238,44 +358,46 @@ export function LiveConsultationPage() {
     setError(null);
 
     try {
-      recorderRef.current?.stop();
-      recorderRef.current = null;
+      stopAudioCapture();
+      scribeRef.current?.close();
+      scribeRef.current = null;
 
       if (socketRef.current?.readyState === WebSocket.OPEN) {
         const stopPayload: SessionClientMessage = {
           action: 'session.stop',
           data: {
             consultation_id: consultationId,
+            event_version: CURRENT_EVENT_VERSION,
           },
         };
         socketRef.current.send(JSON.stringify(stopPayload));
       }
 
       await endSessionMutation.mutateAsync();
-      setSessionMessage('Gravação encerrada. Processamento iniciado.');
+      setSessionMessage('Gravacao encerrada. Processamento iniciado.');
     } catch (requestError) {
       if (requestError instanceof ApiError) {
         setError(requestError.message);
       } else {
-        setError('Falha ao encerrar gravação.');
+        setError('Falha ao encerrar gravacao.');
       }
     } finally {
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
       mediaStreamRef.current = null;
       socketRef.current?.close();
       socketRef.current = null;
-      setConnectionState('disconnected');
+      setRecordingState('disconnected');
       await refetchConsultation();
     }
   }
 
   async function handleReconnect() {
     if (!sessionRef.current) {
-      setError('Nenhuma sessão ativa para reconectar.');
+      setError('Nenhuma sessao ativa para reconectar.');
       return;
     }
 
-    connectWebSocket(sessionRef.current);
+    connectBackendWebSocket(sessionRef.current);
   }
 
   const canStartRecording = consultation?.actions.can_start_recording ?? false;
@@ -283,16 +405,38 @@ export function LiveConsultationPage() {
 
   const statusLabel = useMemo(() => {
     if (!consultation) {
-      return 'indisponível';
+      return 'indisponivel';
     }
 
     return uiConfig?.status_labels?.[consultation.status] ?? consultation.status;
   }, [consultation, uiConfig]);
 
+  const recordingStateLabel = useMemo(() => {
+    const labels: Record<RecordingState, string> = {
+      idle: 'Inativo',
+      connecting: 'Conectando',
+      recording: 'Gravando',
+      paused: 'Pausado',
+      disconnected: 'Desconectado',
+    };
+    return labels[recordingState];
+  }, [recordingState]);
+
+  const recordingStateTone = useMemo(() => {
+    const tones: Record<RecordingState, 'neutral' | 'info' | 'success' | 'warning' | 'danger'> = {
+      idle: 'neutral',
+      connecting: 'info',
+      recording: 'success',
+      paused: 'warning',
+      disconnected: 'warning',
+    };
+    return tones[recordingState];
+  }, [recordingState]);
+
   return (
     <div className="page-grid page-grid-equal">
       <Card
-        title={uiConfig?.labels.live_session_header ?? 'Sessão ao vivo'}
+        title={uiConfig?.labels.live_session_header ?? 'Sessao ao vivo'}
         actions={<RouterLink className="ds-link" to="/consultations">Voltar para consultas</RouterLink>}
       >
 
@@ -304,13 +448,13 @@ export function LiveConsultationPage() {
             <Chip tone={microphoneState === 'denied' ? 'danger' : microphoneState === 'granted' ? 'success' : 'neutral'}>
               Microfone:{' '}
               {microphoneState === 'unknown'
-                ? 'Não solicitado'
+                ? 'Nao solicitado'
                 : microphoneState === 'granted'
                   ? 'Permitido'
                   : 'Negado'}
             </Chip>
-            <Chip tone={connectionState === 'connected' ? 'success' : connectionState === 'disconnected' ? 'warning' : 'neutral'}>
-              Conexão: {connectionState}
+            <Chip tone={recordingStateTone}>
+              Gravacao: {recordingStateLabel}
             </Chip>
           </div>
         ) : null}
@@ -337,13 +481,33 @@ export function LiveConsultationPage() {
           <Button
             type="button"
             onClick={() => void handleStartRecording()}
-            disabled={!canStartRecording}
+            disabled={!canStartRecording || recordingState !== 'idle'}
             isLoading={startSessionMutation.isPending}
           >
             {startSessionMutation.isPending
               ? 'Iniciando...'
-              : uiConfig?.labels.start_recording_button ?? 'Iniciar gravação'}
+              : uiConfig?.labels.start_recording_button ?? 'Iniciar gravacao'}
           </Button>
+
+          {recordingState === 'recording' ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => handlePause()}
+            >
+              Pausar gravacao
+            </Button>
+          ) : null}
+
+          {recordingState === 'paused' ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => handleResume()}
+            >
+              Retomar gravacao
+            </Button>
+          ) : null}
 
           <Button
             type="button"
@@ -354,38 +518,43 @@ export function LiveConsultationPage() {
           >
             {endSessionMutation.isPending
               ? 'Encerrando...'
-              : uiConfig?.labels.stop_recording_button ?? 'Parar gravação'}
+              : uiConfig?.labels.stop_recording_button ?? 'Parar gravacao'}
           </Button>
 
           <Button
             type="button"
             variant="ghost"
             onClick={() => void handleReconnect()}
-            disabled={connectionState === 'connected' || !sessionRef.current}
+            disabled={recordingState === 'recording' || !sessionRef.current}
           >
             Reconectar
           </Button>
 
           <RouterLink to={`/consultations/${consultationId}/review`} className="ds-link">
-            Ir para revisão
+            Ir para revisao
           </RouterLink>
         </div>
       </Card>
 
-      <Card title="Transcrição ao vivo">
-        {transcript.length === 0 ? (
+      <Card title="Transcricao ao vivo">
+        {transcript.length === 0 && !partialText ? (
           <EmptyState
-            title="Aguardando transcrição"
-            description="A transcrição parcial aparecerá aqui durante a sessão."
+            title="Aguardando transcricao"
+            description="A transcricao aparecera aqui durante a sessao."
           />
         ) : (
           <ul className="transcript-list">
             {transcript.map((item) => (
               <li key={item.id}>
                 <strong>{item.speaker}:</strong> {item.text}
-                {!item.isFinal ? <Text tone="muted">parcial</Text> : null}
+                {!item.isFinal ? <Text tone="muted"> parcial</Text> : null}
               </li>
             ))}
+            {partialText ? (
+              <li>
+                <Text tone="muted">{partialText}</Text>
+              </li>
+            ) : null}
           </ul>
         )}
       </Card>

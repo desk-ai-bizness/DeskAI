@@ -12,6 +12,7 @@ class SessionState(StrEnum):
     CONNECTING = "connecting"
     ACTIVE = "active"
     RECORDING = "recording"
+    PAUSED = "paused"
     STOPPING = "stopping"
     ENDED = "ended"
     DISCONNECTED = "disconnected"
@@ -20,7 +21,8 @@ class SessionState(StrEnum):
 VALID_SESSION_TRANSITIONS: dict[SessionState, set[SessionState]] = {
     SessionState.CONNECTING: {SessionState.ACTIVE, SessionState.DISCONNECTED},
     SessionState.ACTIVE: {SessionState.RECORDING, SessionState.STOPPING, SessionState.DISCONNECTED},
-    SessionState.RECORDING: {SessionState.STOPPING, SessionState.DISCONNECTED},
+    SessionState.RECORDING: {SessionState.PAUSED, SessionState.STOPPING, SessionState.DISCONNECTED},
+    SessionState.PAUSED: {SessionState.RECORDING, SessionState.STOPPING, SessionState.DISCONNECTED},
     SessionState.STOPPING: {SessionState.ENDED},
     SessionState.ENDED: set(),
     SessionState.DISCONNECTED: {SessionState.ACTIVE, SessionState.ENDED},

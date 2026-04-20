@@ -27,11 +27,16 @@ class TestStubExportGenerator:
     def test_generate_raises_not_implemented(self):
         stub = StubExportGenerator()
         from deskai.domain.export.value_objects import ExportFormat
-        from tests.conftest import make_sample_consultation
 
-        consultation = make_sample_consultation()
         with pytest.raises(NotImplementedError, match="ExportGenerator.generate"):
-            stub.generate(consultation, ExportFormat.PDF)
+            stub.generate(
+                consultation_id="cons-001",
+                fmt=ExportFormat.PDF,
+                metadata={},
+                medical_history={},
+                summary={},
+                accepted_insights=[],
+            )
 
 
 class TestStubLLMProvider:

@@ -15,7 +15,9 @@ def _mock_container():
     c.auth_provider = MagicMock()
     c.transcription_provider = MagicMock()
     c.end_session = MagicMock()
-    c.finalize_transcript = MagicMock()
+    c.transcript_segment_repo = MagicMock()
+    c.pause_session = MagicMock()
+    c.resume_session = MagicMock()
     return c
 
 
@@ -98,14 +100,42 @@ class WebSocketRouterTest(unittest.TestCase):
 
     @patch(f"{_ROUTER}._build_apigw")
     @patch(f"{_ROUTER}._get_container")
-    @patch("deskai.handlers.websocket.audio_chunk_handler.handle_audio_chunk")
-    def test_route_audio_chunk(self, mock_handler, mock_get_container, mock_apigw):
+    @patch("deskai.handlers.websocket.transcript_commit_handler.handle_transcript_commit")
+    def test_route_transcript_commit(self, mock_handler, mock_get_container, mock_apigw):
         mock_get_container.return_value = self.container
         mock_apigw.return_value = self.apigw
         from deskai.handlers.websocket.router import handler
 
         mock_handler.return_value = {"statusCode": 200}
-        result = handler(self._make_default_event("audio.chunk"), None)
+        result = handler(self._make_default_event("transcript.commit"), None)
+
+        self.assertEqual(result["statusCode"], 200)
+        mock_handler.assert_called_once()
+
+    @patch(f"{_ROUTER}._build_apigw")
+    @patch(f"{_ROUTER}._get_container")
+    @patch("deskai.handlers.websocket.session_pause_handler.handle_session_pause")
+    def test_route_session_pause(self, mock_handler, mock_get_container, mock_apigw):
+        mock_get_container.return_value = self.container
+        mock_apigw.return_value = self.apigw
+        from deskai.handlers.websocket.router import handler
+
+        mock_handler.return_value = {"statusCode": 200}
+        result = handler(self._make_default_event("session.pause"), None)
+
+        self.assertEqual(result["statusCode"], 200)
+        mock_handler.assert_called_once()
+
+    @patch(f"{_ROUTER}._build_apigw")
+    @patch(f"{_ROUTER}._get_container")
+    @patch("deskai.handlers.websocket.session_resume_handler.handle_session_resume")
+    def test_route_session_resume(self, mock_handler, mock_get_container, mock_apigw):
+        mock_get_container.return_value = self.container
+        mock_apigw.return_value = self.apigw
+        from deskai.handlers.websocket.router import handler
+
+        mock_handler.return_value = {"statusCode": 200}
+        result = handler(self._make_default_event("session.resume"), None)
 
         self.assertEqual(result["statusCode"], 200)
         mock_handler.assert_called_once()

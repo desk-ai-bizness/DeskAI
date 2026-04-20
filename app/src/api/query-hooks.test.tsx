@@ -8,6 +8,7 @@ import {
   useCreateConsultationMutation,
   useExportConsultationMutation,
   useFinalizeConsultationMutation,
+  useTranscriptionTokenMutation,
   useUpdateReviewMutation,
 } from './query-hooks';
 
@@ -15,12 +16,14 @@ const createConsultationMock = vi.fn();
 const updateReviewMock = vi.fn();
 const finalizeConsultationMock = vi.fn();
 const exportConsultationMock = vi.fn();
+const getTranscriptionTokenMock = vi.fn();
 
 vi.mock('./endpoints', () => ({
   createConsultation: (...args: unknown[]) => createConsultationMock(...args),
   updateReview: (...args: unknown[]) => updateReviewMock(...args),
   finalizeConsultation: (...args: unknown[]) => finalizeConsultationMock(...args),
   exportConsultation: (...args: unknown[]) => exportConsultationMock(...args),
+  getTranscriptionToken: (...args: unknown[]) => getTranscriptionTokenMock(...args),
 }));
 
 describe('query hooks', () => {
@@ -29,6 +32,7 @@ describe('query hooks', () => {
     updateReviewMock.mockReset();
     finalizeConsultationMock.mockReset();
     exportConsultationMock.mockReset();
+    getTranscriptionTokenMock.mockReset();
   });
 
   it('uses conservative in-memory query defaults', () => {
@@ -166,5 +170,32 @@ describe('query hooks', () => {
     expect(exportConsultationMock).toHaveBeenCalledWith('cons-1');
     expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
     expect(result.current.data?.export_url).toBe('https://example.test/export.pdf');
+  });
+
+  it('calls getTranscriptionToken via mutation', async () => {
+    const queryClient = createAppQueryClient();
+    const tokenResponse = {
+      token: 'el-token-123',
+      websocket_url: 'wss://api.elevenlabs.io/v1/speech-to-text/realtime',
+      model_id: 'scribe_v2_realtime',
+      language_code: 'pt',
+      expires_at: '2026-04-19T12:15:00Z',
+      expires_in_seconds: 900,
+    };
+
+    getTranscriptionTokenMock.mockResolvedValue(tokenResponse);
+
+    function wrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    }
+
+    const { result } = renderHook(() => useTranscriptionTokenMutation('cons-1'), { wrapper });
+
+    result.current.mutate();
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(getTranscriptionTokenMock).toHaveBeenCalledWith('cons-1');
+    expect(result.current.data?.token).toBe('el-token-123');
   });
 });

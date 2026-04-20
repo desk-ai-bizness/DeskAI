@@ -72,12 +72,14 @@ from deskai.application.review.update_review import (
     UpdateReviewUseCase,
 )
 from deskai.application.session.end_session import EndSessionUseCase
+from deskai.application.session.pause_session import PauseSessionUseCase
+from deskai.application.session.resume_session import ResumeSessionUseCase
 from deskai.application.session.start_session import StartSessionUseCase
 from deskai.application.transcription.finalize_transcript import (
     FinalizeTranscriptUseCase,
 )
-from deskai.application.transcription.process_audio_chunk import (
-    ProcessAudioChunkUseCase,
+from deskai.application.transcription.issue_transcription_token import (
+    IssueTranscriptionTokenUseCase,
 )
 from deskai.bff.ui_config.bff_assembler_adapter import (
     BffUiConfigAssembler,
@@ -95,7 +97,9 @@ from deskai.ports.patient_repository import PatientRepository
 from deskai.ports.session_repository import SessionRepository
 from deskai.ports.storage_provider import StorageProvider
 from deskai.ports.transcript_repository import TranscriptRepository
+from deskai.ports.transcript_segment_repository import TranscriptSegmentRepository
 from deskai.ports.transcription_provider import TranscriptionProvider
+from deskai.ports.transcription_token_provider import TranscriptionTokenProvider
 from deskai.ports.ui_config_assembler import UiConfigAssembler
 from deskai.shared.config import Settings, load_settings
 from deskai.shared.logging import get_logger, log_context
@@ -116,7 +120,9 @@ class Container:
     connection_repo: ConnectionRepository
     audit_repo: AuditRepository
     transcription_provider: TranscriptionProvider
+    transcription_token_provider: TranscriptionTokenProvider
     transcript_repo: TranscriptRepository
+    transcript_segment_repo: TranscriptSegmentRepository
     artifact_repo: ArtifactRepository
     event_publisher: EventPublisher
     export_generator: ExportGenerator
@@ -137,7 +143,9 @@ class Container:
     get_patient_detail: GetPatientDetailUseCase
     start_session: StartSessionUseCase
     end_session: EndSessionUseCase
-    process_audio_chunk: ProcessAudioChunkUseCase
+    pause_session: PauseSessionUseCase
+    resume_session: ResumeSessionUseCase
+    issue_transcription_token: IssueTranscriptionTokenUseCase
     finalize_transcript: FinalizeTranscriptUseCase
     run_pipeline: RunPipelineUseCase
     get_ui_config: GetUiConfigUseCase
@@ -215,6 +223,31 @@ def build_container() -> Container:
     transcript_repo = S3TranscriptRepository(s3_client=s3_client)
     artifact_repo = S3ArtifactRepository(s3_client=s3_client)
 
+    from deskai.adapters.persistence.dynamodb_transcript_segment_repository import (
+        DynamoDBTranscriptSegmentRepository,
+    )
+    from deskai.adapters.transcription.elevenlabs_token_provider import (
+        ElevenLabsTokenProvider,
+    )
+
+    transcript_segment_repo = DynamoDBTranscriptSegmentRepository(
+        table_name=settings.dynamodb_table,
+    )
+
+    from deskai.adapters.transcription.lazy_token_provider import (
+        LazyTranscriptionTokenProvider,
+    )
+
+    def _build_token_provider():
+        from deskai.adapters.transcription.elevenlabs_config import (
+            load_elevenlabs_config,
+        )
+
+        config = load_elevenlabs_config(settings.elevenlabs_secret_name)
+        return ElevenLabsTokenProvider(config=config)
+
+    transcription_token_provider = LazyTranscriptionTokenProvider(_build_token_provider)
+
     from deskai.adapters.events.eventbridge_publisher import EventBridgePublisher
     from deskai.adapters.storage.s3_storage_provider import (
         S3StorageProvider,
@@ -261,7 +294,9 @@ def build_container() -> Container:
         connection_repo=connection_repo,
         audit_repo=audit_repo,
         transcription_provider=transcription_provider,
+        transcription_token_provider=transcription_token_provider,
         transcript_repo=transcript_repo,
+        transcript_segment_repo=transcript_segment_repo,
         artifact_repo=artifact_repo,
         event_publisher=event_publisher,
         export_generator=export_generator,
@@ -320,9 +355,18 @@ def build_container() -> Container:
             audit_repo=audit_repo,
             event_publisher=event_publisher,
         ),
-        process_audio_chunk=ProcessAudioChunkUseCase(
+        pause_session=PauseSessionUseCase(
             session_repo=session_repo,
-            transcription_provider=transcription_provider,
+            audit_repo=audit_repo,
+        ),
+        resume_session=ResumeSessionUseCase(
+            session_repo=session_repo,
+            audit_repo=audit_repo,
+        ),
+        issue_transcription_token=IssueTranscriptionTokenUseCase(
+            consultation_repo=consultation_repo,
+            transcription_token_provider=transcription_token_provider,
+            audit_repo=audit_repo,
         ),
         finalize_transcript=FinalizeTranscriptUseCase(
             transcription_provider=transcription_provider,

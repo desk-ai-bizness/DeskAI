@@ -1,6 +1,9 @@
+export const CURRENT_EVENT_VERSION = '2';
+
 export type ConsultationStatus =
   | 'started'
   | 'recording'
+  | 'paused'
   | 'in_processing'
   | 'processing_failed'
   | 'draft_generated'
@@ -261,32 +264,70 @@ export interface UpdateReviewRequest {
   }>;
 }
 
+export interface TranscriptionTokenView {
+  token: string;
+  websocket_url: string;
+  model_id: string;
+  language_code: string;
+  expires_at: string;
+  expires_in_seconds: number;
+}
+
+export interface CommittedSegment {
+  speaker: string;
+  text: string;
+  start_time: number | null;
+  end_time: number | null;
+  confidence: number | null;
+  is_final: boolean;
+}
+
 export type SessionClientMessage =
   | {
       action: 'session.init';
       data: {
         consultation_id: string;
         session_id: string;
+        event_version: string;
       };
     }
   | {
-      action: 'audio.chunk';
+      action: 'transcript.commit';
       data: {
-        chunk_index: number;
-        audio: string;
+        consultation_id: string;
+        segments: CommittedSegment[];
         timestamp: string;
+        event_version: string;
+      };
+    }
+  | {
+      action: 'session.pause';
+      data: {
+        consultation_id: string;
+        timestamp: string;
+        event_version: string;
+      };
+    }
+  | {
+      action: 'session.resume';
+      data: {
+        consultation_id: string;
+        timestamp: string;
+        event_version: string;
       };
     }
   | {
       action: 'session.stop';
       data: {
         consultation_id: string;
+        event_version: string;
       };
     }
   | {
       action: 'client.ping';
       data: {
         timestamp: string;
+        event_version: string;
       };
     };
 
@@ -297,6 +338,9 @@ export interface SessionServerEvent {
     | 'session.status'
     | 'session.warning'
     | 'session.ended'
+    | 'insight.provisional'
+    | 'autofill.candidate'
     | 'server.pong';
   data: Record<string, unknown>;
+  event_version?: string;
 }

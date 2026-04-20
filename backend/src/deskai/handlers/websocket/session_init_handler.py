@@ -15,14 +15,13 @@ def handle_session_init(
     connection_repo,
     session_repo,
     apigw,
-    transcription_provider=None,
 ) -> dict:
     """Bind a WebSocket connection to a consultation session."""
     connection_id = event["requestContext"]["connectionId"]
     body = json.loads(event.get("body", "{}"))
     data = body.get("data", {})
     session_id = data.get("session_id", "")
-    _consultation_id = data.get("consultation_id", "")  # noqa: F841
+    consultation_id = data.get("consultation_id", "")
 
     connection = connection_repo.find_by_connection_id(connection_id)
     if connection is None:
@@ -47,21 +46,6 @@ def handle_session_init(
         )
         return {"statusCode": 403, "body": "Session ownership mismatch"}
 
-    if transcription_provider is not None:
-        try:
-            transcription_provider.start_realtime_session(
-                session_id=session.session_id,
-                language="pt",
-            )
-        except Exception as exc:
-            if "already exists" not in str(exc).lower():
-                logger.exception(
-                    "ws_transcription_session_start_failed",
-                    extra=log_context(connection_id=connection_id, session_id=session_id),
-                )
-                return {"statusCode": 503, "body": "Transcription provider unavailable"}
-
-    # Bind session_id to the connection so audio.chunk can find the session.
     connection = replace(connection, session_id=session.session_id)
     connection_repo.save(connection)
 
@@ -78,7 +62,7 @@ def handle_session_init(
         extra=log_context(
             connection_id=connection_id,
             session_id=session_id,
-            consultation_id=_consultation_id,
+            consultation_id=consultation_id,
         ),
     )
 

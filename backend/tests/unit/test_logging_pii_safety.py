@@ -11,8 +11,6 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from deskai.domain.auth.value_objects import Tokens
-from deskai.domain.session.entities import Session, SessionState
-from deskai.domain.session.value_objects import ConnectionInfo
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -398,96 +396,6 @@ class WsConnectPiiSafetyTest(unittest.TestCase):
         extras = _collect_log_extras(mock_logger)
         _assert_no_pii_in_extras(self, extras)
         _assert_value_not_in_extras(self, extras, "expired-jwt-token", "ws token")
-
-
-# ===================================================================
-# 5. Audio chunk handler — audio data must not be logged
-# ===================================================================
-
-
-class WsAudioChunkPiiSafetyTest(unittest.TestCase):
-    """Verify audio chunk handler never logs audio payload."""
-
-    def _make_session(self, session_id: str = "sess-1") -> Session:
-        return Session(
-            session_id=session_id,
-            consultation_id="cons-1",
-            doctor_id="doc-001",
-            clinic_id="clinic-001",
-            state=SessionState.RECORDING,
-            audio_chunks_received=0,
-            started_at="2026-04-03T12:00:00+00:00",
-            last_activity_at="2026-04-03T12:00:00+00:00",
-        )
-
-    @patch("deskai.handlers.websocket.audio_chunk_handler.logger")
-    def test_audio_chunk_does_not_log_audio_data(
-        self, mock_logger: MagicMock,
-    ) -> None:
-        import base64
-
-        from deskai.handlers.websocket.audio_chunk_handler import (
-            handle_audio_chunk,
-        )
-
-        audio_payload = base64.b64encode(b"fake-audio-bytes-patient-recording").decode()
-
-        connection = ConnectionInfo(
-            connection_id="conn-1",
-            session_id="sess-1",
-            doctor_id="doc-001",
-            clinic_id="clinic-001",
-            connected_at="2026-04-03T12:00:00+00:00",
-        )
-        session = self._make_session()
-
-        connection_repo = MagicMock()
-        connection_repo.find_by_connection_id.return_value = connection
-        session_repo = MagicMock()
-        session_repo.find_by_id.return_value = session
-        apigw = MagicMock()
-
-        event = {
-            "requestContext": {"connectionId": "conn-1"},
-            "body": json.dumps({
-                "event": "audio.chunk",
-                "data": {"audio": audio_payload},
-            }),
-        }
-        handle_audio_chunk(event, connection_repo, session_repo, apigw)
-
-        extras = _collect_log_extras(mock_logger)
-        _assert_no_pii_in_extras(self, extras)
-        _assert_value_not_in_extras(self, extras, audio_payload, "audio b64")
-        _assert_value_not_in_extras(
-            self, extras, "fake-audio-bytes", "raw audio",
-        )
-
-    @patch("deskai.handlers.websocket.audio_chunk_handler.logger")
-    def test_oversized_chunk_does_not_log_audio_data(
-        self, mock_logger: MagicMock,
-    ) -> None:
-        import base64
-
-        from deskai.handlers.websocket.audio_chunk_handler import (
-            handle_audio_chunk,
-        )
-
-        big_audio = base64.b64encode(b"x" * 2_000_000).decode()
-
-        event = {
-            "requestContext": {"connectionId": "conn-1"},
-            "body": json.dumps({
-                "event": "audio.chunk",
-                "data": {"audio": big_audio},
-            }),
-        }
-        handle_audio_chunk(event, MagicMock(), MagicMock(), MagicMock())
-
-        extras = _collect_log_extras(mock_logger)
-        _assert_no_pii_in_extras(self, extras)
-        # size_bytes is safe (it's a number), but the actual audio must not appear
-        _assert_value_not_in_extras(self, extras, big_audio[:50], "audio b64")
 
 
 if __name__ == "__main__":

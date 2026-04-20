@@ -1080,6 +1080,17 @@ Do not include in the MVP:
 - reversibility: high — endpoint transport remains in `app/src/api/endpoints.ts`, and app-local query hooks wrap the dependency boundary
 - reference: `tasks/019-add-frontend-query-cache-and-loading-states.md`
 
+### ADR-017: Client-Side ElevenLabs Realtime Streaming
+
+- decision: browser connects directly to ElevenLabs Scribe v2 Realtime via single-use token; backend acts as a token vending machine and persists committed segments relayed through the app WebSocket
+- reason: AWS Lambda cannot maintain a persistent WebSocket connection to ElevenLabs across invocations (each `audio.chunk` triggers a separate Lambda execution). Client-side streaming is the only serverless-compatible path for real-time transcription. The backend `audio.chunk` route is fully retired.
+- token strategy: backend calls ElevenLabs `tokens.singleUse.create('realtime_scribe')` to generate a 15-minute single-use token; the long-lived API key never reaches the browser
+- commit strategy: VAD (voice activity detection) with automatic silence-based commits
+- token refresh: frontend tracks token age and requests a new token ~1 minute before the 15-minute expiry, seamlessly switching to a new ElevenLabs connection
+- finalization: `session.stop` emits an EventBridge event; a two-step Step Functions workflow (1) finalizes the transcript (ElevenLabs final + DynamoDB segment fallback), then (2) runs the AI pipeline
+- reversibility: high — provider is behind adapter interfaces; switching to a different streaming architecture requires only frontend and adapter changes
+- reference: `tasks/023-implement-realtime-consultation-data-feed.md`
+
 ## 26. AI Agent Notes
 
 If an AI agent uses this file as project context, assume the following:

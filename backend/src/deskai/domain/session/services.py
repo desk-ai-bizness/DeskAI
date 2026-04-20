@@ -8,6 +8,7 @@ from deskai.domain.session.exceptions import (
     AudioChunkRejectedError,
     InvalidSessionStateError,
     SessionOwnershipError,
+    SessionPauseRejectedError,
 )
 from deskai.shared.time import utc_now_iso
 
@@ -53,10 +54,27 @@ class SessionService:
             raise AudioChunkRejectedError(f"Cannot accept audio: session is '{session_state}'")
 
     @staticmethod
+    def validate_pause(session_state: SessionState) -> None:
+        """Validate that a session can be paused. Must be RECORDING."""
+        if session_state != SessionState.RECORDING:
+            raise SessionPauseRejectedError(
+                f"Cannot pause session: session is '{session_state}', expected 'recording'"
+            )
+
+    @staticmethod
+    def validate_resume(session_state: SessionState) -> None:
+        """Validate that a session can be resumed. Must be PAUSED."""
+        if session_state != SessionState.PAUSED:
+            raise SessionPauseRejectedError(
+                f"Cannot resume session: session is '{session_state}', expected 'paused'"
+            )
+
+    @staticmethod
     def validate_session_end(session_state: SessionState) -> None:
         """Validate that a session can be ended."""
         if session_state not in (
             SessionState.RECORDING,
+            SessionState.PAUSED,
             SessionState.ACTIVE,
             SessionState.DISCONNECTED,
         ):

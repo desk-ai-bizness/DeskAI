@@ -47,10 +47,10 @@ Each row traces a business rule through the system layers so that every requirem
 
 | ID | Business Rule | Backend Behavior | API Endpoint | Data Entity | UI Flow | Task |
 |----|---------------|-----------------|--------------|-------------|---------|------|
-| OUT-01 | Raw transcript | Transcription provider output normalized and stored | `GET /v1/consultations/{id}/review` includes transcript | S3 `transcripts/normalized.json` | Transcript panel in review screen | 009 |
-| OUT-02 | Draft structured medical history | AI pipeline generates from normalized transcript | Part of review payload | S3 `ai/medical_history.json` | Editable medical history section in review screen | 010 |
-| OUT-03 | Consultation summary | AI pipeline generates from transcript + medical history | Part of review payload | S3 `ai/summary.json` | Editable summary section in review screen | 010 |
-| OUT-04 | Flagged insights for review | AI pipeline generates insight list with evidence | Part of review payload | S3 `ai/insights.json` | Insight cards with evidence excerpts in review screen | 010 |
+| OUT-01 | Raw transcript | Transcription provider output normalized and stored | `GET /v1/consultations/{id}/review` includes transcript | S3 `transcripts/normalized.json` | Transcript panel in the unified consultation workspace | 009, 024 |
+| OUT-02 | Draft structured medical history | AI pipeline generates from normalized transcript | Part of review payload | S3 `ai/medical_history.json` | Editable medical history section in the unified consultation workspace | 010, 024 |
+| OUT-03 | Consultation summary | AI pipeline generates from transcript + medical history | Part of review payload | S3 `ai/summary.json` | Editable summary section in the unified consultation workspace | 010, 024 |
+| OUT-04 | Flagged insights for review | AI pipeline generates insight list with evidence | Part of review payload | S3 `ai/insights.json` | Insight cards with evidence excerpts in the unified consultation workspace | 010, 024 |
 | OUT-05 | Evidence excerpts linking insights to dialogue | Each insight includes source excerpt references | Part of review payload | Embedded in `ai/insights.json` | Clickable evidence links from insight to transcript | 010 |
 | OUT-06 | Incomplete items marked as such, never fabricated | AI pipeline marks items with confidence; incomplete items flagged | Review payload includes completeness indicators | `completeness_status` per artifact | Visual indicator for incomplete/uncertain items | 010 |
 
@@ -68,7 +68,7 @@ Each row traces a business rule through the system layers so that every requirem
 
 | ID | Business Rule | Backend Behavior | API Endpoint | Data Entity | UI Flow | Task |
 |----|---------------|-----------------|--------------|-------------|---------|------|
-| SUM-01 | Summary in concise clinical language | System prompt enforces style | N/A (prompt design) | `summary.json` | Summary panel in review screen | 010 |
+| SUM-01 | Summary in concise clinical language | System prompt enforces style | N/A (prompt design) | `summary.json` | Summary panel in the unified consultation workspace | 010, 024 |
 | SUM-02 | Faithful to transcript and medical history | Cross-referenced during generation | N/A | Evidence references in summary | N/A | 010 |
 | SUM-03 | No new facts beyond consultation | System prompt constraint | N/A | Schema validation | N/A | 010 |
 | SUM-04 | Follow-up items are reviewable drafts, not final direction | Labeled as "draft" in schema | Part of review payload | `draft_status: true` on follow-up items | "Draft" badge on follow-up items | 010, 012 |
@@ -88,7 +88,7 @@ Each row traces a business rule through the system layers so that every requirem
 | ID | Business Rule | Backend Behavior | API Endpoint | Data Entity | UI Flow | Task |
 |----|---------------|-----------------|--------------|-------------|---------|------|
 | REV-01 | No AI output is final until physician review | Status must reach `under_physician_review` before finalization | State machine guards | `status` field | "Draft" labels on all AI output | 006, 011 |
-| REV-02 | Physician can edit medical history, summary, and insights | Backend accepts partial edits, stores physician version | `PUT /v1/consultations/{id}/review` | `physician_edits` object in DynamoDB + S3 | Editable text fields in review screen | 011 |
+| REV-02 | Physician can edit medical history, summary, and insights | Backend accepts partial edits, stores physician version | `PUT /v1/consultations/{id}/review` | `physician_edits` object in DynamoDB + S3 | Editable text fields in the unified consultation workspace | 011, 024 |
 | REV-03 | Final record requires explicit physician confirmation | Finalization is a deliberate action, not automatic | `POST /v1/consultations/{id}/finalize` | `finalized_at`, `finalized_by` fields | Explicit "Finalize" button with confirmation dialog | 011, 012 |
 | REV-04 | All AI content labeled as subject to medical review | BFF injects disclaimer text | BFF response includes disclaimer metadata | UI config | Persistent disclaimer banner during review | 007, 012 |
 | REV-05 | Only the confirmed version is considered complete | Backend marks `status=finalized` and locks edits | Finalization endpoint | `status` + `is_locked` flags | Read-only view after finalization | 011 |
@@ -127,4 +127,4 @@ Each row traces a business rule through the system layers so that every requirem
 | BND-02 | No automatic prescriptions | System prompt + schema validation block prescription output | N/A | N/A | N/A | 010 |
 | BND-03 | No multi-specialty within same consultation | Single `specialty` field enforced at creation | `POST /v1/consultations` validates single specialty | `specialty` field on consultation record | Single specialty selector | 006 |
 | BND-04 | No deep EHR integration | No external system writes | N/A | N/A | N/A | N/A |
-| BND-05 | Documentation tool only, not clinical decision-maker | All output labeled as draft/review, no authoritative clinical actions | Disclaimer in all review payloads | N/A | Disclaimers throughout review screens | 007, 010, 012 |
+| BND-05 | Documentation tool only, not clinical decision-maker | All output labeled as draft/review, no authoritative clinical actions | Disclaimer in all review payloads | N/A | Disclaimers throughout consultation review surfaces | 007, 010, 012, 024 |

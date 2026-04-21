@@ -69,4 +69,14 @@ describe('App routes', () => {
 
     expect(await screen.findByText('Consultas somente')).toBeInTheDocument();
   });
+
+  it('keeps the legacy /review route available while task 024 transitions it', async () => {
+    render(
+      <MemoryRouter initialEntries={['/consultations/cons-1/review']}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('Revisao')).toBeInTheDocument();
+  });
 });

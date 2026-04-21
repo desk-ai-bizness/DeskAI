@@ -48,6 +48,7 @@ def handle_session_pause(
             "data": {
                 "status": "paused",
                 "session_id": session.session_id,
+                "message": "Sessao pausada.",
             },
         },
     )

@@ -60,28 +60,77 @@ class TranscriptCommitHandlerTest(unittest.TestCase):
             }),
         }
 
-    @patch(
-        "deskai.handlers.websocket.transcript_commit_handler.utc_now_iso",
-        return_value="2026-04-02T10:05:00+00:00",
-    )
-    def test_commit_accepted(self, _mock_time):
+    def test_commit_accepted(self):
         from deskai.handlers.websocket.transcript_commit_handler import (
             handle_transcript_commit,
         )
 
         self.connection_repo.find_by_connection_id.return_value = _make_connection()
         self.session_repo.find_by_id.return_value = _make_session()
+        self.segment_repo.find_by_consultation.return_value = []
 
-        result = handle_transcript_commit(
-            self._make_event(),
-            self.connection_repo,
-            self.session_repo,
-            self.segment_repo,
-            self.apigw,
-        )
+        with patch(
+            "deskai.handlers.websocket.transcript_commit_handler.utc_now_iso",
+            return_value="2026-04-02T10:05:00+00:00",
+        ):
+            result = handle_transcript_commit(
+                self._make_event(),
+                self.connection_repo,
+                self.session_repo,
+                self.segment_repo,
+                self.apigw,
+            )
 
         self.assertEqual(result["statusCode"], 200)
         self.segment_repo.save_batch.assert_called_once()
+
+    def test_commit_emits_provisional_workspace_events(self):
+        from deskai.handlers.websocket.transcript_commit_handler import (
+            handle_transcript_commit,
+        )
+
+        event = {
+            "requestContext": {"connectionId": "conn-abc"},
+            "body": json.dumps({
+                "action": "transcript.commit",
+                "data": {
+                    "consultation_id": "cons-001",
+                    "segments": [
+                        {
+                            "speaker": "patient",
+                            "text": "Estou com dor de cabeca.",
+                            "start_time": 0.0,
+                            "end_time": 1.5,
+                            "confidence": 0.95,
+                            "is_final": True,
+                        }
+                    ],
+                    "timestamp": "2026-04-02T10:05:00+00:00",
+                },
+            }),
+        }
+        self.connection_repo.find_by_connection_id.return_value = _make_connection()
+        self.session_repo.find_by_id.return_value = _make_session()
+        self.segment_repo.find_by_consultation.return_value = []
+
+        with patch(
+            "deskai.handlers.websocket.transcript_commit_handler.utc_now_iso",
+            return_value="2026-04-02T10:05:00+00:00",
+        ):
+            result = handle_transcript_commit(
+                event,
+                self.connection_repo,
+                self.session_repo,
+                self.segment_repo,
+                self.apigw,
+            )
+
+        self.assertEqual(result["statusCode"], 200)
+        emitted_events = [
+            call.kwargs["data"]["event"] for call in self.apigw.send_to_connection.call_args_list
+        ]
+        self.assertIn("autofill.candidate", emitted_events)
+        self.assertIn("insight.provisional", emitted_events)
 
     def test_commit_unknown_connection(self):
         from deskai.handlers.websocket.transcript_commit_handler import (

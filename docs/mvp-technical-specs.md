@@ -753,7 +753,7 @@ The backend should own important frontend configuration.
 - section order
 - card order
 - default visibility
-- review page composition
+- consultation workspace composition
 
 ### Recommended Storage
 

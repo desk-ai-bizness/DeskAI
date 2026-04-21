@@ -285,6 +285,9 @@ class ValidateReviewAccessTest(unittest.TestCase):
     def test_under_physician_review_allows_access(self) -> None:
         validate_review_access("cons-001", ConsultationStatus.UNDER_PHYSICIAN_REVIEW)
 
+    def test_finalized_allows_read_only_access(self) -> None:
+        validate_review_access("cons-001", ConsultationStatus.FINALIZED)
+
     def test_started_raises(self) -> None:
         with self.assertRaises(ReviewNotAvailableError):
             validate_review_access("cons-001", ConsultationStatus.STARTED)
@@ -300,11 +303,6 @@ class ValidateReviewAccessTest(unittest.TestCase):
     def test_processing_failed_raises(self) -> None:
         with self.assertRaises(ReviewNotAvailableError):
             validate_review_access("cons-001", ConsultationStatus.PROCESSING_FAILED)
-
-    def test_finalized_raises(self) -> None:
-        with self.assertRaises(ReviewNotAvailableError):
-            validate_review_access("cons-001", ConsultationStatus.FINALIZED)
-
 
 # ---------------------------------------------------------------------------
 # Domain services — validate_review_editable

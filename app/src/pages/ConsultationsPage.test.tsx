@@ -82,7 +82,7 @@ describe('ConsultationsPage', () => {
     expect(screen.queryByRole('button', { name: 'Criar consulta' })).not.toBeInTheDocument();
   });
 
-  it('renders consultation history links without the new-consultation form', async () => {
+  it('renders consultation history links without using the legacy review route as the primary path', async () => {
     listConsultationsMock.mockResolvedValue({
       consultations: [
         {
@@ -111,14 +111,11 @@ describe('ConsultationsPage', () => {
     );
 
     expect(await screen.findByText('Paciente A')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Sessão ao vivo' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Abrir consulta' })).toHaveAttribute(
       'href',
       '/consultations/cons-1/live',
     );
-    expect(screen.getByRole('link', { name: 'Revisão' })).toHaveAttribute(
-      'href',
-      '/consultations/cons-1/review',
-    );
+    expect(screen.queryByRole('link', { name: 'Revisão' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Paciente')).not.toBeInTheDocument();
     expect(screen.queryByText('Cadastrar novo paciente')).not.toBeInTheDocument();
   });

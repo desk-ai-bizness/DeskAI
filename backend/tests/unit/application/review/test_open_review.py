@@ -21,6 +21,7 @@ class OpenReviewUseCaseTest(unittest.TestCase):
         self.consultation_repo = MagicMock()
         self.artifact_repo = MagicMock()
         self.audit_repo = MagicMock()
+        self.transcript_segment_repo = MagicMock()
 
         from deskai.application.review.open_review import OpenReviewUseCase
 
@@ -28,6 +29,7 @@ class OpenReviewUseCaseTest(unittest.TestCase):
             consultation_repo=self.consultation_repo,
             artifact_repo=self.artifact_repo,
             audit_repo=self.audit_repo,
+            transcript_segment_repo=self.transcript_segment_repo,
         )
         self.auth = make_sample_auth_context()
 
@@ -149,6 +151,89 @@ class OpenReviewUseCaseTest(unittest.TestCase):
         self.assertEqual(result.summary, edited_summary)
         self.assertTrue(result.medical_history_edited)
         self.assertTrue(result.summary_edited)
+
+    def test_includes_transcript_segments_from_committed_segment_repository(self) -> None:
+        from deskai.domain.transcription.value_objects import CommittedSegment
+
+        consultation = make_sample_consultation(status=ConsultationStatus.UNDER_PHYSICIAN_REVIEW)
+        self.consultation_repo.find_by_id.return_value = consultation
+        self.artifact_repo.get_artifact.return_value = None
+        self.transcript_segment_repo.find_by_consultation.return_value = [
+            CommittedSegment(
+                consultation_id="cons-001",
+                session_id="sess-001",
+                speaker="patient",
+                text="Estou com dor de cabeca.",
+                start_time=0.0,
+                end_time=2.0,
+                confidence=0.98,
+                is_final=True,
+                received_at="2026-04-01T10:05:00+00:00",
+                segment_index=0,
+            )
+        ]
+
+        result = self.use_case.execute(
+            auth_context=self.auth,
+            consultation_id="cons-001",
+            clinic_id="clinic-001",
+        )
+
+        self.assertEqual(
+            result.transcript_segments,
+            [
+                {
+                    "speaker": "patient",
+                    "text": "Estou com dor de cabeca.",
+                    "start_time": 0.0,
+                    "end_time": 2.0,
+                }
+            ],
+        )
+
+    def test_loads_finalized_record_for_read_only_workspace(self) -> None:
+        consultation = make_sample_consultation(status=ConsultationStatus.FINALIZED)
+        self.consultation_repo.find_by_id.return_value = consultation
+
+        def get_artifact_side_effect(clinic_id, consultation_id, artifact_type):
+            if artifact_type == ArtifactType.FINAL_VERSION:
+                return {
+                    "medical_history": {"queixa_principal": {"descricao": "Dor final"}},
+                    "summary": {"subjetivo": {"queixa_principal": "Resumo final"}},
+                    "accepted_insights": [
+                        {
+                            "categoria": "lacuna_de_documentacao",
+                            "descricao": "Revisar alergias",
+                            "severidade": "moderado",
+                            "evidencia": {
+                                "trecho": "Paciente nao mencionou alergias",
+                                "contexto": "Consulta finalizada",
+                            },
+                        }
+                    ],
+                }
+            return None
+
+        self.artifact_repo.get_artifact.side_effect = get_artifact_side_effect
+
+        result = self.use_case.execute(
+            auth_context=self.auth,
+            consultation_id="cons-001",
+            clinic_id="clinic-001",
+        )
+
+        self.assertEqual(result.status, ConsultationStatus.FINALIZED)
+        self.assertEqual(
+            result.medical_history,
+            {"queixa_principal": {"descricao": "Dor final"}},
+        )
+        self.assertEqual(
+            result.summary,
+            {"subjetivo": {"queixa_principal": "Resumo final"}},
+        )
+        self.assertEqual(len(result.insights or []), 1)
+        self.consultation_repo.save.assert_not_called()
+        self.audit_repo.append.assert_not_called()
 
     @patch(f"{_MOD}.new_uuid", return_value="evt-uuid-1")
     @patch(f"{_MOD}.utc_now_iso", return_value="2026-04-01T12:00:00+00:00")

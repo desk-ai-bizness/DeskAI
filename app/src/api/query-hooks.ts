@@ -103,11 +103,11 @@ export function useConsultationDetailQuery(consultationId: string) {
   });
 }
 
-export function useReviewQuery(consultationId: string) {
+export function useReviewQuery(consultationId: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.review(consultationId),
     queryFn: () => getReview(consultationId),
-    enabled: Boolean(consultationId),
+    enabled: Boolean(consultationId) && enabled,
   });
 }
 

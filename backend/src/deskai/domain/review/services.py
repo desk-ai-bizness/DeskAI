@@ -13,6 +13,7 @@ _REVIEWABLE_STATUSES = frozenset(
     {
         ConsultationStatus.DRAFT_GENERATED,
         ConsultationStatus.UNDER_PHYSICIAN_REVIEW,
+        ConsultationStatus.FINALIZED,
     }
 )
 

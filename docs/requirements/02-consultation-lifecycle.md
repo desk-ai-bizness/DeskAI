@@ -17,7 +17,7 @@ This is the canonical reference for backend state machine implementation (Task 0
 | In Processing | `in_processing` | Audio session ended, backend is consolidating transcript and running AI pipeline | No | No |
 | Processing Failed | `processing_failed` | Transcript consolidation or AI generation failed | No | No (partial may exist) |
 | Draft Generated | `draft_generated` | AI pipeline completed, all artifacts stored, ready for review | No (not yet opened) | Yes |
-| Under Physician Review | `under_physician_review` | Physician has opened the review screen and may be editing | Yes | Yes |
+| Under Physician Review | `under_physician_review` | Physician has opened the unified consultation workspace review state and may be editing | Yes | Yes |
 | Finalized | `finalized` | Physician has explicitly confirmed and locked the record | No (read-only) | Yes (final version) |
 
 ### Notes on New States
@@ -202,7 +202,7 @@ Every state transition and physician action generates an audit event.
 
 - If the audio session is very short (e.g., under 30 seconds) or contains no detectable speech, the transcription provider may return an empty or near-empty transcript.
 - The AI pipeline receives minimal input and may produce incomplete artifacts.
-- **Behavior**: Mark all artifacts as `incomplete`. Set consultation status to `draft_generated` with a `completeness_warning` flag. The physician sees the review screen with a warning: "Insufficient audio for complete documentation. Please review carefully."
+- **Behavior**: Mark all artifacts as `incomplete`. Set consultation status to `draft_generated` with a `completeness_warning` flag. The physician sees the unified consultation workspace with a warning: "Insufficient audio for complete documentation. Please review carefully."
 
 ### AI generation returns partial artifacts
 

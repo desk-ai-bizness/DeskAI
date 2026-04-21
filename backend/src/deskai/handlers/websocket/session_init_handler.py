@@ -70,6 +70,7 @@ def handle_session_init(
         connection_id=connection_id,
         data={
             "event": "session.status",
+            "event_version": "2",
             "data": {
                 "status": "recording",
                 "session_id": session_id,

@@ -48,6 +48,7 @@ def handle_session_resume(
             "data": {
                 "status": "recording",
                 "session_id": session.session_id,
+                "message": "Sessao retomada.",
             },
         },
     )

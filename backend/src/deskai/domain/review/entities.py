@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
+from deskai.domain.consultation.entities import ConsultationStatus
 from deskai.shared.errors import DomainValidationError
 
 
@@ -38,6 +39,7 @@ class ReviewPayload:
     """Aggregated review data for a consultation."""
 
     consultation_id: str
+    status: ConsultationStatus = ConsultationStatus.UNDER_PHYSICIAN_REVIEW
     medical_history: dict[str, Any] | None = None
     summary: dict[str, Any] | None = None
     insights: list[dict[str, Any]] | None = None
@@ -50,6 +52,8 @@ class ReviewPayload:
     def __post_init__(self) -> None:
         if not self.consultation_id or not self.consultation_id.strip():
             raise DomainValidationError("consultation_id must be a non-empty string")
+        if not isinstance(self.status, ConsultationStatus):
+            raise DomainValidationError("status must be a ConsultationStatus")
 
 
 @dataclass(frozen=True)

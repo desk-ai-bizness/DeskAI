@@ -23,6 +23,14 @@ function getRequestErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+function getWorkspaceLinkLabel(status: string): string {
+  if (status === 'recording' || status === 'paused') {
+    return 'Sessão ao vivo';
+  }
+
+  return 'Abrir consulta';
+}
+
 export function PatientDetailPage() {
   const navigate = useNavigate();
   const { patientId = '' } = useParams();
@@ -129,10 +137,7 @@ export function PatientDetailPage() {
                 </div>
                 <div className="inline-row">
                   <RouterLink className="ds-link" to={`/consultations/${item.consultation_id}/live`}>
-                    Sessão ao vivo
-                  </RouterLink>
-                  <RouterLink className="ds-link" to={`/consultations/${item.consultation_id}/review`}>
-                    Revisão
+                    {getWorkspaceLinkLabel(item.status)}
                   </RouterLink>
                 </div>
               </li>

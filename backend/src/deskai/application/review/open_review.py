@@ -16,6 +16,7 @@ from deskai.domain.review.services import validate_review_access
 from deskai.ports.artifact_repository import ArtifactRepository
 from deskai.ports.audit_repository import AuditRepository
 from deskai.ports.consultation_repository import ConsultationRepository
+from deskai.ports.transcript_segment_repository import TranscriptSegmentRepository
 from deskai.shared.identifiers import new_uuid
 from deskai.shared.logging import get_logger, log_context
 from deskai.shared.time import utc_now_iso
@@ -30,6 +31,7 @@ class OpenReviewUseCase:
     consultation_repo: ConsultationRepository
     artifact_repo: ArtifactRepository
     audit_repo: AuditRepository
+    transcript_segment_repo: TranscriptSegmentRepository
 
     def execute(
         self,
@@ -74,7 +76,29 @@ class OpenReviewUseCase:
                 ),
             )
 
-        # Load artifacts
+        transcript_segments = [
+            {
+                "speaker": segment.speaker,
+                "text": segment.text,
+                "start_time": segment.start_time,
+                "end_time": segment.end_time,
+            }
+            for segment in self.transcript_segment_repo.find_by_consultation(consultation_id)
+        ]
+
+        if consultation.status == ConsultationStatus.FINALIZED:
+            final_record = self.artifact_repo.get_artifact(
+                clinic_id, consultation_id, ArtifactType.FINAL_VERSION
+            ) or {}
+            return ReviewPayload(
+                consultation_id=consultation_id,
+                status=consultation.status,
+                medical_history=final_record.get("medical_history", {}),
+                summary=final_record.get("summary", {}),
+                insights=final_record.get("accepted_insights", []),
+                transcript_segments=transcript_segments,
+            )
+
         medical_history = self.artifact_repo.get_artifact(
             clinic_id, consultation_id, ArtifactType.MEDICAL_HISTORY
         )
@@ -82,30 +106,22 @@ class OpenReviewUseCase:
         insights = self.artifact_repo.get_artifact(
             clinic_id, consultation_id, ArtifactType.INSIGHTS
         )
-
-        # Load physician edits if they exist
         edits = self.artifact_repo.get_artifact(
             clinic_id, consultation_id, ArtifactType.PHYSICIAN_EDITS
-        )
+        ) or {}
 
-        edited_history: dict[str, Any] | None = None
-        edited_summary: dict[str, Any] | None = None
-        history_edited = False
-        summary_edited = False
-
-        if edits:
-            if "medical_history" in edits:
-                edited_history = edits["medical_history"]
-                history_edited = True
-            if "summary" in edits:
-                edited_summary = edits["summary"]
-                summary_edited = True
+        edited_history = edits.get("medical_history")
+        edited_summary = edits.get("summary")
+        insight_actions = edits.get("insight_actions", [])
 
         return ReviewPayload(
             consultation_id=consultation_id,
+            status=consultation.status,
             medical_history=edited_history or medical_history,
             summary=edited_summary or summary,
             insights=insights.get("observacoes", []) if insights else [],
-            medical_history_edited=history_edited,
-            summary_edited=summary_edited,
+            transcript_segments=transcript_segments,
+            medical_history_edited=edited_history is not None,
+            summary_edited=edited_summary is not None,
+            insight_actions=insight_actions,
         )

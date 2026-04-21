@@ -389,6 +389,7 @@ def build_container() -> Container:
             consultation_repo=consultation_repo,
             artifact_repo=artifact_repo,
             audit_repo=audit_repo,
+            transcript_segment_repo=transcript_segment_repo,
         ),
         update_review=UpdateReviewUseCase(
             consultation_repo=consultation_repo,

@@ -17,6 +17,7 @@ class BuildReviewViewTest(unittest.TestCase):
     def _make_payload(self, **overrides):
         defaults = dict(
             consultation_id="cons-001",
+            status=ConsultationStatus.UNDER_PHYSICIAN_REVIEW,
             medical_history={"queixa_principal": {"descricao": "Dor"}},
             summary={"subjetivo": {"queixa_principal": "Dor"}},
             insights=[],
@@ -71,7 +72,7 @@ class BuildReviewViewTest(unittest.TestCase):
         self.assertEqual(len(view["insights"]), 1)
         insight = view["insights"][0]
         self.assertEqual(insight["insight_id"], "0")
-        self.assertEqual(insight["category"], "lacuna_de_documentacao")
+        self.assertEqual(insight["category"], "documentation_gap")
         self.assertEqual(insight["description"], "Exame fisico ausente")
         self.assertEqual(insight["status"], "pending")
         self.assertEqual(len(insight["evidence"]), 1)
@@ -129,6 +130,41 @@ class BuildReviewViewTest(unittest.TestCase):
         view = build_review_view(payload)
         ids = [i["insight_id"] for i in view["insights"]]
         self.assertEqual(ids, ["0", "1", "2"])
+
+    def test_includes_transcript_segments_when_present(self):
+        payload = self._make_payload(
+            transcript_segments=[
+                {
+                    "speaker": "patient",
+                    "text": "Estou com dor.",
+                    "start_time": 0.0,
+                    "end_time": 1.2,
+                }
+            ]
+        )
+
+        view = build_review_view(payload)
+
+        self.assertEqual(
+            view["transcript"],
+            {
+                "segments": [
+                    {
+                        "speaker": "patient",
+                        "text": "Estou com dor.",
+                        "start_time": 0.0,
+                        "end_time": 1.2,
+                    }
+                ]
+            },
+        )
+
+    def test_uses_finalized_status_for_read_only_workspace(self):
+        payload = self._make_payload(status=ConsultationStatus.FINALIZED)
+
+        view = build_review_view(payload)
+
+        self.assertEqual(view["status"], "finalized")
 
 
 class BuildFinalizeViewTest(unittest.TestCase):

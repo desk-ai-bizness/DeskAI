@@ -218,7 +218,7 @@ export interface ReviewInsight {
 
 export interface ReviewView {
   consultation_id: string;
-  status: 'under_physician_review';
+  status: 'under_physician_review' | 'finalized';
   transcript?: {
     segments: TranscriptSegment[];
   };
@@ -256,7 +256,7 @@ export interface ExportView {
 
 export interface UpdateReviewRequest {
   medical_history?: Record<string, unknown>;
-  summary?: string;
+  summary?: Record<string, unknown>;
   insights?: Array<{
     insight_id: string;
     action: 'accept' | 'dismiss' | 'edit';

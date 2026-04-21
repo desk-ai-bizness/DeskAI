@@ -96,6 +96,11 @@ describe('PatientDetailPage', () => {
     expect(screen.getByText('529.***.***-25')).toBeInTheDocument();
     expect(screen.getByText('Consulta de retorno sem novas queixas.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Iniciar nova consulta' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Abrir consulta' })).toHaveAttribute(
+      'href',
+      '/consultations/cons-1/live',
+    );
+    expect(screen.queryByRole('link', { name: 'Revisão' })).not.toBeInTheDocument();
   });
 
   it('starts a new consultation for the selected patient using today as the scheduled date', async () => {

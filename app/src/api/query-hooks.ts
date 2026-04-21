@@ -72,10 +72,11 @@ export function useUiConfigQuery(enabled = true) {
   });
 }
 
-export function usePatientsQuery(search = '') {
+export function usePatientsQuery(search = '', enabled = true) {
   return useQuery({
     queryKey: queryKeys.patients.list(search),
     queryFn: () => listPatients(search),
+    enabled,
   });
 }
 

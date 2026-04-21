@@ -9,11 +9,11 @@ React + TypeScript + Vite application for authenticated physician workflows.
 - No business rules in the client.
 - Product-facing text defaults to Brazilian Portuguese (`pt-BR`).
 
-## Implemented Flows (Task 012)
+## Implemented Flows
 
 - Sign-in, session restoration, and sign-out
-- Consultation list and consultation creation
-- Patient creation helper for consultation setup
+- Staged `Nova consulta` flow with patient-first entry, existing-patient search, patient detail/history, and new-patient quick start
+- Consultation history screen separated from new-consultation setup
 - Live consultation screen with microphone permission handling, WebSocket connection state, transcript partial rendering, and reconnect affordance
 - Review/edit/finalization/export flow with explicit physician confirmation
 - Backend-driven labels, status labels, section ordering, and action availability consumption
@@ -58,6 +58,8 @@ HTTP server state uses TanStack Query through app-local hooks in `src/api/query-
 ## Routes
 
 - `/login`
+- `/nova-consulta`
+- `/patients/:patientId`
 - `/consultations`
 - `/consultations/:consultationId/live`
 - `/consultations/:consultationId/review`

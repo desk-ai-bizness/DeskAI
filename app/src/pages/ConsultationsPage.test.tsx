@@ -62,7 +62,6 @@ describe('ConsultationsPage', () => {
       page: 1,
       page_size: 20,
     });
-
     listPatientsMock.mockResolvedValue({ patients: [] });
   });
 
@@ -79,35 +78,28 @@ describe('ConsultationsPage', () => {
     expect(screen.getByRole('button', { name: 'Atualizar' })).toHaveClass('ds-button');
     expect(screen.getByRole('heading', { name: 'Consultas', level: 2 }).closest('.ds-card')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Nenhuma consulta', level: 2 })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Paciente')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Criar consulta' })).not.toBeInTheDocument();
   });
 
-  it('shows create-locked message when entitlement denies creation', async () => {
-    useAuthMock.mockReturnValue({
-      profile: {
-        user: {
+  it('renders consultation history links without the new-consultation form', async () => {
+    listConsultationsMock.mockResolvedValue({
+      consultations: [
+        {
+          consultation_id: 'cons-1',
+          patient: { patient_id: 'pat-1', name: 'Paciente A', cpf: '529.***.***-25' },
           doctor_id: 'doc-1',
-          name: 'Dra. Maria',
-          email: 'maria@example.com',
-          plan_type: 'free_trial',
           clinic_id: 'clinic-1',
-          clinic_name: 'Clínica Centro',
+          specialty: 'general_practice',
+          status: 'started',
+          scheduled_date: '2026-04-20',
+          created_at: '2026-04-20T10:00:00Z',
+          updated_at: '2026-04-20T11:00:00Z',
         },
-        entitlements: {
-          can_create_consultation: false,
-          consultations_remaining: 0,
-          consultations_used_this_month: 10,
-          max_duration_minutes: 30,
-          export_enabled: true,
-          trial_expired: false,
-          trial_days_remaining: 0,
-        },
-      },
-      uiConfig: {
-        labels: {
-          consultation_list_title: 'Consultas',
-          new_consultation_button: 'Nova consulta',
-        },
-      },
+      ],
+      total_count: 1,
+      page: 1,
+      page_size: 20,
     });
 
     render(
@@ -118,8 +110,16 @@ describe('ConsultationsPage', () => {
       </QueryTestProvider>,
     );
 
-    expect(
-      await screen.findByText('A criação de consultas está bloqueada para este usuário no momento.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Paciente A')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Sessão ao vivo' })).toHaveAttribute(
+      'href',
+      '/consultations/cons-1/live',
+    );
+    expect(screen.getByRole('link', { name: 'Revisão' })).toHaveAttribute(
+      'href',
+      '/consultations/cons-1/review',
+    );
+    expect(screen.queryByLabelText('Paciente')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cadastrar novo paciente')).not.toBeInTheDocument();
   });
 });

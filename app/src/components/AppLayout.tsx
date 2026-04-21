@@ -38,7 +38,14 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </header>
 
-      <nav className="app-nav" aria-label="Navegação principal">
+      <nav className="app-nav inline-row" aria-label="Navegação principal">
+        <NavLink
+          to="/nova-consulta"
+          className={({ isActive }) => (isActive ? 'app-nav-link active' : 'app-nav-link')}
+          end
+        >
+          Nova consulta
+        </NavLink>
         <NavLink
           to="/consultations"
           className={({ isActive }) => (isActive ? 'app-nav-link active' : 'app-nav-link')}

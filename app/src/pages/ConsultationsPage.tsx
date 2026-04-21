@@ -1,12 +1,7 @@
-import { FormEvent, useMemo, useState } from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { ApiError } from '../api/client';
-import {
-  useConsultationsQuery,
-  useCreateConsultationMutation,
-  useCreatePatientMutation,
-  usePatientsQuery,
-} from '../api/query-hooks';
+import { useConsultationsQuery } from '../api/query-hooks';
 import { useAuth } from '../auth/use-auth';
 import {
   Alert,
@@ -15,12 +10,9 @@ import {
   Chip,
   EmptyState,
   Loader,
-  SelectField,
   Text,
-  TextAreaField,
-  TextField,
 } from '../components/ui';
-import type { ConsultationView, PatientView } from '../types/contracts';
+import type { ConsultationView } from '../types/contracts';
 import { toPtBrDate, toPtBrDateTime } from '../utils/format';
 
 function getRequestErrorMessage(error: unknown, fallback: string): string {
@@ -32,40 +24,16 @@ function getRequestErrorMessage(error: unknown, fallback: string): string {
 }
 
 export function ConsultationsPage() {
-  const navigate = useNavigate();
   const { profile, uiConfig } = useAuth();
-
-  const [error, setError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-
-  const [patientId, setPatientId] = useState('');
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [notes, setNotes] = useState('');
-
-  const [showPatientForm, setShowPatientForm] = useState(false);
-  const [newPatientName, setNewPatientName] = useState('');
-  const [newPatientCpf, setNewPatientCpf] = useState('');
-  const [newPatientDob, setNewPatientDob] = useState('');
 
   const statusLabels = uiConfig?.status_labels;
   const consultationsQuery = useConsultationsQuery();
-  const patientsQuery = usePatientsQuery();
-  const createConsultationMutation = useCreateConsultationMutation();
-  const createPatientMutation = useCreatePatientMutation();
 
   const consultations: ConsultationView[] = consultationsQuery.data?.consultations ?? [];
-  const patients: PatientView[] = patientsQuery.data?.patients ?? [];
-  const selectedPatientId = patientId || patients[0]?.patient_id || '';
-  const queryError =
-    consultationsQuery.error || patientsQuery.error
-      ? getRequestErrorMessage(
-        consultationsQuery.error ?? patientsQuery.error,
-        'Não foi possível carregar as consultas.',
-      )
-      : null;
-  const isLoading = consultationsQuery.isPending || patientsQuery.isPending;
-
-  const canCreateConsultation = profile?.entitlements.can_create_consultation ?? false;
+  const queryError = consultationsQuery.error
+    ? getRequestErrorMessage(consultationsQuery.error, 'Não foi possível carregar as consultas.')
+    : null;
+  const isLoading = consultationsQuery.isPending;
 
   const trialStateMessage = useMemo(() => {
     if (!profile) {
@@ -83,77 +51,29 @@ export function ConsultationsPage() {
     return null;
   }, [profile]);
 
-  async function handleCreateConsultation(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setFeedback(null);
-    setError(null);
-
-    if (!selectedPatientId) {
-      setError('Selecione um paciente antes de criar a consulta.');
-      return;
-    }
-
-    if (!scheduledDate) {
-      setError('Informe a data da consulta.');
-      return;
-    }
-
-    try {
-      const created = await createConsultationMutation.mutateAsync({
-        patient_id: selectedPatientId,
-        specialty: 'general_practice',
-        scheduled_date: scheduledDate,
-        notes,
-      });
-      setFeedback('Consulta criada com sucesso.');
-      setNotes('');
-      navigate(`/consultations/${created.consultation_id}/live`);
-    } catch (requestError) {
-      setError(getRequestErrorMessage(requestError, 'Erro ao criar consulta.'));
-    }
-  }
-
-  async function handleCreatePatient() {
-    setFeedback(null);
-    setError(null);
-
-    try {
-      const createdPatient = await createPatientMutation.mutateAsync({
-        name: newPatientName,
-        cpf: newPatientCpf,
-        date_of_birth: newPatientDob || null,
-      });
-      setPatientId(createdPatient.patient_id);
-      setNewPatientName('');
-      setNewPatientCpf('');
-      setNewPatientDob('');
-      setShowPatientForm(false);
-      setFeedback('Paciente criado com sucesso.');
-    } catch (requestError) {
-      setError(getRequestErrorMessage(requestError, 'Erro ao criar paciente.'));
-    }
-  }
-
   return (
     <div className="page-grid">
       <Card
         className="page-span-2"
         title={uiConfig?.labels.consultation_list_title ?? 'Consultas'}
         actions={(
-          <Button
-            type="button"
-            variant="secondary"
-            isLoading={consultationsQuery.isFetching || patientsQuery.isFetching}
-            onClick={() => {
-              void consultationsQuery.refetch();
-              void patientsQuery.refetch();
-            }}
-          >
-            Atualizar
-          </Button>
+          <div className="inline-row">
+            <RouterLink className="ds-link" to="/nova-consulta">
+              Nova consulta
+            </RouterLink>
+            <Button
+              type="button"
+              variant="secondary"
+              isLoading={consultationsQuery.isFetching}
+              onClick={() => {
+                void consultationsQuery.refetch();
+              }}
+            >
+              Atualizar
+            </Button>
+          </div>
         )}
       >
-
         <div className="stats-grid">
           <article className="stat-tile">
             <h3>Consultas no mês</h3>
@@ -170,110 +90,10 @@ export function ConsultationsPage() {
         </div>
 
         {trialStateMessage ? <Text tone="muted">{trialStateMessage}</Text> : null}
-        {feedback ? <Alert tone="success">{feedback}</Alert> : null}
         {queryError ? <Alert tone="danger">{queryError}</Alert> : null}
-        {error ? (
-          <Alert tone="danger">
-            {error}
-          </Alert>
-        ) : null}
       </Card>
 
-      <Card title={uiConfig?.labels.new_consultation_button ?? 'Nova consulta'}>
-
-        {!canCreateConsultation ? (
-          <Alert tone="warning">
-            A criação de consultas está bloqueada para este usuário no momento.
-          </Alert>
-        ) : (
-          <form className="form-grid" onSubmit={handleCreateConsultation}>
-            <SelectField
-              id="patient-select"
-              label="Paciente"
-              value={selectedPatientId}
-              onChange={(event) => setPatientId(event.target.value)}
-              required
-            >
-              {patients.length === 0 ? <option value="">Nenhum paciente cadastrado</option> : null}
-              {patients.map((patient) => (
-                <option value={patient.patient_id} key={patient.patient_id}>
-                  {patient.name} ({patient.cpf})
-                </option>
-              ))}
-            </SelectField>
-
-            <div className="inline-row">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setShowPatientForm((current) => !current)}
-              >
-                {showPatientForm ? 'Cancelar novo paciente' : 'Cadastrar novo paciente'}
-              </Button>
-            </div>
-
-            {showPatientForm ? (
-              <div className="nested-form">
-                <TextField
-                  id="new-patient-name"
-                  label="Nome do paciente"
-                  value={newPatientName}
-                  onChange={(event) => setNewPatientName(event.target.value)}
-                  required
-                />
-
-                <TextField
-                  id="new-patient-cpf"
-                  label="CPF"
-                  value={newPatientCpf}
-                  onChange={(event) => setNewPatientCpf(event.target.value)}
-                  required
-                />
-
-                <TextField
-                  id="new-patient-dob"
-                  label="Data de nascimento (opcional)"
-                  type="date"
-                  value={newPatientDob}
-                  onChange={(event) => setNewPatientDob(event.target.value)}
-                />
-
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => void handleCreatePatient()}
-                  isLoading={createPatientMutation.isPending}
-                >
-                  {createPatientMutation.isPending ? 'Salvando paciente...' : 'Salvar paciente'}
-                </Button>
-              </div>
-            ) : null}
-
-            <TextField
-              id="scheduled-date"
-              label="Data da consulta"
-              type="date"
-              value={scheduledDate}
-              onChange={(event) => setScheduledDate(event.target.value)}
-              required
-            />
-
-            <TextAreaField
-              id="notes"
-              label="Notas (opcional)"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              rows={3}
-            />
-
-            <Button type="submit" isLoading={createConsultationMutation.isPending}>
-              {createConsultationMutation.isPending ? 'Criando consulta...' : 'Criar consulta'}
-            </Button>
-          </form>
-        )}
-      </Card>
-
-      <Card title="Consultas recentes">
+      <Card className="page-span-2" title="Consultas recentes">
         {isLoading ? <Loader label="Carregando consultas" /> : null}
 
         {!isLoading && consultations.length === 0 ? (

@@ -5,9 +5,11 @@ import { AppLayout } from './components/AppLayout';
 import { BrandLogo } from './components/BrandLogo';
 import { RequireAuth } from './components/RequireAuth';
 import { Card, Loader } from './components/ui';
+import { ConsultationEntryPage } from './pages/ConsultationEntryPage';
 import { ConsultationsPage } from './pages/ConsultationsPage';
 import { LiveConsultationPage } from './pages/LiveConsultationPage';
 import { LoginPage } from './pages/LoginPage';
+import { PatientDetailPage } from './pages/PatientDetailPage';
 import { ReviewPage } from './pages/ReviewPage';
 
 function AppShell() {
@@ -37,7 +39,9 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
-          <Route path="/" element={<Navigate to="/consultations" replace />} />
+          <Route path="/" element={<Navigate to="/nova-consulta" replace />} />
+          <Route path="/nova-consulta" element={<ConsultationEntryPage />} />
+          <Route path="/patients/:patientId" element={<PatientDetailPage />} />
           <Route path="/consultations" element={<ConsultationsPage />} />
           <Route path="/consultations/:consultationId/live" element={<LiveConsultationPage />} />
           <Route path="/consultations/:consultationId/review" element={<ReviewPage />} />

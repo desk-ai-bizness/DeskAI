@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createAppQueryClient,
   queryKeys,
+  useCreatePatientMutation,
   useCreateConsultationMutation,
   useExportConsultationMutation,
   useFinalizeConsultationMutation,
@@ -12,6 +13,7 @@ import {
   useUpdateReviewMutation,
 } from './query-hooks';
 
+const createPatientMock = vi.fn();
 const createConsultationMock = vi.fn();
 const updateReviewMock = vi.fn();
 const finalizeConsultationMock = vi.fn();
@@ -19,6 +21,7 @@ const exportConsultationMock = vi.fn();
 const getTranscriptionTokenMock = vi.fn();
 
 vi.mock('./endpoints', () => ({
+  createPatient: (...args: unknown[]) => createPatientMock(...args),
   createConsultation: (...args: unknown[]) => createConsultationMock(...args),
   updateReview: (...args: unknown[]) => updateReviewMock(...args),
   finalizeConsultation: (...args: unknown[]) => finalizeConsultationMock(...args),
@@ -28,6 +31,7 @@ vi.mock('./endpoints', () => ({
 
 describe('query hooks', () => {
   beforeEach(() => {
+    createPatientMock.mockReset();
     createConsultationMock.mockReset();
     updateReviewMock.mockReset();
     finalizeConsultationMock.mockReset();
@@ -76,6 +80,36 @@ describe('query hooks', () => {
 
     expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: queryKeys.consultations.all });
     expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: queryKeys.currentUser() });
+  });
+
+  it('invalidates patient cache after patient creation', async () => {
+    const queryClient = createAppQueryClient();
+    const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    createPatientMock.mockResolvedValue({
+      patient_id: 'pat-1',
+      name: 'Paciente A',
+      cpf: '529.***.***-25',
+      date_of_birth: null,
+      clinic_id: 'clinic-1',
+      created_at: '2026-04-18T00:00:00Z',
+    });
+
+    function wrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    }
+
+    const { result } = renderHook(() => useCreatePatientMutation(), { wrapper });
+
+    result.current.mutate({
+      name: 'Paciente A',
+      cpf: '529.982.247-25',
+      date_of_birth: null,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: queryKeys.patients.all });
   });
 
   it('updates review cache and invalidates consultation detail after review save', async () => {

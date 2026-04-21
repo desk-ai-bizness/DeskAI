@@ -32,7 +32,7 @@ describe('LoginPage', () => {
     });
   });
 
-  it('submits credentials and navigates to consultations', async () => {
+  it('submits credentials and navigates to the staged home flow', async () => {
     loginMock.mockResolvedValue(undefined);
 
     render(
@@ -46,7 +46,7 @@ describe('LoginPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
     expect(loginMock).toHaveBeenCalledWith('medico@example.com', 'senha-segura');
-    expect(navigateMock).toHaveBeenCalledWith('/consultations', { replace: true });
+    expect(navigateMock).toHaveBeenCalledWith('/', { replace: true });
   });
 
   it('shows backend error on failed sign-in', async () => {
@@ -63,6 +63,22 @@ describe('LoginPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Entrar' }));
 
     expect(await screen.findByText('Email ou senha incorretos.')).toBeInTheDocument();
+  });
+
+  it('redirects authenticated users to the staged home flow', () => {
+    useAuthMock.mockReturnValue({
+      isAuthenticated: true,
+      login: loginMock,
+    });
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+
+    expect(navigateMock).not.toHaveBeenCalled();
+    expect(screen.queryByRole('heading', { name: 'Entrar' })).not.toBeInTheDocument();
   });
 
   it('does not show developer-facing authentication notes', () => {

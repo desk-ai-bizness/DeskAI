@@ -30,7 +30,7 @@ export function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (isAuthenticated) {
-    return <Navigate to="/consultations" replace />;
+    return <Navigate to="/" replace />;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -40,7 +40,7 @@ export function LoginPage() {
 
     try {
       await login(email, password);
-      navigate(state?.from?.pathname ?? '/consultations', { replace: true });
+      navigate(state?.from?.pathname ?? '/', { replace: true });
     } catch (requestError) {
       if (requestError instanceof ApiError) {
         setError(requestError.message);

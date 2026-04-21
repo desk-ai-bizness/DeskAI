@@ -38,10 +38,10 @@ Use only one of these statuses:
 ## 4. Project Snapshot
 
 ### Current Phase
-Task 023 completed — realtime consultation data feed delivered with client-side ElevenLabs streaming, async finalization, pause/resume, and provisional event schemas. Public website deferred. Task 025 scheduled for auth token hardening.
+Task 022 completed — staged patient-first consultation entry flow delivered with split routes, existing-patient search, patient detail/history, and default post-login routing into `Nova consulta`. Task 024 is now the next core app workflow step; public website remains deferred.
 
 ### Overall Progress
-97% complete
+98% complete
 
 ### Summary
 - Task 001 completed: requirements baseline, consultation lifecycle, plan entitlements, failure matrix, and decision log documented
@@ -76,6 +76,7 @@ Task 023 completed — realtime consultation data feed delivered with client-sid
 - Task 020 completed: authenticated app neutral gray surfaces, corrected pt-BR copy, and login logo light treatment delivered with frontend and BFF tests.
 - Tasks 020 through 024 created: authenticated app polish/copy/logo fixes, patient CPF/search/history contracts, staged consultation entry flow, realtime consultation data feed, and unified Anamnese consultation workspace.
 - Task 021 completed: CPF-required patient identity, CPF/name search, masked CPF views, duplicate CPF conflict handling, patient detail/history endpoint, current-doctor-only history filtering, frontend API/type readiness, 409 contract response, and patient HTTP schema contract tests delivered.
+- Task 022 completed: staged patient-first consultation entry flow delivered with `/` and post-login routing into `/nova-consulta`, a list-only `/consultations` history screen, existing-patient search, patient detail/history with "Iniciar nova consulta", new-patient quick start using today's local date, updated navigation, frontend docs, and 70 app tests passing.
 - 2026-04-19 planning session:
   - Task 023 scope locked: client-side ElevenLabs Realtime streaming (Path A) with `POST /v1/consultations/{id}/transcription-token`; async post-session finalization via EventBridge (resolves OI-015); `session.pause`/`session.resume` actions and `session.status=paused`; schema-only `insight.provisional` + `autofill.candidate` events (emitter in Task 024); audio chunk S3 key uniqueness fix or full retirement of the backend `audio.chunk` path (new OI-018); stub transcript removal (resolves OI-016).
   - Task 024 updated to explicitly own the runtime emitter and frontend rendering of the provisional events defined in Task 023.
@@ -85,7 +86,7 @@ Task 023 completed — realtime consultation data feed delivered with client-sid
 - Task 023 completed: client-side ElevenLabs Realtime streaming via single-use tokens, async two-step finalization (EventBridge + Step Functions), session pause/resume with PAUSED state, committed segment relay via app WebSocket + DynamoDB persistence, provisional event schemas (emitter deferred to Task 024), `audio.chunk` route fully retired, stub transcript removed, event versioning added, frontend direct streaming with auto token refresh, ADR-017 and DEC-009 documented. OI-015, OI-016, OI-018 resolved.
 
 ### Immediate Next Step
-Start `022-build-staged-consultation-entry-and-patient-flow.md`
+Start `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md`
 
 ## 5. Priority Queue
 
@@ -93,12 +94,11 @@ List the most important tasks to work on next, in order.
 
 | Rank | Task File | Title | Status | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | `022-build-staged-consultation-entry-and-patient-flow.md` | Build staged consultation entry and patient flow | planned | Separates list and new-consultation flow after patient contract expansion |
-| 3 | `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` | Redesign consultation workspace with Anamnese and inline review | planned | Makes the live consultation screen the core app workspace and emits the provisional events defined in Task 023 |
-| 4 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure after core app corrections |
-| 5 | `025-harden-auth-token-delivery.md` | Harden authentication token delivery | planned | Moves refresh token to HttpOnly cookie and drops sessionStorage before security hardening pass (OI-007) |
-| 6 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | planned | Dashboards, alarms, retention, IAM tightening |
-| 7 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | planned | End-to-end validation and release packaging after remaining frontend/security work |
+| 1 | `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` | Redesign consultation workspace with Anamnese and inline review | planned | Makes the live consultation screen the core app workspace and emits the provisional events defined in Task 023 |
+| 2 | `013-build-public-website-and-entry-flows.md` | Build public website and entry flows | planned | Marketing website with SEO-friendly structure after core app corrections |
+| 3 | `025-harden-auth-token-delivery.md` | Harden authentication token delivery | planned | Moves refresh token to HttpOnly cookie and drops sessionStorage before security hardening pass (OI-007) |
+| 4 | `014-add-observability-security-privacy-and-cost-controls.md` | Add observability, security, privacy, and cost controls | planned | Dashboards, alarms, retention, IAM tightening |
+| 5 | `015-run-end-to-end-hardening-and-release-readiness.md` | Run end-to-end hardening and release readiness | planned | End-to-end validation and release packaging after remaining frontend/security work |
 
 ## 6. Active Blockers
 
@@ -106,7 +106,7 @@ List only blockers that currently prevent progress.
 
 | Task File | Blocker | Depends On | Owner | Next Action |
 | --- | --- | --- | --- | --- |
-| None | No active blockers | N/A | N/A | Begin Task 023 implementation |
+| None | No active blockers | N/A | N/A | Begin Task 024 implementation |
 
 ## 7. Task Index
 
@@ -135,7 +135,7 @@ Use one row per real task. Do not include `000-task-template.md` as a delivery t
 | 019 | `019-add-frontend-query-cache-and-loading-states.md` | Add frontend query cache and loading states | Frontend | Medium | done | `012-build-authenticated-react-app.md`, `017-create-authenticated-app-design-system.md`, `018-apply-authenticated-app-facelift.md` | 100 | TanStack Query-backed request state added with query/mutation hooks, provider setup, cache invalidation, sign-out cache clearing, loading states, tests, docs, and ADR-016 |
 | 020 | `020-fix-authenticated-app-polish-copy-and-logo.md` | Fix authenticated app polish, copy, and logo | Full Stack | High | done | `016-apply-notter-frontend-branding.md`, `017-create-authenticated-app-design-system.md`, `018-apply-authenticated-app-facelift.md` | 100 | Neutral gray authenticated app surfaces, corrected pt-BR copy, and login logo light treatment delivered with frontend and BFF tests |
 | 021 | `021-extend-patient-identity-search-and-history-contracts.md` | Extend patient identity, search, and history contracts | Full Stack | Critical | done | `006-model-consultation-domain-persistence-and-audit.md`, `011-implement-review-finalization-and-export-workflows.md`, `014-add-observability-security-privacy-and-cost-controls.md` | 100 | CPF-required patient identity, CPF/name search, masked CPF views, duplicate CPF conflict handling, patient detail/history endpoint, current-doctor-only history filtering, frontend API/type readiness, 409 contract response, and patient HTTP schema contract tests delivered |
-| 022 | `022-build-staged-consultation-entry-and-patient-flow.md` | Build staged consultation entry and patient flow | Frontend | Critical | planned | `021-extend-patient-identity-search-and-history-contracts.md` | 0 | Splits consultation list from new consultation flow and makes post-login home patient-first |
+| 022 | `022-build-staged-consultation-entry-and-patient-flow.md` | Build staged consultation entry and patient flow | Frontend | Critical | done | `021-extend-patient-identity-search-and-history-contracts.md` | 100 | Delivered `/nova-consulta`, patient search/detail/start flows, list-only consultation history, default home redirect changes, docs updates, and frontend regression coverage |
 | 023 | `023-implement-realtime-consultation-data-feed.md` | Implement realtime consultation data feed | Full Stack | Critical | done | `008-implement-realtime-consultation-session-transport.md`, `009-integrate-transcription-provider-and-normalization.md`, `010-build-ai-processing-pipeline-and-artifacts.md` | 100 | Client-side ElevenLabs Realtime streaming via single-use tokens, async two-step finalization (EventBridge + Step Functions), session pause/resume with PAUSED state, committed segment relay via WebSocket + DynamoDB, provisional event schemas, `audio.chunk` retired, stub transcript removed, event versioning, ADR-017 and DEC-009 documented. OI-015, OI-016, OI-018 resolved. |
 | 024 | `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` | Redesign consultation workspace with Anamnese and inline review | Full Stack | Critical | planned | `021-extend-patient-identity-search-and-history-contracts.md`, `022-build-staged-consultation-entry-and-patient-flow.md`, `023-implement-realtime-consultation-data-feed.md` | 0 | Makes `/consultations/:id/live` the unified consultation, Anamnese, recording, review, finalization, and export workspace; emits and renders the provisional AI/autofill events defined in Task 023 |
 | 025 | `025-harden-auth-token-delivery.md` | Harden authentication token delivery | Full Stack | High | planned | `005-implement-authentication-and-plan-access-control.md`, `012-build-authenticated-react-app.md`, `013-build-public-website-and-entry-flows.md` | 0 | Replaces `sessionStorage` token storage with in-memory access token plus HttpOnly/Secure/SameSite=Strict refresh cookie, adds `/v1/auth/refresh` endpoint, updates login/logout handlers, CORS, and CloudFront; resolves OI-007 before Task 014 |
@@ -149,7 +149,7 @@ Track major delivery checkpoints for the MVP.
 | Project Setup | Task system ready for execution | done | Template and manager files created |
 | Infrastructure Ready | AWS baseline in place | done | Tasks 003 and 004 completed. Dev environment deployed 2026-04-02: 9 stacks live in us-east-1, health endpoint verified. Lambda packaging and env var issues from Task 005 fixed (OI-007). |
 | Backend Ready | Core API and business logic in place | done | Tasks 005 through 011 completed. All core backend endpoints implemented: auth, consultations, sessions, transcription, AI pipeline, review, finalization, export. 1115 tests passing. |
-| Frontend Ready | Core MVP interface in place | in_progress | Authenticated app polish completed through Task 020. Tasks 021-024 plan core workflow corrections before Task 013 public website work. |
+| Frontend Ready | Core MVP interface in place | in_progress | Authenticated app workflow corrections advanced through Task 022. Task 024 now owns the unified consultation workspace before public website work. |
 | MVP Ready | End-to-end usable first version | planned | Covered by Tasks 014 and 015 |
 
 ## 9. Open Issues
@@ -182,6 +182,9 @@ Track cross-task decisions, missing information, or conflicts.
 List the most recently changed tasks first.
 
 | Date | Task File | Change |
+| --- | --- | --- |
+| 2026-04-21 | `022-build-staged-consultation-entry-and-patient-flow.md` | Completed: staged `/nova-consulta` entry, list-only `/consultations`, existing-patient search, patient detail/history, "Iniciar nova consulta", today's-date quick start, navigation/docs updates, and frontend regression coverage |
+| 2026-04-21 | `@task-manager.md` | Marked Task 022 done, moved next step to Task 024, refreshed priority queue, and updated progress to 98% |
 | 2026-04-20 | `023-implement-realtime-consultation-data-feed.md` | Completed: client-side ElevenLabs streaming via single-use tokens, async two-step finalization, session pause/resume, committed segment relay, provisional event schemas, audio.chunk retired, stub transcript removed, event versioning, ADR-017, DEC-009 |
 | 2026-04-20 | `@task-manager.md` | Task 023 done, OI-015/016/018 resolved, priority queue updated (next: Task 022), progress 97% |
 | 2026-04-20 | `mvp-technical-specs.md` | Added ADR-017: Client-Side ElevenLabs Realtime Streaming |

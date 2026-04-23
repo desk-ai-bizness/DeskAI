@@ -185,6 +185,7 @@ List the most recently changed tasks first.
 
 | Date | Task File | Change |
 | --- | --- | --- |
+| 2026-04-23 | `013-build-public-website-and-entry-flows.md` | Updated scope to include public-facing `Notter` domains/branding for website and app entrypoints while explicitly preserving internal `DeskAI` naming in code and infrastructure |
 | 2026-04-23 | `@task-manager.md` | Updated OI-019: frontend domains must move to the visual `Notter` brand, but the change must stay domain-only and preserve internal `DeskAI` naming in code/infrastructure |
 | 2026-04-21 | `@task-manager.md` | Added OI-019 to track missing frontend domain purchase/configuration for dev/prod URLs (`app.dev.deskai.com.br`, `dev.deskai.com.br`, `app.deskai.com.br`, `deskai.com.br`) |
 | 2026-04-21 | `024-redesign-consultation-workspace-with-anamnese-and-inline-review.md` | Completed: unified `/live` workspace, inline Anamnese/review, provisional autofill + insight rendering, pause/resume + stop confirmation, finalized read-only behavior, `/review` redirect, review payload alignment, and frontend/backend regression coverage |

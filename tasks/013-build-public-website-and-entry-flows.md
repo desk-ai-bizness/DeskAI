@@ -3,7 +3,7 @@
 ## 1. Overview
 
 ### Objective
-Build the public marketing website and entry flows that explain the product, support SEO, and direct users into the authenticated application.
+Build the public marketing website and entry flows that explain the product, support SEO, direct users into the authenticated application, and establish the public-facing `Notter` web domains for the website and app entrypoints.
 
 ### Why This Matters
 The MVP frontend includes both a public website and the logged-in app. The public website must communicate the product clearly, set correct expectations, and avoid misrepresenting the MVP as a clinical decision-maker.
@@ -21,6 +21,8 @@ The public website introduces the documentation-support value proposition, plan 
 
 ### Technical Context
 The technical specs explicitly call for standard HTML, CSS, and minimal JavaScript to maximize crawlability, performance, and simple deployment.
+
+This task also owns the public-domain follow-up captured in `OI-019`: the intended frontend URLs are not yet reachable, and the public-facing domain/brand should move from `DeskAI` to `Notter`. That rename must remain strictly visual and URL-facing. Internal code identifiers, package names, stack names, environment keys, and variables must continue using `DeskAI`.
 
 ### Related Systems
 - Frontend app
@@ -42,11 +44,14 @@ Before implementing this task, read these documents in addition to the standard 
 - Add login and product entry links that route users into the authenticated flow.
 - Define the core marketing copy, plan presentation, and trust messaging for the MVP.
 - Ensure the website is optimized for SEO, performance, and responsive layout.
+- Define and wire the public-facing `Notter` website/app domains for `dev` and `prod`.
+- Update public links, metadata, and entrypoints to use the `Notter` brand externally without renaming internal `DeskAI` code/infrastructure identifiers.
 
 ### Out of Scope
 - Complex SPA behavior on marketing pages.
 - In-app authenticated product workflows.
 - Non-MVP sales automation or CRM integrations.
+- Broad internal repository/package/stack renaming from `DeskAI` to `Notter`.
 
 ## 4. Requirements
 
@@ -55,11 +60,14 @@ Before implementing this task, read these documents in addition to the standard 
 - The website must present product content in `pt-BR`.
 - The website must give users a clear path to log in or start the product flow.
 - The website must support future updates to plan messaging without major rewrites.
+- Public-facing website and app entry URLs must use the `Notter` brand once domain setup is complete.
+- The `Notter` rename in this task must be limited to visual/public domain surfaces and must not require internal `DeskAI` identifier changes.
 
 ### Non-Functional Requirements
 - Pages should prioritize crawlability and fast load times.
 - The site should remain simple to deploy via CloudFront.
 - The UX must be responsive across mobile and desktop.
+- Domain and certificate setup must keep deployment risk low by avoiding unnecessary internal renames.
 
 ### Business Rules
 - The product must be presented as documentation assistance and review support, not as an autonomous clinical system.
@@ -69,6 +77,7 @@ Before implementing this task, read these documents in addition to the standard 
 ### Technical Rules
 - Use standard HTML and CSS with minimal JavaScript only when needed.
 - Keep the website separate from the React authenticated app.
+- Keep internal repository, package, stack, environment, and variable naming on `DeskAI`; only public-facing branding/domains should move to `Notter`.
 
 ## 5. Implementation Notes
 
@@ -77,6 +86,8 @@ Create a small set of static pages with strong information hierarchy, clear call
 
 ### AWS / Infrastructure Notes
 - Ensure generated assets fit the CloudFront/static hosting path defined in CDK.
+- Confirm domain ownership/purchase, provision ACM certificates in the correct region for CloudFront, and create the DNS records needed for the `Notter` public domains.
+- Preserve existing internal AWS/CDK naming based on `DeskAI` unless a future dedicated infrastructure migration task explicitly says otherwise.
 
 ### Backend Notes
 - Keep public website dependencies on backend services minimal.
@@ -91,12 +102,15 @@ The task should produce:
 - Login and entry routing
 - SEO and metadata setup
 - Copy aligned with business rules
+- Public-facing `Notter` website/app domains wired for `dev` and `prod` or the concrete implementation needed to make them reachable
 
 ## 7. Acceptance Criteria
 
 - [ ] Public website pages exist and are deployable as static assets.
 - [ ] Product copy clearly describes the MVP as a physician review tool, not a clinical decision-maker.
 - [ ] Login or product entry flows connect users to the authenticated app.
+- [ ] Public-facing website/app URLs use the `Notter` brand.
+- [ ] The `Notter` change is limited to public-facing domains/branding and does not rename internal `DeskAI` identifiers.
 - [ ] Pages are responsive and performant.
 - [ ] Relevant tests are added or updated
 - [ ] Documentation is updated if behavior or setup changed
@@ -108,17 +122,19 @@ The task should produce:
 - Basic accessibility and SEO checks
 
 ### Manual Verification
-Open the public pages on desktop and mobile, verify copy and navigation, and confirm the login entrypoint routes correctly into the authenticated product flow.
+Open the public pages on desktop and mobile, verify copy and navigation, confirm the login entrypoint routes correctly into the authenticated product flow, and verify that the reachable public URLs use the `Notter` domain while internal configuration/code identifiers remain on `DeskAI`.
 
 ## 9. Risks and Edge Cases
 
 ### Risks
 - Marketing copy could overpromise functionality outside MVP boundaries.
 - Overengineering the public website could distract from core product delivery.
+- Mixing a public rebrand with internal renaming could create unnecessary deployment risk and infrastructure churn.
 
 ### Edge Cases
 - A logged-in user lands on a public page and needs a clear route back into the app.
 - Plan messaging changes before launch.
+- The public `Notter` domains are ready before every environment-specific DNS/certificate dependency is fully configured.
 
 ## 10. Definition of Done
 

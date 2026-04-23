@@ -1,9 +1,23 @@
 # Task 013: Build Public Website And Entry Flows
 
+## Status
+
+Canceled / superseded.
+
+Task 013 was decomposed into the following implementation tasks on 2026-04-23:
+
+- `026-create-sales-website-design-system.md`
+- `027-create-sales-website-figma-design.md`
+- `028-build-sales-website-interface-from-figma.md`
+- `029-integrate-sales-website-entry-flows-and-javascript.md`
+- `030-revalidate-public-sales-website.md`
+
+Keep this file as the historical parent scope. Do not implement directly from this task unless the task manager is updated to reactivate it.
+
 ## 1. Overview
 
 ### Objective
-Build the public marketing website and entry flows that explain the product, support SEO, direct users into the authenticated application, and establish the public-facing `Notter` web domains for the website and app entrypoints.
+Track the original parent scope for the public marketing website and entry flows that explain the product, support SEO, direct users into the authenticated application, and establish the public-facing `Notter` web domains for the website and app entrypoints.
 
 ### Why This Matters
 The MVP frontend includes both a public website and the logged-in app. The public website must communicate the product clearly, set correct expectations, and avoid misrepresenting the MVP as a clinical decision-maker.
